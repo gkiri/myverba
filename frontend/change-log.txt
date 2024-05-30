@@ -1,0 +1,12 @@
+1.page.tsx
+
+footer upadated to p-1 and mt-
+
+
+2.ChatComponensts.tsx
+3 window width is updated
+
+
+3.Chat Interface
+
+height is updated from 55 to h-64vh
