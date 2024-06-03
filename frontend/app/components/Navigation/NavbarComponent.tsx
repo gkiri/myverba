@@ -12,6 +12,7 @@ import { IoBuildSharp } from "react-icons/io5";
 import { LuMenu } from "react-icons/lu";
 
 import NavbarButton from "./NavButton";
+import MockExamButton from "./MockExamButton";
 import { getGitHubStars } from "./util";
 
 interface NavbarProps {
@@ -164,7 +165,10 @@ const Navbar: React.FC<NavbarProps> = ({
           <div
             className={`sm:h-[3vh] lg:h-[5vh] mx-1 hidden sm:block bg-text-alt-verba w-px`}
           ></div>
-          <button
+
+          {/* commenting github and verba version number*/
+          
+          /* <button
             className={`md:hidden btn md:btn-sm lg:btn-md lg:flex items-center justify-center border-none bg-secondary-verba hover:bg-button-hover-verba`}
             onClick={handleGitHubClick}
           >
@@ -175,8 +179,18 @@ const Navbar: React.FC<NavbarProps> = ({
           </button>
           <p className="hidden lg:flex text-xs text-text-alt-verba">
             {version}
-          </p>
-        </div>
+          </p> */}
+
+
+
+          {/* Mock Exam Button -  NEW */}
+          <MockExamButton  
+            APIHost={APIHost} 
+            currentPage={currentPage} 
+            setCurrentPage={setCurrentPage}
+          /> 
+          
+          </div>
 
         {/* Menu */}
         <div className="flex flex-row items-center sm:gap-1 lg:gap-5 justify-between">

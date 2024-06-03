@@ -14,6 +14,7 @@ import { detectHost } from "./api";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { fonts, FontKey } from "./info";
 import PulseLoader from "react-spinners/PulseLoader";
+import MockExamPage from "./components/MockExam/MockExamPage";
 
 export default function Home() {
   // Page States
@@ -271,6 +272,15 @@ export default function Home() {
             />
           )}
 
+          {/* Render MockExamPage when currentPage is "MOCK_EXAM" */}
+          {currentPage === "MOCK_EXAM" && (
+            <MockExamPage 
+              production={production}
+              settingConfig={baseSetting[settingTemplate]} 
+              APIHost={APIHost} 
+            />
+          )}
+          
           <footer className="footer footer-center p-1 mt-2 bg-bg-verba text-text-alt-verba">
             <aside>
               <p>Build with ♥ and Weaviate © 2024</p>

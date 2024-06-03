@@ -22,7 +22,7 @@ from goldenverba.server.types import (
     ImportPayload,
 )
 from goldenverba.server.util import get_config, set_config, setup_managers
-
+from goldenverba.components.types import Question # Add  Question model to types
 load_dotenv()
 
 # Check if runs in production
@@ -474,3 +474,23 @@ async def delete_document(payload: GetDocumentPayload):
 
     manager.delete_document_by_id(payload.document_id)
     return JSONResponse(content={})
+
+# Gkiri new api
+@app.get("/api/mock_exam")
+async def get_mock_exam_data():
+  # Example hardcoded questions for development
+  questions = [
+        Question(id=1, text="What is the capital of France?", options=["Berlin", "Paris", "Madrid", "Rome"], correctAnswer="Paris", explanation="Paris is the capital of France."),
+        Question(id=2, text="What is the highest mountain in the world?", options=["K2", "Kangchenjunga", "Mount Everest", "Lhotse"], correctAnswer="Mount Everest", explanation="Mount Everest is the highest mountain in the world."),
+        Question(id=3, text="What is the capital of India?", options=["Berlin", "Paris", "Madrid", "Rome"], correctAnswer="Paris", explanation="Paris is the capital of France."),
+        Question(id=4, text="What is the highest Tree in the world?", options=["K2", "Kangchenjunga", "Mount Everest", "Lhotse"], correctAnswer="Mount Everest", explanation="Mount Everest is the highest mountain in the world."),
+ 
+        #... add more questions
+    ]
+    
+    # Convert Question objects to dictionaries
+  questions_as_dicts = [question.model_dump() for question in questions] 
+  mock_exam_data = {
+    "questions": questions_as_dicts 
+  }
+  return JSONResponse(content=mock_exam_data)

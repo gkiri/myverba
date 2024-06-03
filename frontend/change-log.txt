@@ -10,3 +10,29 @@ footer upadated to p-1 and mt-
 3.Chat Interface
 
 height is updated from 55 to h-64vh
+
+
+5.
+D:\UPSC-AI\2024-weaviate\Verba-1.0.0\frontend\app\components\Navigation\NavbarComponent.tsx
+wont display button.eg:setings button is disabled here.
+
+          <NavbarButton
+            hide={production}
+            APIHost={APIHost}
+            Icon={IoBuildSharp}
+            iconSize={icon_size}
+            title="RAG"
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            setPage="RAG"
+          />
+          {/* <NavbarButton
+            hide={production}
+            APIHost={APIHost}
+            Icon={IoSettingsSharp}
+            iconSize={icon_size}
+            title="Settings"
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            setPage="SETTINGS"
+          /> */}
