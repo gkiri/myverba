@@ -1,8 +1,9 @@
-from fastapi import FastAPI, WebSocket, status
+from fastapi import FastAPI, WebSocket, UploadFile, status,HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-
+import json
+import uuid
 import os
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from goldenverba.server.types import (
 )
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question # Add  Question model to types
+from pydantic import ValidationError
 load_dotenv()
 
 # Check if runs in production
@@ -475,22 +477,60 @@ async def delete_document(payload: GetDocumentPayload):
     manager.delete_document_by_id(payload.document_id)
     return JSONResponse(content={})
 
+###########################################Gkiri
+@app.post("/api/upload_mock_exam")
+async def upload_mock_exam(file: UploadFile):
+    if production:
+        raise HTTPException(status_code=403, detail="Uploading mocks is disabled in production mode.")
+
+    try:
+        content = await file.read()
+        data = json.loads(content.decode("utf-8"))  # Decode bytes to string then to JSON
+        
+        if not isinstance(data, list):
+            raise ValueError("Invalid JSON format. Expected a list of questions.")
+        
+        # Validate question structure within the list
+        for question_data in data:
+            try:
+                Question(**question_data)  # Attempt to create a Question object
+            except ValidationError as e: 
+                raise ValueError(f"Invalid question data: {e}")
+
+        with manager.client.batch as batch:
+            batch.batch_size = 100  # Set batch size
+            for question_data in data:
+                question_data['global_questionID'] = int(question_data['global_questionID'])
+                #question_data['year'] = int(question_data['year'])
+                question = Question(**question_data)
+                properties = question.model_dump() 
+                manager.client.batch.add_data_object(properties, "MockExamQuestion")
+        msg.good(f"Successfully uploaded and imported {len(data)} mock exam questions.")
+        return JSONResponse(content={"message": "Success"})
+    except Exception as e:
+        msg.fail(f"Error uploading or importing mock exam data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))  # Return detailed errors
+
 # Gkiri new api
 @app.get("/api/mock_exam")
 async def get_mock_exam_data():
-  # Example hardcoded questions for development
-  questions = [
-        Question(id=1, text="What is the capital of France?", options=["Berlin", "Paris", "Madrid", "Rome"], correctAnswer="Paris", explanation="Paris is the capital of France."),
-        Question(id=2, text="What is the highest mountain in the world?", options=["K2", "Kangchenjunga", "Mount Everest", "Lhotse"], correctAnswer="Mount Everest", explanation="Mount Everest is the highest mountain in the world."),
-        Question(id=3, text="What is the capital of India?", options=["Berlin", "Paris", "Madrid", "Rome"], correctAnswer="Paris", explanation="Paris is the capital of France."),
-        Question(id=4, text="What is the highest Tree in the world?", options=["K2", "Kangchenjunga", "Mount Everest", "Lhotse"], correctAnswer="Mount Everest", explanation="Mount Everest is the highest mountain in the world."),
- 
-        #... add more questions
-    ]
-    
-    # Convert Question objects to dictionaries
-  questions_as_dicts = [question.model_dump() for question in questions] 
-  mock_exam_data = {
-    "questions": questions_as_dicts 
-  }
-  return JSONResponse(content=mock_exam_data)
+    # Retrieve random 30 questions from Weaviate
+    try:
+        results = (
+            manager.client.query.get(
+                "MockExamQuestion",
+                ["question", "options", "answer_key", "year", "topic", "description", "question_number","global_questionID"],
+            )
+            .with_limit(4)
+            .do()
+        )
+        print("Results Format:", results)
+        if "data" in results and "Get" in results["data"] and "MockExamQuestion" in results["data"]["Get"]:
+            questions = [Question(**question_data).dict() for question_data in results["data"]["Get"]["MockExamQuestion"]]
+            mock_exam_data = {"questions": questions}
+            return JSONResponse(content=mock_exam_data)
+        else:
+            return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
+    except Exception as e:
+        msg.fail(f"Error retrieving mock exam questions: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})

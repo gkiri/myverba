@@ -25,6 +25,7 @@ const MockExamPage: React.FC<MockExamPageProps> = ({
   const questionsPerPage = 3; 
 
   useEffect(() => {
+    
     const fetchExamData = async () => {
       try {
         const response = await fetch(APIHost + "/api/mock_exam", {
@@ -77,7 +78,7 @@ const MockExamPage: React.FC<MockExamPageProps> = ({
   const handleSubmitExam = () => {
     localStorage.setItem("selectedAnswers", JSON.stringify(selectedAnswers));
     localStorage.setItem("mockExamQuestions", JSON.stringify(questions));
-    
+
     router.push('/exam_summary'); 
     //router.push('/mock-exam/exam_summary'); // Updated route
     
@@ -94,12 +95,12 @@ const MockExamPage: React.FC<MockExamPageProps> = ({
         </div>
       ) : (
         <div>
-          {currentQuestions.map((question, index) => ( 
+          {currentQuestions.map((question,index) => ( 
             <QuestionComponent
-              key={question.id}
+              key={question.global_questionID}
               question={question}
               onAnswerSelect={handleAnswerSelect}
-              selectedAnswer={selectedAnswers[question.id]}
+              selectedAnswer={selectedAnswers[question.global_questionID]}
             />
           ))}
         </div>

@@ -6,6 +6,7 @@ import { IoChatbubbleSharp } from "react-icons/io5";
 import { IoDocumentSharp } from "react-icons/io5";
 import { HiOutlineStatusOnline } from "react-icons/hi";
 import { IoMdAddCircle } from "react-icons/io";
+import { IoMdAddCircleOutline } from "react-icons/io";  //  Or a different suitable icon
 import { IoSettingsSharp } from "react-icons/io5";
 import { FaGithub } from "react-icons/fa";
 import { IoBuildSharp } from "react-icons/io5";
@@ -14,6 +15,7 @@ import { LuMenu } from "react-icons/lu";
 import NavbarButton from "./NavButton";
 import MockExamButton from "./MockExamButton";
 import { getGitHubStars } from "./util";
+import AddMocksPage from "../../add-mocks/page";
 
 interface NavbarProps {
   imageSrc: string;
@@ -189,7 +191,18 @@ const Navbar: React.FC<NavbarProps> = ({
             currentPage={currentPage} 
             setCurrentPage={setCurrentPage}
           /> 
-          
+
+          <NavbarButton
+            hide={production}
+            APIHost={APIHost}
+            Icon={IoMdAddCircleOutline} // Use the new icon 
+            iconSize={icon_size}
+            title="Add Mocks" 
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            setPage="ADD_MOCKS" 
+          />
+
           </div>
 
         {/* Menu */}

@@ -126,6 +126,7 @@ def init_schemas(
         init_cache(client, vectorizer, force, check)
         init_suggestion(client, vectorizer, force, check)
         init_config(client, vectorizer, force, check)
+        init_mock_exam_schema(client, vectorizer, force, check) # Initialize the Mock Exam schema
         return True
     except Exception as e:
         msg.fail(f"Schema initialization failed {str(e)}")
@@ -417,3 +418,80 @@ def init_config(
         msg.good(f"{config_name} schema created")
 
     return config_schema
+
+
+# Schema for Mock Exam Questions
+SCHEMA_MOCK_EXAM = {
+    "classes": [
+        {
+            "class": "MockExamQuestion",
+            "description": "UPSC Mock Exam Questions",
+            "properties": [
+                {
+                    "name": "questionText",
+                    "dataType": ["text"],
+                    "description": "Text of the question",
+                },
+                {
+                    "name": "options",
+                    "dataType": ["text[]"], 
+                    "description": "Array of answer options",
+                },
+                {
+                    "name": "correctAnswer",
+                    "dataType": ["text"],
+                    "description": "The correct answer",
+                },
+                {
+                    "name": "explanation",
+                    "dataType": ["text"],
+                    "description": "Explanation for the answer (optional)",
+                },
+                {  # You can add this to store the year if needed
+                    "name": "year",
+                    "dataType": ["int"],
+                    "description": "Year of the exam question",
+                },
+            ],
+            # ... You can add vectorizer configuration if needed 
+        }
+    ]
+}
+
+def init_mock_exam_schema(client: Client, vectorizer: str = None, force: bool = False, check: bool = False) -> dict:
+    """Initializes the MockExamQuestion schema in Weaviate.
+
+    Args:
+        client (Client): Weaviate client.
+        vectorizer (str, optional): Vectorizer to use (if any). Defaults to None.
+        force (bool, optional): Delete existing schema without user input. Defaults to False.
+        check (bool, optional): Only create if it doesn't exist. Defaults to False.
+
+    Returns:
+        dict: The modified schema.
+    """
+
+    # Verify Vectorizer (if needed)
+    mock_exam_schema = verify_vectorizer(SCHEMA_MOCK_EXAM, vectorizer)
+
+    # Add Suffix (if needed)
+    mock_exam_schema, mock_exam_name = add_suffix(mock_exam_schema, vectorizer)
+
+    if client.schema.exists(mock_exam_name):
+        if check:
+            return mock_exam_schema
+        if not force:
+            user_input = input(f"{mock_exam_name} class already exists, do you want to delete it? (y/n): ")
+        else:
+            user_input = "y"
+        if user_input.strip().lower() == "y":
+            client.schema.delete_class(mock_exam_name)
+            client.schema.create(mock_exam_schema)
+            msg.good(f"{mock_exam_name} schema created")
+        else:
+            msg.warn(f"Skipped deleting {mock_exam_name} schema, nothing changed")
+    else:
+        client.schema.create(mock_exam_schema)
+        msg.good(f"{mock_exam_name} schema created")
+
+    return mock_exam_schema

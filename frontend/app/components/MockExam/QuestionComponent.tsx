@@ -16,7 +16,7 @@ const QuestionComponent: React.FC<QuestionComponentProps> = ({
 }) => {
   return (
     <div className="flex flex-col gap-2 p-4 bg-bg-alt-verba rounded-lg shadow-lg mb-4">
-      <p className="font-bold text-lg">{question.text}</p>
+      <p className="font-bold text-lg">{question.question}</p>
 
       {/* Render Options */}
       {question.options.map((option, index) => (
@@ -27,10 +27,10 @@ const QuestionComponent: React.FC<QuestionComponentProps> = ({
         >
           <input 
             type="radio" 
-            name={`question-${question.id}`} //  Group radio buttons by question
+            name={`question-${question.global_questionID}`} // Unique name per question, not per option
             value={option} 
             checked={selectedAnswer === option} 
-            onChange={() => onAnswerSelect(question.id, option)} 
+            onChange={() => onAnswerSelect(question.global_questionID, option)} 
             className="radio" 
           /> 
           <span>{option}</span>
