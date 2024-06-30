@@ -14,8 +14,11 @@ import { detectHost } from "./api";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { fonts, FontKey } from "./info";
 import PulseLoader from "react-spinners/PulseLoader";
-import MockExamPage from "./components/MockExam/MockExamPage";
+import MockExamPage from "./mock-exam/page";
+import MockExamStartPage from "./components/MockExam/MockExamStartPage";
 import AddMocksPage from "./add-mocks/page"; 
+
+const API_HOST = "http://localhost:8000"; // Define your API host here
 
 export default function Home() {
   // Page States
@@ -272,6 +275,8 @@ export default function Home() {
               setBaseSetting={setBaseSetting}
             />
           )}
+
+          {currentPage === 'MOCK_EXAM_START' && (<MockExamStartPage APIHost={API_HOST} setCurrentPage={setCurrentPage} />)} 
 
           {/* Render MockExamPage when currentPage is "MOCK_EXAM" */}
           {currentPage === "MOCK_EXAM" && (

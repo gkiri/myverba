@@ -24,7 +24,7 @@ const MockExamButton: React.FC<MockExamButtonProps> = ({
       title="Mock Tests"
       currentPage={currentPage}
       setCurrentPage={setCurrentPage} 
-      setPage="MOCK_EXAM"  // New page identifier 
+      setPage="MOCK_EXAM_START"  // New startpage identifier 
     />
   );
 };
