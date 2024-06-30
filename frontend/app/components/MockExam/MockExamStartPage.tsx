@@ -1,47 +1,75 @@
-"use client";
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface MockExamStartPageProps {
-  APIHost: string;
-  setCurrentPage: (page: string) => void;
-}
-
-const MockExamStartPage: React.FC<MockExamStartPageProps> = ({ APIHost,setCurrentPage }) => {
-
+const MockExamStartPage = ({ APIHost, setCurrentPage }) => {
+  const [examType, setExamType] = useState('full');
   const router = useRouter();
 
   const handleStartExam = () => {
-    router.push('/mock-exam'); // Navigate to the actual exam page
-    //setCurrentPage('MOCK_EXAM'); // Set the currentPage to "MOCK_EXAM"
+    localStorage.setItem('examType', examType);
+    router.push('/mock-exam');
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-8">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
-        <h2 className="text-3xl font-bold text-center mb-6 text-blue-500">UPSC Mock Exam</h2>
-
-        {/* Exam Instructions Section */}
-        <div className="space-y-4">
-          <p className="font-semibold text-lg">Instructions:</p>
-          <ul className="list-disc list-inside text-gray-700 space-y-2">
-            <li>This mock exam consists of 100 multiple-choice questions (MCQs).</li>
-            <li>Each question carries 1 mark.</li>
-            <li>You will have 20 minutes to complete the exam.</li>
-            <li>The timer will start as soon as you click "Start Exam".</li>
-            <li>There is no negative marking.</li>
-            <li>You can navigate between questions using the pagination controls.</li>
-            <li>Once you submit the exam, you will see a detailed summary of your performance.</li>
-          </ul>
-
-          <button 
-            onClick={handleStartExam}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out"
-          >
-            Start Exam
-          </button>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+      <div className="max-w-4xl w-full bg-white rounded-lg shadow-xl p-8">
+        <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">UPSC Mock Exam</h1>
+        
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          <div className="bg-blue-50 p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">Exam Details</h2>
+            <ul className="space-y-2 text-gray-700">
+              <li>• 100 multiple-choice questions</li>
+              <li>• Covers various UPSC topics</li>
+              <li>• No negative marking</li>
+              <li>• Timed exam environment</li>
+            </ul>
+          </div>
+          <div className="bg-green-50 p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">Time Management</h2>
+            <ul className="space-y-2 text-gray-700">
+              <li>• Full Exam: 120 minutes</li>
+              <li>• Section-wise time limits</li>
+              <li>• Timer displayed throughout</li>
+              <li>• Auto-submit on time expiry</li>
+            </ul>
+          </div>
         </div>
+        
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Select Exam Type</h2>
+          <div className="flex space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="examType"
+                value="full"
+                checked={examType === 'full'}
+                onChange={() => setExamType('full')}
+              />
+              <span className="ml-2">Full Exam (120 min)</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio text-blue-600"
+                name="examType"
+                value="quick"
+                checked={examType === 'quick'}
+                onChange={() => setExamType('quick')}
+              />
+              <span className="ml-2">Quick Practice (30 min)</span>
+            </label>
+          </div>
+        </div>
+        
+        <button
+          onClick={handleStartExam}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300"
+        >
+          Start Exam
+        </button>
       </div>
     </div>
   );

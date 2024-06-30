@@ -1,46 +1,31 @@
-"use client";
+import React, { useState, useEffect } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-import React, { useState, useEffect } from "react";
-import { Question } from "./types";
-import { IoChevronDownOutline, IoChevronUpOutline, IoHelpCircleOutline } from 'react-icons/io5'; 
-
-const ExamSummaryPage: React.FC = () => {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
+const ExamSummaryPage = () => {
+  const [questions, setQuestions] = useState([]);
+  const [selectedAnswers, setSelectedAnswers] = useState({});
   const [score, setScore] = useState(0);
-  const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set());
+  const [expandedQuestions, setExpandedQuestions] = useState(new Set());
 
   useEffect(() => {
-    const storedQuestions = localStorage.getItem("mockExamQuestions");
-    const storedAnswers = localStorage.getItem("selectedAnswers");
+    const storedQuestions = JSON.parse(localStorage.getItem('mockExamQuestions') || '[]');
+    const storedAnswers = JSON.parse(localStorage.getItem('selectedAnswers') || '{}');
 
-    if (storedQuestions && storedAnswers) {
-      const parsedQuestions = JSON.parse(storedQuestions) as Question[];
-      const parsedAnswers = JSON.parse(storedAnswers) as Record<number, string>;
+    setQuestions(storedQuestions);
+    setSelectedAnswers(storedAnswers);
 
-      setQuestions(parsedQuestions);
-      setSelectedAnswers(parsedAnswers);
+    // Calculate score
+    const correctCount = storedQuestions.reduce((count, question) => {
+      const correctAnswerText = question.options[question.answer_key.charCodeAt(0) - 97];
+      return storedAnswers[question.global_questionID] === correctAnswerText ? count + 1 : count;
+    }, 0);
 
-      // Calculate score
-      let correctCount = 0;
-      parsedQuestions.forEach((question) => {
-        const correctAnswerText = question.options[question.answer_key.charCodeAt(0) - 97];
-        if (parsedAnswers[question.global_questionID] === correctAnswerText) {
-          correctCount++;
-        }
-      });
-      setScore(correctCount);
-    }
+    setScore(correctCount);
   }, []);
 
-  const attemptedQuestions = Object.keys(selectedAnswers).length;
-  const unattemptedQuestions = questions.length - attemptedQuestions;
-  const correctAnswers = score;
-  const wrongAnswers = attemptedQuestions - correctAnswers;
-
-  const handleQuestionToggle = (questionId: number) => {
-    setExpandedQuestions((prevState) => {
-      const newSet = new Set(prevState);
+  const toggleQuestionExpansion = (questionId) => {
+    setExpandedQuestions(prev => {
+      const newSet = new Set(prev);
       if (newSet.has(questionId)) {
         newSet.delete(questionId);
       } else {
@@ -50,114 +35,109 @@ const ExamSummaryPage: React.FC = () => {
     });
   };
 
-  return (
-    <div className="flex flex-col gap-5 p-5">
-      <h2 className="text-2xl font-bold mb-4 text-center">Exam Summary</h2>
+  const attemptedQuestions = Object.keys(selectedAnswers).length;
+  const unattemptedQuestions = questions.length - attemptedQuestions;
+  const incorrectAnswers = attemptedQuestions - score;
 
-      {/* Summary Box */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h3 className="text-xl font-semibold mb-4 text-center">Scorecard</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gray-100 p-3 rounded-md">
-            <p className="text-gray-600">Attempted:</p>
-            <p className="font-semibold text-lg">{attemptedQuestions}</p>
+  const chartData = [
+    { name: 'Correct', value: score, color: '#4CAF50' },
+    { name: 'Incorrect', value: incorrectAnswers, color: '#F44336' },
+    { name: 'Unattempted', value: unattemptedQuestions, color: '#9E9E9E' },
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-3xl font-bold text-center mb-8">Exam Summary</h1>
+
+      <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Score Overview</h2>
+          <div className="text-4xl font-bold text-center mb-4">
+            {score} / {questions.length}
           </div>
-          <div className="bg-gray-100 p-3 rounded-md">
-            <p className="text-gray-600">Unattempted:</p>
-            <p className="font-semibold text-lg">{unattemptedQuestions}</p>
-          </div>
-          <div className="bg-green-100 p-3 rounded-md">
-            <p className="text-green-600">Correct:</p>
-            <p className="font-semibold text-lg">{correctAnswers}</p>
-          </div>
-          <div className="bg-red-100 p-3 rounded-md">
-            <p className="text-red-600">Incorrect:</p>
-            <p className="font-semibold text-lg">{wrongAnswers}</p>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-green-500 font-semibold">{score}</div>
+              <div className="text-sm">Correct</div>
+            </div>
+            <div>
+              <div className="text-red-500 font-semibold">{incorrectAnswers}</div>
+              <div className="text-sm">Incorrect</div>
+            </div>
+            <div>
+              <div className="text-gray-500 font-semibold">{unattemptedQuestions}</div>
+              <div className="text-sm">Unattempted</div>
+            </div>
           </div>
         </div>
-        <div className="mt-6 border-t border-gray-200 pt-4">
-          <p className="text-center text-xl font-semibold">
-            Final Score:{" "}
-            <span className="text-2xl text-blue-500">
-              {score}/{questions.length}
-            </span>
-          </p>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Performance Chart</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Question Review Section (Collapsible) */}
-      {questions.map((question, index) => {
-        const selectedAnswer = selectedAnswers[question.global_questionID];
-        const isCorrect = selectedAnswer === question.options[question.answer_key.charCodeAt(0) - 97];
-        const isExpanded = expandedQuestions.has(question.global_questionID);
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold mb-4">Question Review</h2>
+        {questions.map((question, index) => {
+          const selectedAnswer = selectedAnswers[question.global_questionID];
+          const correctAnswerText = question.options[question.answer_key.charCodeAt(0) - 97];
+          const isCorrect = selectedAnswer === correctAnswerText;
+          const isExpanded = expandedQuestions.has(question.global_questionID);
 
-        return (
-          <div key={question.global_questionID} className="bg-white rounded-lg shadow-lg p-4 mb-4">
-            <div className="flex justify-between items-center cursor-pointer" onClick={() => handleQuestionToggle(question.global_questionID)}>
-              <p className="font-bold text-lg">Question {index + 1}</p>
-              <span
-                className={`px-2 py-1 rounded-full text-sm font-semibold ${
-                  isCorrect ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
-                }`}
-              >
-                {isCorrect ? "Correct" : "Incorrect"}
-              </span>
-              {/* Expand/Collapse Icon */}
-              {isExpanded ? (
-                <IoChevronUpOutline className="text-gray-600" /> 
-              ) : (
-                <IoChevronDownOutline className="text-gray-600" />
+          return (
+            <div key={question.global_questionID} className="mb-4 p-4 border rounded">
+              <div className="flex justify-between items-center cursor-pointer" onClick={() => toggleQuestionExpansion(question.global_questionID)}>
+                <p className="font-bold">Question {index + 1}</p>
+                <span className={`px-2 py-1 rounded-full text-sm ${isCorrect ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                  {isCorrect ? 'Correct' : 'Incorrect'}
+                </span>
+              </div>
+              
+              {isExpanded && (
+                <div className="mt-2">
+                  <p>{question.question}</p>
+                  <div className="mt-2">
+                    {question.options.map((option, optionIndex) => {
+                      const isSelected = selectedAnswer === option;
+                      const isCorrectOption = option === correctAnswerText;
+                      return (
+                        <div key={optionIndex} className={`p-2 ${isSelected ? (isCorrectOption ? 'bg-green-100' : 'bg-red-100') : ''} ${isCorrectOption ? 'font-bold' : ''}`}>
+                          {option} {isSelected && '(Selected)'} {isCorrectOption && '(Correct)'}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {question.description && (
+                    <div className="mt-2 p-2 bg-blue-50">
+                      <p className="font-semibold">Explanation:</p>
+                      <p>{question.description}</p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-            
-            {/* Conditional Rendering for Expanded Question */}
-            {isExpanded && ( 
-              <div className="mt-3 space-y-2"> 
-                <p className="mt-2">{question.question}</p>
-
-                <div className="mt-3 space-y-2">
-                  {question.options.map((option, optionIndex) => {
-                    const optionLetter = String.fromCharCode(97 + optionIndex); 
-                    const isSelected = selectedAnswer === option; 
-                    const isCorrectOption = optionLetter === question.answer_key;
-
-                    return (
-                      <div key={optionIndex} className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={isSelected}
-                          disabled={true} 
-                          className="radio mr-2"
-                        />
-                        <label
-                          className={`
-                            ${isSelected && isCorrectOption ? "font-semibold text-green-600" : ""} 
-                            ${isSelected && !isCorrectOption ? "font-semibold text-red-600" : ""}
-                          `}
-                        >
-                          {option} {isCorrectOption && "(Correct)"}
-                        </label>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Enhanced Explanation Section */}
-                {question.description && (
-                  <div className="mt-4 border-t border-gray-200 pt-3 relative group">
-                    <button className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out">
-                      <IoHelpCircleOutline className="text-blue-500 text-lg" /> 
-                    </button>
-                    <p className="text-base text-gray-700 bg-blue-50 p-3 rounded-md shadow-inner">
-                      <span className="font-semibold text-blue-500">Explanation:</span> {question.description}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 };
