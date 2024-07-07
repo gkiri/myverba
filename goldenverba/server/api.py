@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from starlette.websockets import WebSocketDisconnect
 from wasabi import msg  # type: ignore[import]
 import time
+import random
+
 
 from goldenverba import verba_manager
 from goldenverba.server.types import (
@@ -512,22 +514,83 @@ async def upload_mock_exam(file: UploadFile):
         raise HTTPException(status_code=500, detail=str(e))  # Return detailed errors
 
 # Gkiri new api
+# @app.get("/api/mock_exam")
+# async def get_mock_exam_data():
+#     # Retrieve random 30 questions from Weaviate
+#     try:
+#         results = (
+#             manager.client.query.get(
+#                 "MockExamQuestion",
+#                 ["question", "options", "answer_key", "year", "topic", "description", "question_number","global_questionID"],
+#             )
+#             .with_limit(100)
+#             .do()
+#         )
+#         print("Results Format:", results)
+#         if "data" in results and "Get" in results["data"] and "MockExamQuestion" in results["data"]["Get"]:
+#             questions = [Question(**question_data).dict() for question_data in results["data"]["Get"]["MockExamQuestion"]]
+#             mock_exam_data = {"questions": questions}
+#             return JSONResponse(content=mock_exam_data)
+#         else:
+#             return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
+#     except Exception as e:
+#         msg.fail(f"Error retrieving mock exam questions: {e}")
+#         return JSONResponse(status_code=500, content={"error": str(e)})
+
+import random
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from wasabi import msg
+
 @app.get("/api/mock_exam")
 async def get_mock_exam_data():
-    # Retrieve random 30 questions from Weaviate
     try:
+        QUESTIONS_TO_RETRIEVE = 100
+
+        # Get total count of questions
+        count_result = (
+            manager.client.query
+            .aggregate("MockExamQuestion")
+            .with_meta_count()
+            .do()
+        )
+        
+        total_questions = count_result['data']['Aggregate']['MockExamQuestion'][0]['meta']['count']
+
+        # Retrieve all global_questionIDs
+        id_results = (
+            manager.client.query
+            .get("MockExamQuestion", ["global_questionID"])
+            .with_additional(["id"])
+            .with_limit(total_questions)
+            .do()
+        )
+        
+        all_question_ids = [q["global_questionID"] for q in id_results["data"]["Get"]["MockExamQuestion"]]
+        
+        # Randomly select 100 unique question IDs
+        selected_ids = random.sample(all_question_ids, min(QUESTIONS_TO_RETRIEVE, len(all_question_ids)))
+        
+
+        # Retrieve the selected questions
         results = (
             manager.client.query.get(
                 "MockExamQuestion",
-                ["question", "options", "answer_key", "year", "topic", "description", "question_number","global_questionID"],
+                ["question", "options", "answer_key", "year", "topic", "description", "question_number", "global_questionID"]
             )
-            .with_limit(4)
+            .with_where({
+                "path": ["global_questionID"],
+                "operator": "ContainsAny",
+                "valueNumber": selected_ids
+            })
+            .with_limit(QUESTIONS_TO_RETRIEVE)
             .do()
         )
-        print("Results Format:", results)
+        
         if "data" in results and "Get" in results["data"] and "MockExamQuestion" in results["data"]["Get"]:
             questions = [Question(**question_data).dict() for question_data in results["data"]["Get"]["MockExamQuestion"]]
             mock_exam_data = {"questions": questions}
+            #print("mock_exam_data Format:", mock_exam_data)
             return JSONResponse(content=mock_exam_data)
         else:
             return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
