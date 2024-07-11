@@ -1,21 +1,17 @@
-"use client";
-
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import ChatInterfaceComponent from "./ChatInterface";
 import { SettingsConfiguration } from "../Settings/types";
 import { DocumentChunk } from "../Document/types";
-
 import ChunksComponent from "../Document/ChunksComponent";
 import DocumentComponent from "../Document/DocumentComponent";
-
 import { RAGConfig } from "../RAG/types";
-
 import InfoComponent from "../Navigation/InfoComponent";
 import {
   document_interface_info,
   chunk_interface_info,
   chat_interface_info,
 } from "@/app/info";
+import { Message ,QueryPayload_Button } from "./types";
 
 interface ChatComponentProps {
   settingConfig: SettingsConfiguration;
@@ -35,14 +31,72 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   const [chunks, setChunks] = useState<DocumentChunk[]>([]);
   const [context, setContext] = useState("");
   const [chunkTime, setChunkTime] = useState(0);
-  const [selectedChunk, setSelectedChunk] = useState<DocumentChunk | null>(
-    null
-  );
+  const [selectedChunk, setSelectedChunk] = useState<DocumentChunk | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [featureContent, setFeatureContent] = useState<string | null>(null);
+  const [featureType, setFeatureType] = useState<string | null>(null);
+
+  // Add this useEffect to log messages whenever they change
+  useEffect(() => {
+    console.log("Messages updated in ChatComponent:", messages);
+  }, [messages]);
+
+  const handleFeatureClick = async (feature: string) => {
+    console.log(`Clicked feature: ${feature}`);
+    console.log(`Backend route called: ${APIHost}/api/${feature}`);
+    
+    const lastMessage = messages.filter(msg => msg.type === "system").pop();
+    console.log(`Gkiri chat messages:`,messages);
+    console.log(`Gkiri Last chat message:`,lastMessage);
+    
+    if (!lastMessage) {
+      setFeatureContent("There are no chat messages available. Please ask the user to query.");
+      setFeatureType(null);
+      return;
+    }
+
+    const content = lastMessage.content;
+    console.log(`Last AI message: ${content}`);
+
+    try {
+      const payload: QueryPayload_Button = { query: content };
+      console.log(`Gkiri Last chat message: ${payload.query}`);
+      console.log(`Gkiri Backend route called: ${APIHost}/api/${feature}`);
+
+      const response = await fetch(`${APIHost}/api/${feature}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(`Backend response for ${feature}:`, data);
+
+      if (feature === 'bullet_points') {
+        setFeatureContent(data.bullet_points);
+        setFeatureType('bullet_points');
+      } else if (feature === 'summarize') {
+        setFeatureContent(data.summary);
+        setFeatureType('summary');
+      } else if (feature === 'visualize') {
+        setFeatureContent(data.mermaid_code);
+        setFeatureType('mermaid');
+      }
+    } catch (error) {
+      console.error(`Error fetching ${feature}:`, error);
+      setFeatureContent(`Error: ${error.message}`);
+      setFeatureType(null);
+    }
+  };
 
   return (
     <div className="flex sm:flex-col md:flex-row justify-between items-start md:gap-3 ">
-      {/* Chat Interface */}
-      {/* <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col gap-2 h-[66vh]"> */}
       <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col gap-2">
         <InfoComponent
           settingConfig={settingConfig}
@@ -58,12 +112,12 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
           setChunks={setChunks}
           setChunkTime={setChunkTime}
           setCurrentPage={setCurrentPage}
+          setMessages={setMessages}
+          messages={messages}
         />
       </div>
 
       <div className="flex lg:flex-row sm:flex-col justify-between items-start sm:w-full md:w-1/2 lg:w-4/6 gap-3">
-        {/* Chunk Selection */}
-        {/* <div className="sm:w-full md:w-1/3 lg:w-1/5 flex flex-col gap-2 h-[36vh]"> */}
         <div className="sm:w-full md:w-1/3 lg:w-1/5 flex flex-col gap-2 ">
           <InfoComponent
             settingConfig={settingConfig}
@@ -79,11 +133,11 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
             setSelectedChunk={setSelectedChunk}
             chunkTime={chunkTime}
             setCurrentPage={setCurrentPage}
+            messages={messages}
+            onFeatureClick={handleFeatureClick}
           />
         </div>
 
-        {/* Document Viewer */}
-        {/*<div className="sm:w-full lg:w-4/5 flex flex-col gap-2 h-[90vh]"> */}
         <div className="sm:w-full lg:w-4/5 flex flex-col gap-2">
           <InfoComponent
             settingConfig={settingConfig}
@@ -98,6 +152,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
             settingConfig={settingConfig}
             deletable={false}
             selectedDocument={null}
+            featureContent={featureContent}
+            featureType={featureType}
           />
         </div>
       </div>

@@ -7,3 +7,5 @@ export const getWebSocketApiHost = () => {
   const host = window.location.host;
   return `${protocol}//${host}/ws/generate_stream`;
 };
+
+

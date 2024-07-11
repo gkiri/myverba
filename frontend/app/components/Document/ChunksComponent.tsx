@@ -7,6 +7,7 @@ import { MdSummarize } from "react-icons/md";
 import { BsGraphUp } from "react-icons/bs";
 import UserModalComponent from "../Navigation/UserModal";
 import ChunkDropdown from "./ChunkDropdown";
+import { Message } from "../Chat/types";
 
 interface ChunksComponentProps {
   chunks: DocumentChunk[];
@@ -17,6 +18,8 @@ interface ChunksComponentProps {
   context: string;
   RAGConfig: RAGConfig | null;
   production: boolean;
+  messages: Message[];
+  onFeatureClick: (feature: string) => void;
 }
 
 interface FeatureButton {
@@ -35,14 +38,12 @@ const ChunksComponent: React.FC<ChunksComponentProps> = ({
   setCurrentPage,
   RAGConfig,
   production,
+  messages,
+  onFeatureClick,
 }) => {
   useEffect(() => {
-    if (chunks && chunks.length > 0) {
-      setSelectedChunk(chunks[0]);
-    } else {
-      setSelectedChunk(null);
-    }
-  }, [chunks]);
+    console.log("Messages in ChunksComponent:", messages);
+  }, [messages]);
 
   const openContextModal = () => {
     const modal = document.getElementById("context_modal");
@@ -65,9 +66,21 @@ const ChunksComponent: React.FC<ChunksComponentProps> = ({
       isRAGComponent: true
     },
     { icon: IoSparkles, label: "See Context", action: openContextModal },
-    { icon: FaListUl, label: "Bullet Points", action: () => console.log("Bullet Points") },
-    { icon: MdSummarize, label: "Summarize", action: () => console.log("Summarize") },
-    { icon: BsGraphUp, label: "Visualize", action: () => console.log("Visualize") },
+    { 
+      icon: FaListUl, 
+      label: "Bullet Points", 
+      action: () => onFeatureClick("bullet_points")
+    },
+    { 
+      icon: MdSummarize, 
+      label: "Summarize", 
+      action: () => onFeatureClick("summarize")
+    },
+    { 
+      icon: BsGraphUp, 
+      label: "Visualize", 
+      action: () => onFeatureClick("visualize")
+    },
   ];
 
   return (

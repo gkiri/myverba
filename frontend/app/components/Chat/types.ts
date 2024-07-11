@@ -14,6 +14,10 @@ export type QueryPayload = {
   took: number;
 };
 
+export type QueryPayload_Button = {
+  query: string;
+};
+
 export type Segment =
   | { type: "text"; content: string }
   | { type: "code"; language: string; content: string };

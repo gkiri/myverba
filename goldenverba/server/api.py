@@ -12,7 +12,8 @@ from starlette.websockets import WebSocketDisconnect
 from wasabi import msg  # type: ignore[import]
 import time
 import random
-
+from goldenverba.components.generation.GPT3Generator import GPT3Generator
+from goldenverba.components.generation.GroqGenerator import GroqGenerator
 
 from goldenverba import verba_manager
 from goldenverba.server.types import (
@@ -28,6 +29,23 @@ from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question # Add  Question model to types
 from pydantic import ValidationError
 load_dotenv()
+
+gpt3_generator = GPT3Generator()
+groq_generator = GroqGenerator()
+
+async def generate_llm_response(prompt: str,context: str) -> str:
+    """Helper function to generate LLM response."""
+    try:
+        full_response = ""
+        async for chunk in groq_generator.generate_stream([prompt], [context], []):
+            if chunk["finish_reason"] == "stop":
+                break
+            full_response += chunk["message"]
+        return full_response
+    except Exception as e:
+        msg.fail(f"LLM API call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
 
 # Check if runs in production
 production_key = os.environ.get("VERBA_PRODUCTION", "")
@@ -597,3 +615,121 @@ async def get_mock_exam_data():
     except Exception as e:
         msg.fail(f"Error retrieving mock exam questions: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
+# New routes for bullet points, summarize, and visualize (without chunk retrieval)
+# @app.post("/api/bullet_points")
+# async def bullet_points(payload: QueryPayload):
+#     print("Gkiri:bullet_points Format:", payload.query)
+#     msg.good(f"Received bullet points request: {payload.query}")
+#     try:
+#         # Construct prompt directly with user input
+#         prompt = f"Generate bullet points for the following: {payload.query}"
+
+#         # Generate bullet points (no context needed)
+#         bullet_points_response = await manager.generate_answer([prompt], [], []) 
+
+#         return JSONResponse(content={"bullet_points": bullet_points_response})
+
+#     except Exception as e:
+#         msg.warn(f"Bullet points generation failed: {str(e)}")
+#         return JSONResponse(
+#             content={"error": f"Bullet points generation failed: {str(e)}"}
+#         )
+
+
+# @app.post("/api/summarize")
+# async def summarize(payload: QueryPayload):
+#     print("Gkiri:summarize Format:", payload.query)
+#     msg.good(f"Received summarize request: {payload.query}")
+#     try:
+#         # Construct prompt directly with user input
+#         prompt = f"Summarize the following: {payload.query}"
+
+#         # Generate summary (no context needed)
+#         summary_response = await manager.generate_answer([prompt], [], [])
+
+#         return JSONResponse(content={"summary": summary_response})
+
+#     except Exception as e:
+#         msg.warn(f"Summarization failed: {str(e)}")
+#         return JSONResponse(content={"error": f"Summarization failed: {str(e)}"})
+
+
+# @app.post("/api/visualize")
+# async def visualize(payload: QueryPayload):
+#     print("Gkiri:visualize Format:", payload.query)
+#     msg.good(f"Received visualize request: {payload.query}")
+#     try:
+#         # Construct prompt directly with user input
+#         prompt = f"Generate a Mermaid code block to visualize the following: {payload.query}"
+
+#         # Generate Mermaid code (no context needed)
+#         mermaid_response = await manager.generate_answer([prompt], [], [])
+
+#         return JSONResponse(content={"mermaid_code": mermaid_response})
+
+#     except Exception as e:
+#         msg.warn(f"Visualization failed: {str(e)}")
+#         return JSONResponse(content={"error": f"Visualization failed: {str(e)}"})
+    
+    
+    
+@app.post("/api/bullet_points")
+async def bullet_points(payload: QueryPayload):
+    print("Gkiri:bullet_points Format:", payload.query)
+    msg.good(f"Received bullet points request: {payload.query}")
+    try:
+        #prompt = f"you will be given topic/text/ ,please generate concise bullet points for the following topic: {payload.query}"
+        prompt = "you will be given topic/text/ ,please generate concise bullet points for the following topic:"
+
+        bullet_points_response = await generate_llm_response(prompt,payload.query)
+        print("Gkiri:LLM output:", bullet_points_response)
+        return JSONResponse(content={"bullet_points": bullet_points_response})
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.warn(f"Bullet points generation failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Bullet points generation failed: {str(e)}"}
+        )
+
+@app.post("/api/summarize")
+async def summarize(payload: QueryPayload):
+    print("Gkiri:summarize Format:", payload.query)
+    msg.good(f"Received summarize request: {payload.query}")
+    try:
+        #prompt = f"Provide a concise summary of the following: {payload.query}"
+        
+        prompt = "Provide a concise summary of the following: "
+        summary_response = await generate_llm_response(prompt,payload.query)
+        print("Gkiri:LLM output:", summary_response)
+        return JSONResponse(content={"summary": summary_response})
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.warn(f"Summarization failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Summarization failed: {str(e)}"}
+        )
+
+@app.post("/api/visualize")
+async def visualize(payload: QueryPayload):
+    print("Gkiri:visualize Format:", payload.query)
+    msg.good(f"Received visualize request: {payload.query}")
+    try:
+        #prompt = f"Generate a Mermaid diagram code to visualize the following concept: {payload.query}. Provide only the Mermaid code without any explanations."
+        prompt = "Generate a Mermaid diagram code to visualize the following concept: Provide only the Mermaid code without any explanations."
+
+        mermaid_response = await generate_llm_response(prompt,payload.query)
+        print("Gkiri:LLM output:", mermaid_response)
+        return JSONResponse(content={"mermaid_code": mermaid_response})
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.warn(f"Visualization failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Visualization failed: {str(e)}"}
+        )

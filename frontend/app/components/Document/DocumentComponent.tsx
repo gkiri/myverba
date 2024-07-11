@@ -1,13 +1,9 @@
-"use client";
 import React, { useState, useEffect, useRef } from "react";
 import { DocumentChunk, Document, DocumentPayload } from "../Document/types";
 import ReactMarkdown from "react-markdown";
 import PulseLoader from "react-spinners/PulseLoader";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  oneDark,
-  oneLight,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { oneDark, oneLight } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { SettingsConfiguration } from "../Settings/types";
 import { FormattedDocument } from "../Document/types";
 import { splitDocument } from "./util";
@@ -15,8 +11,8 @@ import { FaExternalLinkAlt } from "react-icons/fa";
 import { MdOutlineSimCardDownload } from "react-icons/md";
 import { HiMiniSparkles } from "react-icons/hi2";
 import { MdDelete } from "react-icons/md";
-
 import UserModalComponent from "../Navigation/UserModal";
+import mermaid from "mermaid";
 
 interface DocumentComponentProps {
   settingConfig: SettingsConfiguration;
@@ -28,6 +24,8 @@ interface DocumentComponentProps {
   setDocuments?: (d: Document[] | null) => void;
   setTriggerReset?: (b: any) => void;
   production: boolean;
+  featureContent: string | null;
+  featureType: string | null;
 }
 
 const DocumentComponent: React.FC<DocumentComponentProps> = ({
@@ -40,10 +38,11 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
   setDocuments,
   setTriggerReset,
   production,
+  featureContent,
+  featureType,
 }) => {
   const [currentDocument, setCurrentDocument] = useState<Document | null>(null);
-  const [formattedDocument, setFormattedDocument] =
-    useState<FormattedDocument | null>(null);
+  const [formattedDocument, setFormattedDocument] = useState<FormattedDocument | null>(null);
   const [isFetching, setIsFetching] = useState(false);
   const [showWholeDocument, setWholeDocument] = useState(false);
 
@@ -56,6 +55,13 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
       setCurrentDocument(null);
     }
   }, [selectedChunk]);
+
+  useEffect(() => {
+    if (featureType === 'mermaid') {
+      mermaid.initialize({ startOnLoad: true });
+      mermaid.contentLoaded();
+    }
+  }, [featureContent, featureType]);
 
   const fetchDocuments = async () => {
     if (selectedChunk != null && APIhost != null) {
@@ -108,7 +114,6 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
   };
 
   const handleSourceClick = () => {
-    // Open a new tab with the specified URL
     window.open(currentDocument?.link, "_blank", "noopener,noreferrer");
   };
 
@@ -145,6 +150,48 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
       modal.showModal();
     }
   };
+
+  const renderFeatureContent = () => {
+    if (!featureContent) return null;
+
+    switch (featureType) {
+      case 'bullet_points':
+        return (
+          <div className="border-2 border-secondary-verba rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-2">Bullet Points</h3>
+            <ReactMarkdown>{featureContent}</ReactMarkdown>
+          </div>
+        );
+      case 'summary':
+        return (
+          <div className="border-2 border-secondary-verba rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-2">Summary</h3>
+            <ReactMarkdown>{featureContent}</ReactMarkdown>
+          </div>
+        );
+      case 'mermaid':
+        return (
+          <div className="border-2 border-secondary-verba rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-2">Visualization</h3>
+            <div className="mermaid">{featureContent}</div>
+          </div>
+        );
+      default:
+        return (
+          <div className="border-2 border-secondary-verba rounded-lg p-4">
+            <p>{featureContent}</p>
+          </div>
+        );
+    }
+  };
+
+  if (featureContent) {
+    return (
+      <div className="flex flex-col bg-bg-alt-verba rounded-lg shadow-lg p-5 text-text-verba gap-5 sm:h-[53.5vh] lg:h-[65vh] overflow-auto">
+        {renderFeatureContent()}
+      </div>
+    );
+  }
 
   if (currentDocument !== null && !isFetching) {
     return (
