@@ -1,9 +1,10 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ChatInterfaceComponent from "./ChatInterface";
 import { SettingsConfiguration } from "../Settings/types";
 import { DocumentChunk } from "../Document/types";
 import ChunksComponent from "../Document/ChunksComponent";
 import DocumentComponent from "../Document/DocumentComponent";
+import MermaidDiagram from "../Document/MermaidDiagram";  // Import the MermaidDiagram component
 import { RAGConfig } from "../RAG/types";
 import InfoComponent from "../Navigation/InfoComponent";
 import {
@@ -11,7 +12,7 @@ import {
   chunk_interface_info,
   chat_interface_info,
 } from "@/app/info";
-import { Message ,QueryPayload_Button } from "./types";
+import { Message, QueryPayload_Button } from "./types";
 
 interface ChatComponentProps {
   settingConfig: SettingsConfiguration;
@@ -36,18 +37,14 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   const [featureContent, setFeatureContent] = useState<string | null>(null);
   const [featureType, setFeatureType] = useState<string | null>(null);
 
-  // Add this useEffect to log messages whenever they change
   useEffect(() => {
     console.log("Messages updated in ChatComponent:", messages);
   }, [messages]);
 
   const handleFeatureClick = async (feature: string) => {
     console.log(`Clicked feature: ${feature}`);
-    console.log(`Backend route called: ${APIHost}/api/${feature}`);
     
     const lastMessage = messages.filter(msg => msg.type === "system").pop();
-    console.log(`Gkiri chat messages:`,messages);
-    console.log(`Gkiri Last chat message:`,lastMessage);
     
     if (!lastMessage) {
       setFeatureContent("There are no chat messages available. Please ask the user to query.");
@@ -56,12 +53,10 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     }
 
     const content = lastMessage.content;
-    console.log(`Last AI message: ${content}`);
 
     try {
       const payload: QueryPayload_Button = { query: content };
-      console.log(`Gkiri Last chat message: ${payload.query}`);
-      console.log(`Gkiri Backend route called: ${APIHost}/api/${feature}`);
+      console.log(`Backend route called: ${APIHost}/api/${feature}`);
 
       const response = await fetch(`${APIHost}/api/${feature}`, {
         method: 'POST',
@@ -79,19 +74,63 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       console.log(`Backend response for ${feature}:`, data);
 
       if (feature === 'bullet_points') {
-        setFeatureContent(data.bullet_points);
+        // Handle bullet points
+        let bulletPointsArray: string[];
+        if (Array.isArray(data.bullet_points)) {
+          bulletPointsArray = data.bullet_points;
+        } else if (typeof data.bullet_points === 'string') {
+          bulletPointsArray = data.bullet_points.split('\n').filter(Boolean);
+        } else if (typeof data.bullet_points === 'object') {
+          bulletPointsArray = Object.values(data.bullet_points);
+        } else {
+          throw new Error('Unexpected data structure for bullet points');
+        }
+        
+        const bulletPointsMarkdown = bulletPointsArray.map((point: string) => `- ${point}`).join('\n');
+        setFeatureContent(bulletPointsMarkdown);
         setFeatureType('bullet_points');
       } else if (feature === 'summarize') {
         setFeatureContent(data.summary);
         setFeatureType('summary');
       } else if (feature === 'visualize') {
-        setFeatureContent(data.mermaid_code);
-        setFeatureType('mermaid');
+        if (typeof data.mermaid_code === 'string') {
+          console.log('Raw Mermaid code:', data.mermaid_code);
+          setFeatureContent(data.mermaid_code);
+          setFeatureType('visualization');
+        } else {
+          throw new Error('Unexpected data structure for Mermaid diagram');
+        }
       }
     } catch (error) {
       console.error(`Error fetching ${feature}:`, error);
       setFeatureContent(`Error: ${error.message}`);
       setFeatureType(null);
+    }
+  };
+
+  const renderFeatureContent = () => {
+    if (!featureContent) return null;
+
+    switch (featureType) {
+      case 'bullet_points':
+      case 'summary':
+        return (
+          <DocumentComponent
+            production={production}
+            setSelectedChunk={setSelectedChunk}
+            selectedChunk={selectedChunk}
+            APIhost={APIHost}
+            settingConfig={settingConfig}
+            deletable={false}
+            selectedDocument={null}
+            featureContent={featureContent}
+            featureType={featureType}
+          />
+        );
+      case 'visualization':
+        return <MermaidDiagram code={featureContent} />;
+      default:
+        return null;
     }
   };
 
@@ -144,17 +183,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
             tooltip_text={document_interface_info}
             display_text="Document Viewer"
           />
-          <DocumentComponent
-            production={production}
-            setSelectedChunk={setSelectedChunk}
-            selectedChunk={selectedChunk}
-            APIhost={APIHost}
-            settingConfig={settingConfig}
-            deletable={false}
-            selectedDocument={null}
-            featureContent={featureContent}
-            featureType={featureType}
-          />
+          {renderFeatureContent()}
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ import { MdOutlineSimCardDownload } from "react-icons/md";
 import { HiMiniSparkles } from "react-icons/hi2";
 import { MdDelete } from "react-icons/md";
 import UserModalComponent from "../Navigation/UserModal";
-import mermaid from "mermaid";
+import MermaidDiagram from "./MermaidDiagram";
 
 interface DocumentComponentProps {
   settingConfig: SettingsConfiguration;
@@ -55,13 +55,6 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
       setCurrentDocument(null);
     }
   }, [selectedChunk]);
-
-  useEffect(() => {
-    if (featureType === 'mermaid') {
-      mermaid.initialize({ startOnLoad: true });
-      mermaid.contentLoaded();
-    }
-  }, [featureContent, featureType]);
 
   const fetchDocuments = async () => {
     if (selectedChunk != null && APIhost != null) {
@@ -154,32 +147,36 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
   const renderFeatureContent = () => {
     if (!featureContent) return null;
 
+    const commonClasses = "bg-bg-alt-verba rounded-lg p-6 shadow-lg prose prose-verba max-w-none";
+
     switch (featureType) {
       case 'bullet_points':
         return (
-          <div className="border-2 border-secondary-verba rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-2">Bullet Points</h3>
-            <ReactMarkdown>{featureContent}</ReactMarkdown>
+          <div className={commonClasses}>
+            <h2 className="text-2xl font-bold mb-4 text-primary-verba">Key Points</h2>
+            <ReactMarkdown
+              components={{
+                ul: ({node, ...props}) => <ul className="list-disc pl-5 space-y-2" {...props} />,
+                li: ({node, ...props}) => <li className="text-text-verba" {...props} />,
+              }}
+            >
+              {featureContent}
+            </ReactMarkdown>
           </div>
         );
       case 'summary':
         return (
-          <div className="border-2 border-secondary-verba rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-2">Summary</h3>
+          <div className={commonClasses}>
+            <h2 className="text-2xl font-bold mb-4 text-primary-verba">Summary</h2>
             <ReactMarkdown>{featureContent}</ReactMarkdown>
           </div>
         );
-      case 'mermaid':
-        return (
-          <div className="border-2 border-secondary-verba rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-2">Visualization</h3>
-            <div className="mermaid">{featureContent}</div>
-          </div>
-        );
+      case 'visualization':
+        return <MermaidDiagram code={featureContent} />;
       default:
         return (
-          <div className="border-2 border-secondary-verba rounded-lg p-4">
-            <p>{featureContent}</p>
+          <div className={commonClasses}>
+            <ReactMarkdown>{featureContent}</ReactMarkdown>
           </div>
         );
     }

@@ -720,7 +720,9 @@ async def visualize(payload: QueryPayload):
     msg.good(f"Received visualize request: {payload.query}")
     try:
         #prompt = f"Generate a Mermaid diagram code to visualize the following concept: {payload.query}. Provide only the Mermaid code without any explanations."
-        prompt = "Generate a Mermaid diagram code to visualize the following concept: Provide only the Mermaid code without any explanations."
+        #prompt = "Generate a Mermaid diagram code to visualize the following concept: Provide only the Mermaid code without any explanations."
+
+        prompt = "You are an assistant to help user build diagram with Mermaid.You only need to return the output Mermaid code block.Do not include any description, do not include the Code (no ```).";
 
         mermaid_response = await generate_llm_response(prompt,payload.query)
         print("Gkiri:LLM output:", mermaid_response)
