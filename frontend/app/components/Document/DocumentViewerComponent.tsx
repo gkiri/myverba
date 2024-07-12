@@ -32,7 +32,7 @@ const DocumentViewerComponent: React.FC<DocumentViewerComponentProps> = ({
 
   return (
     <div className="flex sm:flex-col md:flex-row justify-center items-start gap-3">
-      {/* Chat Interface */}
+      {/* Document Search */}
       <div className="sm:w-full md:w-2/4">
         <DocumentSearchComponent
           production={production}
@@ -48,6 +48,7 @@ const DocumentViewerComponent: React.FC<DocumentViewerComponentProps> = ({
         />
       </div>
 
+      {/* Document Viewer */}
       <div className="sm:w-full md:w-2/4">
         <DocumentComponent
           production={production}
@@ -59,6 +60,8 @@ const DocumentViewerComponent: React.FC<DocumentViewerComponentProps> = ({
           APIhost={APIHost}
           settingConfig={settingConfig}
           selectedDocument={null}
+          featureContent={null}
+          featureType={null}
         />
       </div>
     </div>

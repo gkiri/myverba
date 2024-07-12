@@ -183,7 +183,17 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
             tooltip_text={document_interface_info}
             display_text="Document Viewer"
           />
-          {renderFeatureContent()}
+          <DocumentComponent
+            production={production}
+            setSelectedChunk={setSelectedChunk}
+            selectedChunk={selectedChunk}
+            APIhost={APIHost}
+            settingConfig={settingConfig}
+            deletable={false}
+            selectedDocument={null}
+            featureContent={featureContent}
+            featureType={featureType}
+          />
         </div>
       </div>
     </div>

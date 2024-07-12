@@ -28,6 +28,7 @@ from goldenverba.server.types import (
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question # Add  Question model to types
 from pydantic import ValidationError
+from goldenverba.server.prompts import get_prompt
 load_dotenv()
 
 gpt3_generator = GPT3Generator()
@@ -722,9 +723,11 @@ async def visualize(payload: QueryPayload):
         #prompt = f"Generate a Mermaid diagram code to visualize the following concept: {payload.query}. Provide only the Mermaid code without any explanations."
         #prompt = "Generate a Mermaid diagram code to visualize the following concept: Provide only the Mermaid code without any explanations."
 
-        prompt = "You are an assistant to help user build diagram with Mermaid.You only need to return the output Mermaid code block.Do not include any description, do not include the Code (no ```).";
+        #prompt = "You are an assistant to help user build diagram with Mermaid.You only need to return the output Mermaid code block.Do not include any description, do not include the Code (no ```).";
+        
+        summary_prompt = get_prompt("VISUALIZE", topic=payload.query)
 
-        mermaid_response = await generate_llm_response(prompt,payload.query)
+        mermaid_response = await generate_llm_response(summary_prompt,payload.query)
         print("Gkiri:LLM output:", mermaid_response)
         return JSONResponse(content={"mermaid_code": mermaid_response})
     except HTTPException as e:

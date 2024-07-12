@@ -1,5 +1,6 @@
 from goldenverba.components.generation.GPT4Generator import GPT4Generator
 import os
+import openai
 
 class GPT3Generator(GPT4Generator):
     """
@@ -15,6 +16,9 @@ class GPT3Generator(GPT4Generator):
         self.requires_env = ["OPENAI_API_KEY"]
         self.streamable = True
         self.context_window = 8000
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        print("MODEL :: gpt-3.5-turbo-0125")
+        openai.api_key = self.openai_api_key
 
     async def generate_stream(
         self,
@@ -41,19 +45,18 @@ class GPT3Generator(GPT4Generator):
         messages = self.prepare_messages(queries, context, conversation)
 
         try:
-            import openai
 
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-            base_url = os.environ.get("OPENAI_BASE_URL", "")
-            if base_url:
-                openai.api_base = base_url
+            # openai.api_key = os.getenv("OPENAI_API_KEY")
+            # base_url = os.environ.get("OPENAI_BASE_URL", "")
+            # if base_url:
+            #     openai.api_base = base_url
 
-            if "OPENAI_API_TYPE" in os.environ:
-                openai.api_type = os.getenv("OPENAI_API_TYPE")
-            if "OPENAI_API_BASE" in os.environ:
-                openai.api_base = os.getenv("OPENAI_API_BASE")
-            if "OPENAI_API_VERSION" in os.environ:
-                openai.api_version = os.getenv("OPENAI_API_VERSION")
+            # if "OPENAI_API_TYPE" in os.environ:
+            #     openai.api_type = os.getenv("OPENAI_API_TYPE")
+            # if "OPENAI_API_BASE" in os.environ:
+            #     openai.api_base = os.getenv("OPENAI_API_BASE")
+            # if "OPENAI_API_VERSION" in os.environ:
+            #     openai.api_version = os.getenv("OPENAI_API_VERSION")
 
             chat_completion_arguments = {
                 "model": self.model_name,

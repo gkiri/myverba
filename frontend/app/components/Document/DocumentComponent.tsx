@@ -368,21 +368,23 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
         />
       </div>
     );
-  } else {
+  }
+
+  // Add this new return statement for the initial/empty state
+  if (!currentDocument && !featureContent && !isFetching) {
     return (
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col bg-bg-alt-verba rounded-lg items-center justify-center shadow-lg p-5 text-text-verba gap-5 sm:h-[47vh] lg:h-[65vh] overflow-auto">
-          {isFetching && (
-            <div className="flex items-center justify-center pl-4 mb-4 gap-3">
-              <PulseLoader
-                color={settingConfig.Customization.settings.text_color.color}
-                loading={true}
-                size={10}
-                speedMultiplier={0.75}
-              />
-              <p>Loading Document...</p>
-            </div>
-          )}
+      <div className="flex flex-col bg-bg-alt-verba rounded-lg shadow-lg p-5 text-text-verba sm:h-[53.5vh] lg:h-[65vh] overflow-auto">
+        <div className="flex flex-col items-center justify-center h-full text-center">
+          <svg className="w-12 h-12 mb-4 text-secondary-verba" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h2 className="text-xl font-semibold mb-2 text-primary-verba">Welcome to the Document Viewer</h2>
+          <p className="text-sm text-text-verba mb-3">Your gateway to insightful document analysis</p>
+          <ul className="text-xs text-text-alt-verba">
+            <li>• Select a document from the list</li>
+            <li>• Use features like Summarize or Visualize</li>
+            <li>• Explore context and gain insights</li>
+          </ul>
         </div>
       </div>
     );
