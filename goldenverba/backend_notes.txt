@@ -1,0 +1,23 @@
+1. 
+(base) PS C:\Users\gkiran> conda activate verba
+(verba) PS C:\Users\gkiran>
+
+
+Note:verba_manager_UT has change that requires docker to runwith weavaite container alone on port 3000
+
+            weaviate_url = "http://localhost:3000"
+            client = weaviate.Client(
+                    url=weaviate_url,
+                    additional_headers=additional_header,
+                )
+
+
+2. start docker and make sure wevaite runs and kill verba backend
+
+
+3.
+python -m goldenverba.server.cli start
+
+
+4.
+use test_routes.py for curl cals to test all backedn routes

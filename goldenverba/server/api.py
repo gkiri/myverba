@@ -34,7 +34,20 @@ load_dotenv()
 gpt3_generator = GPT3Generator()
 groq_generator = GroqGenerator()
 
-async def generate_llm_response(prompt: str,context: str) -> str:
+async def generate_gpt3_response(prompt: str,context: str) -> str:
+    """Helper function to generate LLM response."""
+    try:
+        full_response = ""
+        async for chunk in gpt3_generator.generate_stream([prompt], [context], []):
+            if chunk["finish_reason"] == "stop":
+                break
+            full_response += chunk["message"]
+        return full_response
+    except Exception as e:
+        msg.fail(f"gpt3 API call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
+async def generate_groq_response(prompt: str,context: str) -> str:
     """Helper function to generate LLM response."""
     try:
         full_response = ""
@@ -44,9 +57,8 @@ async def generate_llm_response(prompt: str,context: str) -> str:
             full_response += chunk["message"]
         return full_response
     except Exception as e:
-        msg.fail(f"LLM API call failed: {str(e)}")
+        msg.fail(f"groq API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
-
 
 # Check if runs in production
 production_key = os.environ.get("VERBA_PRODUCTION", "")
@@ -683,7 +695,7 @@ async def bullet_points(payload: QueryPayload):
         #prompt = f"you will be given topic/text/ ,please generate concise bullet points for the following topic: {payload.query}"
         prompt = "you will be given topic/text/ ,please generate concise bullet points for the following topic:"
 
-        bullet_points_response = await generate_llm_response(prompt,payload.query)
+        bullet_points_response = await generate_groq_response(prompt,payload.query)
         print("Gkiri:LLM output:", bullet_points_response)
         return JSONResponse(content={"bullet_points": bullet_points_response})
     except HTTPException as e:
@@ -703,7 +715,7 @@ async def summarize(payload: QueryPayload):
         #prompt = f"Provide a concise summary of the following: {payload.query}"
         
         prompt = "Provide a concise summary of the following: "
-        summary_response = await generate_llm_response(prompt,payload.query)
+        summary_response = await generate_groq_response(prompt,payload.query)
         print("Gkiri:LLM output:", summary_response)
         return JSONResponse(content={"summary": summary_response})
     except HTTPException as e:
@@ -727,7 +739,7 @@ async def visualize(payload: QueryPayload):
         
         summary_prompt = get_prompt("VISUALIZE", topic=payload.query)
 
-        mermaid_response = await generate_llm_response(summary_prompt,payload.query)
+        mermaid_response = await generate_gpt3_response(summary_prompt,payload.query)
         print("Gkiri:LLM output:", mermaid_response)
         return JSONResponse(content={"mermaid_code": mermaid_response})
     except HTTPException as e:
