@@ -7,7 +7,7 @@ from wasabi import msg
 from weaviate.embedded import EmbeddedOptions
 
 import goldenverba.components.schema.schema_generation as schema_manager
-
+from goldenverba.server.debug_utils import debug_log, info_log, warn_log, error_log
 from goldenverba.components.chunk import Chunk
 from goldenverba.components.document import Document
 from goldenverba.components.types import FileData
@@ -642,12 +642,14 @@ class VerbaManager:
             semantic_query = self.embedder_manager.embedders[
                 self.embedder_manager.selected_embedder
             ].conversation_to_query(queries, conversation)
+            debug_log(f"Semantic query: {semantic_query}")
             (
                 semantic_result,
                 distance,
             ) = self.embedder_manager.embedders[
                 self.embedder_manager.selected_embedder
             ].retrieve_semantic_cache(self.client, semantic_query)
+            debug_log(f"Semantic result: {semantic_result}, Distance: {distance}")
 
         if semantic_result is not None:
             yield {
@@ -658,6 +660,7 @@ class VerbaManager:
             }
 
         else:
+            debug_log("Calling generator...")
             full_text = ""
             async for result in self.generator_manager.generators[
                 self.generator_manager.selected_generator

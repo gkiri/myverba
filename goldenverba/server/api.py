@@ -14,6 +14,7 @@ import time
 import random
 from goldenverba.components.generation.GPT3Generator import GPT3Generator
 from goldenverba.components.generation.GroqGenerator import GroqGenerator
+from goldenverba.server.debug_utils import debug_log, info_log, warn_log, error_log
 
 from goldenverba import verba_manager
 from goldenverba.server.types import (
@@ -689,14 +690,15 @@ async def get_mock_exam_data():
     
 @app.post("/api/bullet_points")
 async def bullet_points(payload: QueryPayload):
-    print("Gkiri:bullet_points Format:", payload.query)
-    msg.good(f"Received bullet points request: {payload.query}")
+    
+    debug_log(f"Received bullet points request: {payload.query}")
+    
     try:
         #prompt = f"you will be given topic/text/ ,please generate concise bullet points for the following topic: {payload.query}"
         prompt = "you will be given topic/text/ ,please generate concise bullet points for the following topic:"
 
         bullet_points_response = await generate_groq_response(prompt,payload.query)
-        print("Gkiri:LLM output:", bullet_points_response)
+        debug_log("Gkiri:LLM output:", bullet_points_response)
         return JSONResponse(content={"bullet_points": bullet_points_response})
     except HTTPException as e:
         raise e
@@ -709,14 +711,15 @@ async def bullet_points(payload: QueryPayload):
 
 @app.post("/api/summarize")
 async def summarize(payload: QueryPayload):
-    print("Gkiri:summarize Format:", payload.query)
-    msg.good(f"Received summarize request: {payload.query}")
+    
+    debug_log(f"Received summarize request: {payload.query}")
+    
     try:
         #prompt = f"Provide a concise summary of the following: {payload.query}"
         
         prompt = "Provide a concise summary of the following: "
         summary_response = await generate_groq_response(prompt,payload.query)
-        print("Gkiri:LLM output:", summary_response)
+        debug_log("Gkiri:LLM output:", summary_response)
         return JSONResponse(content={"summary": summary_response})
     except HTTPException as e:
         raise e
@@ -729,8 +732,9 @@ async def summarize(payload: QueryPayload):
 
 @app.post("/api/visualize")
 async def visualize(payload: QueryPayload):
-    print("Gkiri:visualize Format:", payload.query)
-    msg.good(f"Received visualize request: {payload.query}")
+    
+    debug_log(f"Received visualize request: {payload.query}")
+    
     try:
         #prompt = f"Generate a Mermaid diagram code to visualize the following concept: {payload.query}. Provide only the Mermaid code without any explanations."
         #prompt = "Generate a Mermaid diagram code to visualize the following concept: Provide only the Mermaid code without any explanations."
@@ -740,7 +744,8 @@ async def visualize(payload: QueryPayload):
         summary_prompt = get_prompt("VISUALIZE", topic=payload.query)
 
         mermaid_response = await generate_gpt3_response(summary_prompt,payload.query)
-        print("Gkiri:LLM output:", mermaid_response)
+        #mermaid_response = await generate_groq_response(summary_prompt,payload.query)
+        debug_log("Gkiri:LLM output:", mermaid_response)
         return JSONResponse(content={"mermaid_code": mermaid_response})
     except HTTPException as e:
         raise e
