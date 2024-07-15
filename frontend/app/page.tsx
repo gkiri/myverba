@@ -1,6 +1,7 @@
-"use client";
+'use client'
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 import Navbar from "./components/Navigation/NavbarComponent";
 import SettingsComponent from "./components/Settings/SettingsComponent";
 import ChatComponent from "./components/Chat/ChatComponent";
@@ -16,14 +17,18 @@ import { fonts, FontKey } from "./info";
 import PulseLoader from "react-spinners/PulseLoader";
 import MockExamPage from "./mock-exam/page";
 import MockExamStartPage from "./components/MockExam/MockExamStartPage";
-import AddMocksPage from "./add-mocks/page"; 
+import AddMocksPage from "./add-mocks/page";
+import { useAuth } from './contexts/AuthContext';
 
 const API_HOST = "http://localhost:8000"; // Define your API host here
 
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
   // Page States
   const [currentPage, setCurrentPage] = useState<
-    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG"
+    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS"
   >("CHAT");
 
   const [production, setProduction] = useState(false);
@@ -36,7 +41,7 @@ export default function Home() {
   const fontKey = baseSetting
     ? (baseSetting[settingTemplate].Customization.settings.font
         .value as FontKey)
-    : null; // Safely cast if you're sure, or use a check
+    : null;
   const fontClassName = fontKey ? fonts[fontKey]?.className || "" : "";
 
   // RAG Config
@@ -93,13 +98,19 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error detecting host:", error);
-      setAPIHost(null); // Optionally handle the error by setting the state to an empty string or a specific error message
+      setAPIHost(null);
     }
   };
 
   useEffect(() => {
     fetchHost();
   }, []);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/login');
+    }
+  }, [user, loading, router]);
 
   const importConfig = async () => {
     if (!APIHost || !baseSetting) {
@@ -180,6 +191,19 @@ export default function Home() {
       );
     }
   }, [baseSetting, settingTemplate]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen gap-2">
+        <PulseLoader loading={true} size={12} speedMultiplier={0.75} />
+        <p>Loading Verba</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // This will prevent the main content from rendering before redirect
+  }
 
   return (
     <main
@@ -276,9 +300,10 @@ export default function Home() {
             />
           )}
 
-          {currentPage === 'MOCK_EXAM_START' && (<MockExamStartPage APIHost={API_HOST} setCurrentPage={setCurrentPage} />)} 
+          {currentPage === 'MOCK_EXAM_START' && (
+            <MockExamStartPage APIHost={API_HOST} setCurrentPage={setCurrentPage} />
+          )} 
 
-          {/* Render MockExamPage when currentPage is "MOCK_EXAM" */}
           {currentPage === "MOCK_EXAM" && (
             <MockExamPage 
               production={production}
@@ -287,10 +312,9 @@ export default function Home() {
             />
           )}
 
-          {/* Render AddMocksPage */}
           {currentPage === "ADD_MOCKS" && !production && (
             <AddMocksPage 
-                settingConfig={baseSetting[settingTemplate]} // Pass necessary props 
+                settingConfig={baseSetting[settingTemplate]}
                 APIHost={APIHost} 
             /> 
           )}

@@ -1,4 +1,3 @@
----
 version: '3.4'
 
 services:
@@ -17,7 +16,7 @@ services:
       - UNSTRUCTURED_API_KEY=$UNSTRUCTURED_API_KEY
       - UNSTRUCTURED_API_URL=$UNSTRUCTURED_API_URL
       - GITHUB_TOKEN=$GITHUB_TOKEN
-      ## IF YOU WANT AUTHENTICATION, UNCOMENT BELLOW 
+      ## IF YOU WANT AUTHENTICATION, UNCOMENT BELOW 
       ## AND ADD WEAVIATE SERVICE
       #- WEAVIATE_API_KEY_VERBA=adminkey
 
@@ -44,7 +43,6 @@ services:
     image: semitechnologies/weaviate:1.24.2
     ports:
       - 8080:8080
-      - 3000:8080
     volumes:
       - weaviate_data:/var/lib/weaviate
     restart: on-failure:0
@@ -72,4 +70,3 @@ services:
 
 volumes:
   weaviate_data: {}
-...

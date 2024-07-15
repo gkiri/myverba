@@ -1,21 +1,21 @@
-"use client";
+'use client'
 
 import React, { useState, useEffect } from "react";
-
-import { IoChatbubbleSharp } from "react-icons/io5";
-import { IoDocumentSharp } from "react-icons/io5";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { IoChatbubbleSharp, IoDocumentSharp, IoSettingsSharp } from "react-icons/io5";
 import { HiOutlineStatusOnline } from "react-icons/hi";
 import { IoMdAddCircle } from "react-icons/io";
-import { IoMdAddCircleOutline } from "react-icons/io";  //  Or a different suitable icon
-import { IoSettingsSharp } from "react-icons/io5";
 import { FaGithub } from "react-icons/fa";
 import { IoBuildSharp } from "react-icons/io5";
 import { LuMenu } from "react-icons/lu";
+import { IoSchoolSharp } from "react-icons/io5";
+import { IoMdAddCircleOutline } from "react-icons/io";
 
 import NavbarButton from "./NavButton";
 import MockExamButton from "./MockExamButton";
 import { getGitHubStars } from "./util";
-import AddMocksPage from "../../add-mocks/page";
+import { useAuth } from '../../contexts/AuthContext';
 
 interface NavbarProps {
   imageSrc: string;
@@ -26,16 +26,9 @@ interface NavbarProps {
   APIHost: string | null;
   production: boolean;
   setCurrentPage: (
-    page: "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG"
+    page: "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS"
   ) => void;
 }
-
-const formatGitHubNumber = (num: number): string => {
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  }
-  return num.toString();
-};
 
 const Navbar: React.FC<NavbarProps> = ({
   imageSrc,
@@ -49,30 +42,33 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [gitHubStars, setGitHubStars] = useState("0");
   const icon_size = 18;
+  const { user, signOut } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    // Declare an asynchronous function inside the useEffect
     const fetchGitHubStars = async () => {
       try {
-        // Await the asynchronous call to getGitHubStars
         const response: number = await getGitHubStars();
-
         if (response) {
-          // Now response is the resolved value of the promise
-          const formatedStars = formatGitHubNumber(response);
-          setGitHubStars(formatedStars);
+          const formattedStars = formatGitHubNumber(response);
+          setGitHubStars(formattedStars);
         }
       } catch (error) {
         console.error("Failed to fetch GitHub stars:", error);
       }
     };
 
-    // Call the async function
     fetchGitHubStars();
   }, []);
 
+  const formatGitHubNumber = (num: number): string => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    }
+    return num.toString();
+  };
+
   const handleGitHubClick = () => {
-    // Open a new tab with the specified URL
     window.open(
       "https://github.com/weaviate/verba",
       "_blank",
@@ -80,11 +76,20 @@ const Navbar: React.FC<NavbarProps> = ({
     );
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div className="flex justify-between items-center mb-10">
       {/* Logo, Title, Subtitle */}
       <div className="flex flex-row items-center gap-5">
-        <img src={imageSrc} width={80} className="flex"></img>
+        <img src={imageSrc} width={80} className="flex" alt="Logo" />
         <div className="flex flex-col lg:flex-row lg:items-end justify-center lg:gap-3">
           <p className="sm:text-2xl md:text-3xl text-text-verba">{title}</p>
           <p className="sm:text-sm text-base text-text-alt-verba font-light">
@@ -99,7 +104,7 @@ const Navbar: React.FC<NavbarProps> = ({
         {/* Pages */}
         <div className="lg:flex hidden lg:flex-row items-center lg:gap-3 justify-between">
           <div
-            className={` ${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
+            className={`${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
           ></div>
           <NavbarButton
             hide={false}
@@ -132,7 +137,7 @@ const Navbar: React.FC<NavbarProps> = ({
             setPage="STATUS"
           />
           <div
-            className={` ${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
+            className={`${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
           ></div>
           <NavbarButton
             hide={production}
@@ -168,34 +173,16 @@ const Navbar: React.FC<NavbarProps> = ({
             className={`sm:h-[3vh] lg:h-[5vh] mx-1 hidden sm:block bg-text-alt-verba w-px`}
           ></div>
 
-          {/* commenting github and verba version number*/
-          
-          /* <button
-            className={`md:hidden btn md:btn-sm lg:btn-md lg:flex items-center justify-center border-none bg-secondary-verba hover:bg-button-hover-verba`}
-            onClick={handleGitHubClick}
-          >
-            <FaGithub size={icon_size} className="text-text-verba" />
-            <p className="text-xs sm:hidden md:flex text-text-verba ">
-              {gitHubStars}
-            </p>
-          </button>
-          <p className="hidden lg:flex text-xs text-text-alt-verba">
-            {version}
-          </p> */}
-
-
-
-          {/* Mock Exam Button -  NEW */}
           <MockExamButton  
             APIHost={APIHost} 
             currentPage={currentPage} 
             setCurrentPage={setCurrentPage}
-          /> 
+          />
 
           <NavbarButton
             hide={production}
             APIHost={APIHost}
-            Icon={IoMdAddCircleOutline} // Use the new icon 
+            Icon={IoMdAddCircleOutline}
             iconSize={icon_size}
             title="Add Mocks" 
             currentPage={currentPage}
@@ -203,83 +190,98 @@ const Navbar: React.FC<NavbarProps> = ({
             setPage="ADD_MOCKS" 
           />
 
-          </div>
+          {/* Authentication Buttons */}
+          {user ? (
+            <button
+              onClick={handleLogout}
+              className="btn md:btn-sm lg:btn-md flex items-center justify-center border-none bg-warning-verba hover:bg-button-hover-verba"
+            >
+              Logout
+            </button>
+          ) : (
+            <>
+              <Link href="/auth/login">
+                <button className="btn md:btn-sm lg:btn-md flex items-center justify-center border-none bg-secondary-verba hover:bg-button-hover-verba">
+                  Login
+                </button>
+              </Link>
+              <Link href="/auth/signup">
+                <button className="btn md:btn-sm lg:btn-md flex items-center justify-center border-none bg-primary-verba hover:bg-button-hover-verba">
+                  Sign Up
+                </button>
+              </Link>
+            </>
+          )}
+        </div>
 
-        {/* Menu */}
-        <div className="flex flex-row items-center sm:gap-1 lg:gap-5 justify-between">
-          <div className="lg:hidden sm:flex md:ml-4 sm:mr-8">
-            <ul className="menu md:menu-md sm:menu-sm sm:menu-horizontal bg-base-200 rounded-box bg-bg-alt-verba z-50">
-              <li>
-                <details>
-                  <summary>
-                    <LuMenu size={20} />
-                  </summary>
-                  <ul className="bg-bg-alt-verba">
-                    <li
-                      onClick={(e) => {
-                        setCurrentPage("CHAT");
-                      }}
-                    >
-                      <a>Chat</a>
+        {/* Menu for mobile */}
+        <div className="lg:hidden sm:flex md:ml-4 sm:mr-8">
+          <ul className="menu md:menu-md sm:menu-sm sm:menu-horizontal bg-base-200 rounded-box bg-bg-alt-verba z-50">
+            <li>
+              <details>
+                <summary>
+                  <LuMenu size={20} />
+                </summary>
+                <ul className="bg-bg-alt-verba">
+                  <li onClick={() => setCurrentPage("CHAT")}>
+                    <a>Chat</a>
+                  </li>
+                  <li onClick={() => setCurrentPage("DOCUMENTS")}>
+                    <a>Documents</a>
+                  </li>
+                  {!production && (
+                    <li onClick={() => setCurrentPage("STATUS")}>
+                      <a>Status</a>
                     </li>
-                    <li
-                      onClick={(e) => {
-                        setCurrentPage("DOCUMENTS");
-                      }}
-                    >
-                      <a>Documents</a>
+                  )}
+                  {!production && (
+                    <li onClick={() => setCurrentPage("ADD")}>
+                      <a>Add Documents</a>
                     </li>
-                    {!production && (
-                      <li
-                        onClick={(e) => {
-                          setCurrentPage("STATUS");
-                        }}
-                      >
-                        <a>Status</a>
-                      </li>
-                    )}
-
-                    {!production && (
-                      <li
-                        onClick={(e) => {
-                          setCurrentPage("ADD");
-                        }}
-                      >
-                        <a>Add Documents</a>
-                      </li>
-                    )}
-
-                    {!production && (
-                      <li
-                        onClick={(e) => {
-                          setCurrentPage("RAG");
-                        }}
-                      >
-                        <a>RAG</a>
-                      </li>
-                    )}
-
-                    {!production && (
-                      <li
-                        onClick={(e) => {
-                          setCurrentPage("SETTINGS");
-                        }}
-                      >
-                        <a>Settings</a>
-                      </li>
-                    )}
-
-                    <li onClick={handleGitHubClick}>
-                      <a>GitHub</a>
+                  )}
+                  {!production && (
+                    <li onClick={() => setCurrentPage("RAG")}>
+                      <a>RAG</a>
                     </li>
-                    <li className="items-center justify-center text-xs text-text-alt-verba mt-2">
-                      {version}
+                  )}
+                  {!production && (
+                    <li onClick={() => setCurrentPage("SETTINGS")}>
+                      <a>Settings</a>
                     </li>
-                  </ul>
-                </details>
-              </li>
-            </ul>
-          </div>
+                  )}
+                  <li onClick={() => setCurrentPage("MOCK_EXAM_START")}>
+                    <a>Mock Tests</a>
+                  </li>
+                  {!production && (
+                    <li onClick={() => setCurrentPage("ADD_MOCKS")}>
+                      <a>Add Mocks</a>
+                    </li>
+                  )}
+                  {/* Authentication Menu Items */}
+                  {user ? (
+                    <li onClick={handleLogout}>
+                      <a>Logout</a>
+                    </li>
+                  ) : (
+                    <>
+                      <li onClick={() => router.push('/auth/login')}>
+                        <a>Login</a>
+                      </li>
+                      <li onClick={() => router.push('/auth/signup')}>
+                        <a>Sign Up</a>
+                      </li>
+                    </>
+                  )}
+                  <li onClick={handleGitHubClick}>
+                    <a>GitHub</a>
+                  </li>
+                  <li className="items-center justify-center text-xs text-text-alt-verba mt-2">
+                    {version}
+                  </li>
+                </ul>
+              </details>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
