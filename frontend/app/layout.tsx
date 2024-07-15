@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
-import { detectHost } from "./api";
+import AuthProviderWrapper from './AuthProviderWrapper'
 
 export const metadata: Metadata = {
   title: "Verba",
@@ -16,8 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <link rel="icon" href="/icon.ico" />
-      {/* <link rel="icon" href="/icon.ico" /> */}
-      <body>{children}</body>
+      <body>
+        <AuthProviderWrapper>{children}</AuthProviderWrapper>
+      </body>
     </html>
   );
 }
