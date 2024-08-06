@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 import Navbar from "./components/Navigation/NavbarComponent";
 import SettingsComponent from "./components/Settings/SettingsComponent";
 import ChatComponent from "./components/Chat/ChatComponent";
@@ -16,14 +18,17 @@ import { fonts, FontKey } from "./info";
 import PulseLoader from "react-spinners/PulseLoader";
 import MockExamPage from "./mock-exam/page";
 import MockExamStartPage from "./components/MockExam/MockExamStartPage";
-import AddMocksPage from "./add-mocks/page"; 
-
-const API_HOST = "http://localhost:8000"; // Define your API host here
+import AddMocksPage from "./add-mocks/page";
 
 export default function Home() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+
   // Page States
   const [currentPage, setCurrentPage] = useState<
-    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG"
+    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS"
   >("CHAT");
 
   const [production, setProduction] = useState(false);
@@ -33,73 +38,116 @@ export default function Home() {
   const [settingTemplate, setSettingTemplate] = useState("Default");
   const [baseSetting, setBaseSetting] = useState<Settings | null>(null);
 
-  const fontKey = baseSetting
-    ? (baseSetting[settingTemplate].Customization.settings.font
-        .value as FontKey)
-    : null; // Safely cast if you're sure, or use a check
-  const fontClassName = fontKey ? fonts[fontKey]?.className || "" : "";
-
   // RAG Config
   const [RAGConfig, setRAGConfig] = useState<RAGConfig | null>(null);
 
   const [APIHost, setAPIHost] = useState<string | null>(null);
+
+  const fontKey = baseSetting
+    ? (baseSetting[settingTemplate].Customization.settings.font
+        .value as FontKey)
+    : null;
+  const fontClassName = fontKey ? fonts[fontKey]?.className || "" : "";
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push('/login');
+      } else {
+        setIsAuthenticated(true);
+        setUser(session.user);
+        await fetchHost();
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, [router]);
 
   const fetchHost = async () => {
     try {
       const host = await detectHost();
       setAPIHost(host);
       if (host === "" || host === "http://localhost:8000") {
-        try {
-          const health_response = await fetch(host + "/api/health", {
-            method: "GET",
-          });
-
-          const health_data: HealthPayload = await health_response.json();
-
-          if (health_data) {
-            setProduction(health_data.production);
-            setGtag(health_data.gtag);
-          } else {
-            console.warn("Could not retrieve health data");
-          }
-
-          const response = await fetch(host + "/api/config", {
-            method: "GET",
-          });
-          const data: RAGResponse = await response.json();
-
-          if (data) {
-            if (data.error) {
-              console.error(data.error);
-            }
-
-            if (data.data.RAG) {
-              setRAGConfig(data.data.RAG);
-            }
-            if (data.data.SETTING.themes) {
-              setBaseSetting(data.data.SETTING.themes);
-              setSettingTemplate(data.data.SETTING.selectedTheme);
-            } else {
-              setBaseSetting(BaseSettings);
-              setSettingTemplate("Default");
-            }
-          } else {
-            console.warn("Configuration could not be retrieved");
-          }
-        } catch (error) {
-          console.error("Failed to fetch configuration:", error);
-          setRAGConfig(null);
-        }
+        await fetchHealthData(host);
+        await fetchConfigData(host);
       }
     } catch (error) {
       console.error("Error detecting host:", error);
-      setAPIHost(null); // Optionally handle the error by setting the state to an empty string or a specific error message
+      setAPIHost(null);
+    }
+  };
+
+  const fetchHealthData = async (host: string) => {
+    try {
+      const health_response = await fetch(host + "/api/health", {
+        method: "GET",
+      });
+      const health_data: HealthPayload = await health_response.json();
+      if (health_data) {
+        setProduction(health_data.production);
+        setGtag(health_data.gtag);
+      } else {
+        console.warn("Could not retrieve health data");
+      }
+    } catch (error) {
+      console.error("Failed to fetch health data:", error);
+    }
+  };
+
+  const fetchConfigData = async (host: string) => {
+    try {
+      const response = await fetch(host + "/api/config", {
+        method: "GET",
+      });
+      const data: RAGResponse = await response.json();
+      if (data) {
+        if (data.error) {
+          console.error(data.error);
+        }
+        if (data.data.RAG) {
+          setRAGConfig(data.data.RAG);
+        }
+        if (data.data.SETTING.themes) {
+          setBaseSetting(data.data.SETTING.themes);
+          setSettingTemplate(data.data.SETTING.selectedTheme);
+        } else {
+          setBaseSetting(BaseSettings);
+          setSettingTemplate("Default");
+        }
+      } else {
+        console.warn("Configuration could not be retrieved");
+      }
+    } catch (error) {
+      console.error("Failed to fetch configuration:", error);
+      setRAGConfig(null);
     }
   };
 
   useEffect(() => {
-    fetchHost();
-  }, []);
+    if (baseSetting) {
+      updateDocumentStyles();
+    }
+  }, [baseSetting, settingTemplate]);
+
+  const updateDocumentStyles = () => {
+    if (!baseSetting) return;
+    const settings = baseSetting[settingTemplate].Customization.settings;
+    document.documentElement.style.setProperty("--primary-verba", settings.primary_color.color);
+    document.documentElement.style.setProperty("--secondary-verba", settings.secondary_color.color);
+    document.documentElement.style.setProperty("--warning-verba", settings.warning_color.color);
+    document.documentElement.style.setProperty("--bg-verba", settings.bg_color.color);
+    document.documentElement.style.setProperty("--bg-alt-verba", settings.bg_alt_color.color);
+    document.documentElement.style.setProperty("--text-verba", settings.text_color.color);
+    document.documentElement.style.setProperty("--text-alt-verba", settings.text_alt_color.color);
+    document.documentElement.style.setProperty("--button-verba", settings.button_color.color);
+    document.documentElement.style.setProperty("--button-hover-verba", settings.button_hover_color.color);
+    document.documentElement.style.setProperty("--bg-console-verba", settings.bg_console.color);
+    document.documentElement.style.setProperty("--text-console-verba", settings.text_console.color);
+  };
 
   const importConfig = async () => {
     if (!APIHost || !baseSetting) {
@@ -114,7 +162,7 @@ export default function Home() {
         },
       };
 
-      const response = await fetch(APIHost + "/api/set_config", {
+      await fetch(APIHost + "/api/set_config", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -130,56 +178,18 @@ export default function Home() {
     importConfig();
   }, [baseSetting, settingTemplate]);
 
-  useEffect(() => {
-    if (baseSetting) {
-      document.documentElement.style.setProperty(
-        "--primary-verba",
-        baseSetting[settingTemplate].Customization.settings.primary_color.color
-      );
-      document.documentElement.style.setProperty(
-        "--secondary-verba",
-        baseSetting[settingTemplate].Customization.settings.secondary_color
-          .color
-      );
-      document.documentElement.style.setProperty(
-        "--warning-verba",
-        baseSetting[settingTemplate].Customization.settings.warning_color.color
-      );
-      document.documentElement.style.setProperty(
-        "--bg-verba",
-        baseSetting[settingTemplate].Customization.settings.bg_color.color
-      );
-      document.documentElement.style.setProperty(
-        "--bg-alt-verba",
-        baseSetting[settingTemplate].Customization.settings.bg_alt_color.color
-      );
-      document.documentElement.style.setProperty(
-        "--text-verba",
-        baseSetting[settingTemplate].Customization.settings.text_color.color
-      );
-      document.documentElement.style.setProperty(
-        "--text-alt-verba",
-        baseSetting[settingTemplate].Customization.settings.text_alt_color.color
-      );
-      document.documentElement.style.setProperty(
-        "--button-verba",
-        baseSetting[settingTemplate].Customization.settings.button_color.color
-      );
-      document.documentElement.style.setProperty(
-        "--button-hover-verba",
-        baseSetting[settingTemplate].Customization.settings.button_hover_color
-          .color
-      );
-      document.documentElement.style.setProperty(
-        "--bg-console-verba",
-        baseSetting[settingTemplate].Customization.settings.bg_console.color
-      );
-      document.documentElement.style.setProperty(
-        "--text-console-verba",
-        baseSetting[settingTemplate].Customization.settings.text_console.color
-      );
-    }
-  }, [baseSetting, settingTemplate]);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen gap-2">
+        <PulseLoader loading={true} size={12} speedMultiplier={0.75} />
+        <p>Loading Verba</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // or a custom "Access Denied" component
+  }
 
   return (
     <main
@@ -192,7 +202,7 @@ export default function Home() {
     >
       {gtag !== "" && <GoogleAnalytics gaId={gtag} />}
 
-      {baseSetting ? (
+      {baseSetting && (
         <div>
           <Navbar
             APIHost={APIHost}
@@ -209,6 +219,8 @@ export default function Home() {
             version="v1.0.0"
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
+            isAuthenticated={isAuthenticated}
+            user={user}
           />
 
           {currentPage === "CHAT" && (
@@ -276,9 +288,13 @@ export default function Home() {
             />
           )}
 
-          {currentPage === 'MOCK_EXAM_START' && (<MockExamStartPage APIHost={API_HOST} setCurrentPage={setCurrentPage} />)} 
+          {currentPage === 'MOCK_EXAM_START' && (
+            <MockExamStartPage 
+              APIHost={APIHost} 
+              setCurrentPage={setCurrentPage} 
+            />
+          )}
 
-          {/* Render MockExamPage when currentPage is "MOCK_EXAM" */}
           {currentPage === "MOCK_EXAM" && (
             <MockExamPage 
               production={production}
@@ -287,24 +303,18 @@ export default function Home() {
             />
           )}
 
-          {/* Render AddMocksPage */}
           {currentPage === "ADD_MOCKS" && !production && (
             <AddMocksPage 
-                settingConfig={baseSetting[settingTemplate]} // Pass necessary props 
-                APIHost={APIHost} 
-            /> 
+              settingConfig={baseSetting[settingTemplate]} 
+              APIHost={APIHost} 
+            />
           )}
 
           <footer className="footer footer-center p-1 mt-2 bg-bg-verba text-text-alt-verba">
             <aside>
-              <p>Build with ♥ and Weaviate © 2024</p>
+              <p>Built with ♥ and Weaviate © 2024</p>
             </aside>
           </footer>
-        </div>
-      ) : (
-        <div className="flex items-center justify-center h-screen gap-2">
-          <PulseLoader loading={true} size={12} speedMultiplier={0.75} />
-          <p>Loading Verba</p>
         </div>
       )}
     </main>

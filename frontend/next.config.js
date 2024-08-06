@@ -1,11 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    "output": "export"
+    // "output": "export", // This line is removed or commented out
+    assetPrefix: process.env.NODE_ENV === 'production' ? '/static' : '', // Directly assign assetPrefix
 };
 
-// Set assetPrefix only in production/export mode
-if (process.env.NODE_ENV === 'production') {
-    nextConfig.assetPrefix = '/static';
-}
-
-module.exports = nextConfig;
+module.exports = nextConfig; 
