@@ -1,25 +1,22 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import ClientLayout from './ClientLayout';
-
-export const metadata: Metadata = {
-  title: "Verba",
-  description: "The GoldenRAGtriever",
-};
+import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from './useAuth'
+import ErrorBoundary from './components/ErrorBoundary'
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/icon.ico" />
-      </head>
       <body>
-        <ClientLayout>{children}</ClientLayout>
+        <ErrorBoundary>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+          <Toaster />
+        </ErrorBoundary>
       </body>
     </html>
-  );
+  )
 }

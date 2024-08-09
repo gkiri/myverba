@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { useAuth } from './useAuth';
 import Navbar from "./components/Navigation/NavbarComponent";
 import SettingsComponent from "./components/Settings/SettingsComponent";
 import ChatComponent from "./components/Chat/ChatComponent";
@@ -19,15 +19,15 @@ import PulseLoader from "react-spinners/PulseLoader";
 import MockExamPage from "./mock-exam/page";
 import MockExamStartPage from "./components/MockExam/MockExamStartPage";
 import AddMocksPage from "./add-mocks/page";
+import { toast } from 'react-hot-toast';
 
 export default function Home() {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
 
   // Page States
-  const [currentPage, setCurrentPage] = useState<
+  const [currentPage, setCurrentPage] = useState
     "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS"
   >("CHAT");
 
@@ -50,22 +50,30 @@ export default function Home() {
   const fontClassName = fontKey ? fonts[fontKey]?.className || "" : "";
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        router.push('/login');
-      } else {
-        setIsAuthenticated(true);
-        setUser(session.user);
-        await fetchHost();
+    // Suppress specific warnings in development
+    const originalError = console.error;
+    console.error = (...args) => {
+      if (typeof args[0] === 'string' && args[0].includes('Extra attributes from the server')) {
+        return;
       }
-      setIsLoading(false);
+      originalError.apply(console, args);
     };
 
-    checkAuth();
-  }, [router]);
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else {
+        fetchHost();
+      }
+      setIsLoading(false);
+    }
+  }, [user, loading, router]);
 
   const fetchHost = async () => {
     try {
@@ -78,6 +86,7 @@ export default function Home() {
     } catch (error) {
       console.error("Error detecting host:", error);
       setAPIHost(null);
+      toast.error("Failed to connect to the server. Please try again later.");
     }
   };
 
@@ -92,9 +101,11 @@ export default function Home() {
         setGtag(health_data.gtag);
       } else {
         console.warn("Could not retrieve health data");
+        toast.warn("Some features may be limited due to server issues.");
       }
     } catch (error) {
       console.error("Failed to fetch health data:", error);
+      toast.error("Failed to retrieve system health data.");
     }
   };
 
@@ -107,6 +118,7 @@ export default function Home() {
       if (data) {
         if (data.error) {
           console.error(data.error);
+          toast.error("Error loading configuration: " + data.error);
         }
         if (data.data.RAG) {
           setRAGConfig(data.data.RAG);
@@ -120,10 +132,12 @@ export default function Home() {
         }
       } else {
         console.warn("Configuration could not be retrieved");
+        toast.warn("Using default configuration due to retrieval issues.");
       }
     } catch (error) {
       console.error("Failed to fetch configuration:", error);
       setRAGConfig(null);
+      toast.error("Failed to load system configuration. Some features may be unavailable.");
     }
   };
 
@@ -169,8 +183,10 @@ export default function Home() {
         },
         body: JSON.stringify(payload),
       });
+      toast.success("Configuration updated successfully.");
     } catch (error) {
       console.error("Failed to update config:", error);
+      toast.error("Failed to update configuration. Please try again.");
     }
   };
 
@@ -178,7 +194,7 @@ export default function Home() {
     importConfig();
   }, [baseSetting, settingTemplate]);
 
-  if (isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="flex items-center justify-center h-screen gap-2">
         <PulseLoader loading={true} size={12} speedMultiplier={0.75} />
@@ -187,7 +203,7 @@ export default function Home() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null; // or a custom "Access Denied" component
   }
 
@@ -219,7 +235,7 @@ export default function Home() {
             version="v1.0.0"
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            isAuthenticated={isAuthenticated}
+            isAuthenticated={!!user}
             user={user}
           />
 

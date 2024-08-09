@@ -1,71 +1,30 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
-        },
-    });
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
+  const supabase = createMiddlewareClient({ req, res })
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return request.cookies.get(name)?.value;
-                },
-                set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    });
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    });
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    });
-                },
-                remove(name: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    });
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    });
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    });
-                },
-            },
-        }
-    );
+  // Public routes that don't require authentication
+  const publicRoutes = ['/login', '/signup']; 
 
-    await supabase.auth.getUser(); // Refresh session
+  // Allow access to public routes
+  if (publicRoutes.includes(req.nextUrl.pathname)) {
+    return res; 
+  }
 
-    // Redirect to root route ('/') if user is authenticated
-    if (request.cookies.get('sb:token') && request.nextUrl.pathname === '/login') { 
-        return NextResponse.redirect(new URL('/', request.url)); 
-    }
+  // For all other routes, check for authentication
+  if (!session) {
+    return NextResponse.redirect(new URL('/login', req.url))
+  }
 
-    return response;
+  return res
 }
 
 export const config = {
-    matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-    ],
-};
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+}

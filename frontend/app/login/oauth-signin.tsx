@@ -1,38 +1,21 @@
 "use client";
 import { Button } from "../components/ui/button";
 import { Provider } from "@supabase/supabase-js";
-import { Github } from "lucide-react";
+import { Github } from "lucide-react"; 
 import { oAuthSignIn } from "./actions";
 
-type OAuthProvider = {
-  name: Provider;
-  displayName: string;
-  icon?: JSX.Element;
-};
-
 export function OAuthButtons() {
-  const oAuthProviders: OAuthProvider[] = [
-    {
-      name: "github",
-      displayName: "GitHub",
-      icon: <Github className="size-5" />,
-    },
-  ];
-
+  // You can remove the OAuthProvider type as you only have one provider for now.
   return (
-    <>
-      {oAuthProviders.map((provider) => (
-        <Button
-          className="w-full flex items-center justify-center gap-2"
-          variant="outline"
-          onClick={async () => {
-            await oAuthSignIn(provider.name);
-          }}
-        >
-          {provider.icon}
-          Login with {provider.displayName}
-        </Button>
-      ))}
-    </>
+    <Button
+      className="w-full flex items-center justify-center gap-2"
+      variant="outline"
+      onClick={async () => {
+        await oAuthSignIn('github'); 
+      }}
+    >
+      <Github className="size-5" />
+      <span>Login with GitHub</span>
+    </Button>
   );
 }

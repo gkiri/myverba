@@ -1,47 +1,63 @@
-'use client';
+'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { createClient, Session, SupabaseClient } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { Session, User } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@/utils/supabase/client'
 
 interface AuthContextType {
-  session: Session | null;
-  supabase: SupabaseClient;
+  session: Session | null
+  user: User | null
+  signOut: () => Promise<void>
+  loading: boolean
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [supabase] = useState(() => createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ));
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createSupabaseClient()
 
   useEffect(() => {
     const setServerSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-    };
-    setServerSession();
+      const { data: { session } } = await supabase.auth.getSession()
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+    }
+
+    setServerSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+      setSession(session)
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
 
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+    return () => subscription.unsubscribe()
+  }, [])
 
-  return (
-    <AuthContext.Provider value={{ session, supabase }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    setSession(null)
+    setUser(null)
+  }
+
+  const value = {
+    session,
+    user,
+    signOut,
+    loading,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
+  return context
 }
