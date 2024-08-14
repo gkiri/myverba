@@ -1,23 +1,18 @@
-import type { Metadata } from "next";
-import "./globals.css";
-
-import { detectHost } from "./api";
-
-export const metadata: Metadata = {
-  title: "Verba",
-  description: "The GoldenRAGtriever",
-};
+import { AuthProvider } from './context/AuthConext'
+import './globals.css'
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <link rel="icon" href="/icon.ico" />
-      {/* <link rel="icon" href="/icon.ico" /> */}
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
-  );
+  )
 }

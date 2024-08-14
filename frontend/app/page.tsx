@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useAuth } from './context/AuthConext';
 import Navbar from "./components/Navigation/NavbarComponent";
+import ProtectedRoute from './components/ProtectedRoute';
 import SettingsComponent from "./components/Settings/SettingsComponent";
 import ChatComponent from "./components/Chat/ChatComponent";
 import DocumentViewerComponent from "./components/Document/DocumentViewerComponent";
@@ -17,29 +19,26 @@ import PulseLoader from "react-spinners/PulseLoader";
 import MockExamPage from "./mock-exam/page";
 import MockExamStartPage from "./components/MockExam/MockExamStartPage";
 import AddMocksPage from "./add-mocks/page"; 
-
-const API_HOST = "http://localhost:8000"; // Define your API host here
+import Link from 'next/link';
 
 export default function Home() {
-  // Page States
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState<
-    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG"
+    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "PROFILE" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS"
   >("CHAT");
 
   const [production, setProduction] = useState(false);
   const [gtag, setGtag] = useState("");
 
-  // Settings
   const [settingTemplate, setSettingTemplate] = useState("Default");
   const [baseSetting, setBaseSetting] = useState<Settings | null>(null);
 
   const fontKey = baseSetting
     ? (baseSetting[settingTemplate].Customization.settings.font
         .value as FontKey)
-    : null; // Safely cast if you're sure, or use a check
+    : null;
   const fontClassName = fontKey ? fonts[fontKey]?.className || "" : "";
 
-  // RAG Config
   const [RAGConfig, setRAGConfig] = useState<RAGConfig | null>(null);
 
   const [APIHost, setAPIHost] = useState<string | null>(null);
@@ -93,7 +92,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error detecting host:", error);
-      setAPIHost(null); // Optionally handle the error by setting the state to an empty string or a specific error message
+      setAPIHost(null);
     }
   };
 
@@ -195,6 +194,7 @@ export default function Home() {
       {baseSetting ? (
         <div>
           <Navbar
+            user={user}
             APIHost={APIHost}
             production={production}
             title={
@@ -211,88 +211,113 @@ export default function Home() {
             setCurrentPage={setCurrentPage}
           />
 
-          {currentPage === "CHAT" && (
-            <ChatComponent
-              production={production}
-              settingConfig={baseSetting[settingTemplate]}
-              APIHost={APIHost}
-              RAGConfig={RAGConfig}
-              setCurrentPage={setCurrentPage}
-            />
-          )}
+          {user ? (
+            <ProtectedRoute>
+              {currentPage === "CHAT" && (
+                <ChatComponent
+                  production={production}
+                  settingConfig={baseSetting[settingTemplate]}
+                  APIHost={APIHost}
+                  RAGConfig={RAGConfig}
+                  setCurrentPage={setCurrentPage}
+                />
+              )}
 
-          {currentPage === "DOCUMENTS" && (
-            <DocumentViewerComponent
-              RAGConfig={RAGConfig}
-              production={production}
-              setCurrentPage={setCurrentPage}
-              settingConfig={baseSetting[settingTemplate]}
-              APIHost={APIHost}
-            />
-          )}
+              {currentPage === "DOCUMENTS" && (
+                <DocumentViewerComponent
+                  RAGConfig={RAGConfig}
+                  production={production}
+                  setCurrentPage={setCurrentPage}
+                  settingConfig={baseSetting[settingTemplate]}
+                  APIHost={APIHost}
+                />
+              )}
 
-          {currentPage === "STATUS" && !production && (
-            <StatusComponent
-              fetchHost={fetchHost}
-              settingConfig={baseSetting[settingTemplate]}
-              APIHost={APIHost}
-            />
-          )}
+              {currentPage === "STATUS" && !production && (
+                <StatusComponent
+                  fetchHost={fetchHost}
+                  settingConfig={baseSetting[settingTemplate]}
+                  APIHost={APIHost}
+                />
+              )}
 
-          {currentPage === "ADD" && !production && (
-            <RAGComponent
-              baseSetting={baseSetting}
-              settingTemplate={settingTemplate}
-              buttonTitle="Import"
-              settingConfig={baseSetting[settingTemplate]}
-              APIHost={APIHost}
-              RAGConfig={RAGConfig}
-              setRAGConfig={setRAGConfig}
-              setCurrentPage={setCurrentPage}
-              showComponents={["Reader", "Chunker", "Embedder"]}
-            />
-          )}
+              {currentPage === "ADD" && !production && (
+                <RAGComponent
+                  baseSetting={baseSetting}
+                  settingTemplate={settingTemplate}
+                  buttonTitle="Import"
+                  settingConfig={baseSetting[settingTemplate]}
+                  APIHost={APIHost}
+                  RAGConfig={RAGConfig}
+                  setRAGConfig={setRAGConfig}
+                  setCurrentPage={setCurrentPage}
+                  showComponents={["Reader", "Chunker", "Embedder"]}
+                />
+              )}
 
-          {currentPage === "RAG" && !production && (
-            <RAGComponent
-              baseSetting={baseSetting}
-              settingTemplate={settingTemplate}
-              buttonTitle="Save"
-              settingConfig={baseSetting[settingTemplate]}
-              APIHost={APIHost}
-              RAGConfig={RAGConfig}
-              setRAGConfig={setRAGConfig}
-              setCurrentPage={setCurrentPage}
-              showComponents={["Embedder", "Retriever", "Generator"]}
-            />
-          )}
+              {currentPage === "RAG" && !production && (
+                <RAGComponent
+                  baseSetting={baseSetting}
+                  settingTemplate={settingTemplate}
+                  buttonTitle="Save"
+                  settingConfig={baseSetting[settingTemplate]}
+                  APIHost={APIHost}
+                  RAGConfig={RAGConfig}
+                  setRAGConfig={setRAGConfig}
+                  setCurrentPage={setCurrentPage}
+                  showComponents={["Embedder", "Retriever", "Generator"]}
+                />
+              )}
 
-          {currentPage === "SETTINGS" && !production && (
-            <SettingsComponent
-              settingTemplate={settingTemplate}
-              setSettingTemplate={setSettingTemplate}
-              baseSetting={baseSetting}
-              setBaseSetting={setBaseSetting}
-            />
-          )}
+              {currentPage === "SETTINGS" && !production && (
+                <SettingsComponent
+                  settingTemplate={settingTemplate}
+                  setSettingTemplate={setSettingTemplate}
+                  baseSetting={baseSetting}
+                  setBaseSetting={setBaseSetting}
+                />
+              )}
 
-          {currentPage === 'MOCK_EXAM_START' && (<MockExamStartPage APIHost={API_HOST} setCurrentPage={setCurrentPage} />)} 
+              {currentPage === 'MOCK_EXAM_START' && (
+                <MockExamStartPage APIHost={APIHost} setCurrentPage={setCurrentPage} />
+              )}
 
-          {/* Render MockExamPage when currentPage is "MOCK_EXAM" */}
-          {currentPage === "MOCK_EXAM" && (
-            <MockExamPage 
-              production={production}
-              settingConfig={baseSetting[settingTemplate]} 
-              APIHost={APIHost} 
-            />
-          )}
+              {currentPage === "MOCK_EXAM" && (
+                <MockExamPage 
+                  production={production}
+                  settingConfig={baseSetting[settingTemplate]} 
+                  APIHost={APIHost} 
+                />
+              )}
 
-          {/* Render AddMocksPage */}
-          {currentPage === "ADD_MOCKS" && !production && (
-            <AddMocksPage 
-                settingConfig={baseSetting[settingTemplate]} // Pass necessary props 
-                APIHost={APIHost} 
-            /> 
+              {currentPage === "ADD_MOCKS" && !production && (
+                <AddMocksPage 
+                  settingConfig={baseSetting[settingTemplate]} 
+                  APIHost={APIHost} 
+                />
+              )}
+
+              {currentPage === "PROFILE" && (
+                <div className="bg-bg-alt-verba p-6 rounded-lg shadow-md">
+                  <h2 className="text-2xl font-bold mb-4">User Profile</h2>
+                  <p>Email: {user.email}</p>
+                  {/* Add more user profile information here */}
+                </div>
+              )}
+            </ProtectedRoute>
+          ) : (
+            <div className="text-center mt-10">
+              <h2 className="text-2xl font-bold mb-4">Welcome to Verba</h2>
+              <p className="mb-4">Please log in or sign up to access the full features.</p>
+              <div className="space-x-4">
+                <Link href="/login" className="btn btn-primary">
+                  Log In
+                </Link>
+                <Link href="/signup" className="btn btn-secondary">
+                  Sign Up
+                </Link>
+              </div>
+            </div>
           )}
 
           <footer className="footer footer-center p-1 mt-2 bg-bg-verba text-text-alt-verba">
