@@ -1,0 +1,1025 @@
+file : app/auth/callback/route.ts
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
+import { type CookieOptions, createServerClient } from '@supabase/ssr'
+
+export async function GET(request: Request) {
+    const { searchParams, origin } = new URL(request.url)
+    const code = searchParams.get('code')
+    // if "next" is in param, use it as the redirect URL
+    const next = searchParams.get('next') ?? '/todos'
+
+    if (code) {
+        const cookieStore = cookies()
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    get(name: string) {
+                        return cookieStore.get(name)?.value
+                    },
+                    set(name: string, value: string, options: CookieOptions) {
+                        cookieStore.set({ name, value, ...options })
+                    },
+                    remove(name: string, options: CookieOptions) {
+                        cookieStore.delete({ name, ...options })
+                    },
+                },
+            }
+        )
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error) {
+            return NextResponse.redirect(`${origin}${next}`)
+        }
+    }
+
+    // return the user to an error page with instructions
+    return NextResponse.redirect(`${origin}/login?message=Could not login with provider`)
+}
+
+/////////////////////////////////////////////
+file:app/auth/confirm/route.ts
+
+import { type EmailOtpType } from '@supabase/supabase-js'
+import { type NextRequest, NextResponse } from 'next/server'
+
+import { createClient } from '@/utils/supabase/server'
+
+export async function GET(request: NextRequest) {
+    const { searchParams } = new URL(request.url)
+    const token_hash = searchParams.get('token_hash')
+    const type = searchParams.get('type') as EmailOtpType | null
+    const next = searchParams.get('next') ?? '/todos'
+
+    const redirectTo = request.nextUrl.clone()
+    redirectTo.pathname = next
+    redirectTo.searchParams.delete('token_hash')
+    redirectTo.searchParams.delete('type')
+
+    if (token_hash && type) {
+        const supabase = createClient()
+
+        const { error } = await supabase.auth.verifyOtp({
+            type,
+            token_hash,
+        })
+        if (!error) {
+            redirectTo.searchParams.delete('next')
+            return NextResponse.redirect(redirectTo)
+        }
+    }
+
+    // return the user to an error page with some instructions
+    redirectTo.pathname = '/login?message=Could not verify OTP'
+    return NextResponse.redirect(redirectTo)
+}
+
+///////////////////////////////
+
+file : app/login/actions.ts
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+
+import { createClient } from '@/utils/supabase/server'
+import { Provider } from '@supabase/supabase-js'
+import { getURL } from '@/utils/helpers'
+
+export async function emailLogin(formData: FormData) {
+    const supabase = createClient()
+
+    // type-casting here for convenience
+    // in practice, you should validate your inputs
+    const data = {
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+    }
+
+    const { error } = await supabase.auth.signInWithPassword(data)
+
+    if (error) {
+        redirect('/login?message=Could not authenticate user')
+    }
+
+    revalidatePath('/', 'layout')
+    redirect('/todos')
+}
+
+export async function signup(formData: FormData) {
+    const supabase = createClient()
+
+    // type-casting here for convenience
+    // in practice, you should validate your inputs
+    const data = {
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+    }
+
+    const { error } = await supabase.auth.signUp(data)
+
+    if (error) {
+        redirect('/login?message=Error signing up')
+    }
+
+    revalidatePath('/', 'layout')
+    redirect('/login')
+}
+
+export async function signOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    redirect('/login')
+}
+
+export async function oAuthSignIn(provider: Provider) {
+    if (!provider) {
+        return redirect('/login?message=No provider selected')
+    }
+
+    const supabase = createClient();
+    const redirectUrl = getURL("/auth/callback")
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+            redirectTo: redirectUrl,
+        }
+    })
+
+    if (error) {
+        redirect('/login?message=Could not authenticate user')
+    }
+
+    return redirect(data.url)
+}
+
+////////////////////////////////
+file: app/login/oauth-signin.tsx
+
+"use client";
+import { Button } from "@/components/ui/button";
+import { Provider } from "@supabase/supabase-js";
+import { Github } from "lucide-react";
+import { oAuthSignIn } from "./actions";
+
+type OAuthProvider = {
+  name: Provider;
+  displayName: string;
+  icon?: JSX.Element;
+};
+
+export function OAuthButtons() {
+  const oAuthProviders: OAuthProvider[] = [
+    {
+      name: "github",
+      displayName: "GitHub",
+      icon: <Github className="size-5" />,
+    },
+  ];
+
+  return (
+    <>
+      {oAuthProviders.map((provider) => (
+        <Button
+          className="w-full flex items-center justify-center gap-2"
+          variant="outline"
+          onClick={async () => {
+            await oAuthSignIn(provider.name);
+          }}
+        >
+          {provider.icon}
+          Login with {provider.displayName}
+        </Button>
+      ))}
+    </>
+  );
+}
+////////////////////////////
+
+file: app/login/page.tsx
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { emailLogin, signup } from "./actions";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { OAuthButtons } from "./oauth-signin";
+
+export default async function Login({
+  searchParams,
+}: {
+  searchParams: { message: string };
+}) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    return redirect("/todos");
+  }
+
+  return (
+    <section className="h-[calc(100vh-57px)] flex justify-center items-center">
+      <Card className="mx-auto max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardDescription>
+            Enter your email below to login to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <form id="login-form" className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+              </div>
+              <Input
+                minLength={6}
+                name="password"
+                id="password"
+                type="password"
+                required
+              />
+            </div>
+            {searchParams.message && (
+              <div className="text-sm font-medium text-destructive">
+                {searchParams.message}
+              </div>
+            )}
+            <Button formAction={emailLogin} className="w-full">
+              Login
+            </Button>
+          </form>
+          <OAuthButtons />
+          <div className="text-center text-sm">
+            Don&apos;t have an account?{" "}
+            <button formAction={signup} form="login-form" className="underline">
+              Sign up
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+////////////////////////////
+
+file: app/todos/actions.ts
+"use server"
+
+import { Todo } from "@/types/custom";
+import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
+
+export async function addTodo(formData: FormData) {
+    const supabase = createClient();
+    const text = formData.get("todo") as string | null
+
+    if (!text) {
+        throw new Error("Text is required")
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        throw new Error("User is not logged in")
+    }
+
+    const { error } = await supabase.from("todos").insert({
+        task: text,
+        user_id: user.id
+    })
+
+    if (error) {
+        throw new Error("Error adding task")
+    }
+
+    revalidatePath("/todos")
+}
+
+export async function deleteTodo(id: number) {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        throw new Error("User is not logged in")
+    }
+
+    const { error } = await supabase.from("todos").delete().match({
+        user_id: user.id,
+        id: id
+    })
+
+    if (error) {
+        throw new Error("Error deleting task")
+    }
+
+    revalidatePath("/todos")
+}
+
+export async function updateTodo(todo: Todo) {
+
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        throw new Error("User is not logged in")
+    }
+
+    const { error } = await supabase.from("todos").update(todo).match({
+        user_id: user.id,
+        id: todo.id
+    })
+
+    if (error) {
+        throw new Error("Error updating task")
+    }
+
+    revalidatePath("/todos")
+}
+
+///////////////////
+
+file:app/todos/page.tsx
+import { TodoList } from "@/components/todo-list";
+import { Separator } from "@/components/ui/separator";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+
+export default async function TodosPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/login");
+  }
+
+  const { data: todos } = await supabase
+    .from("todos")
+    .select()
+    .order("inserted_at", { ascending: false });
+
+  return (
+    <section className="p-3 pt-6 max-w-2xl w-full flex flex-col gap-4">
+      <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+        Todo's
+      </h1>
+      <Separator className="w-full " />
+      <TodoList todos={todos ?? []} />
+    </section>
+  );
+}
+///////////////
+file :app/layout.tsx
+import { GeistSans } from "geist/font/sans";
+import "./globals.css";
+import Header from "@/components/header";
+
+const defaultUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
+
+export const metadata = {
+  metadataBase: new URL(defaultUrl),
+  title: "Next.js and Supabase Todo App",
+  description: "An example of Supabase, Auth and NextJS server actions",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={GeistSans.variable}>
+      <body className="sticky top-0 bg-background text-foreground">
+        <Header />
+        <main className="flex flex-col items-center">{children}</main>
+      </body>
+    </html>
+  );
+}
+//////////////////
+file : app/page.tsx
+export default async function Index() {
+  return (
+    <section className="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32">
+      <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
+        <a
+          className="rounded-2xl bg-muted px-4 py-1.5 text-sm font-medium"
+          target="_blank"
+          href="https://www.youtube.com/@jollycoding"
+        >
+          🎞️ Follow on YouTube
+        </a>
+        <h1 className="font-sans text-balance font-black text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
+          Next.js 14 Server Actions and Supabase / Auth.
+        </h1>
+        <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
+          A demo todo app that utilises Supabase for databse and auth, combined
+          with NextJS 14 Server Actions.
+        </p>
+        <div className="space-x-4">
+          <a
+            className="inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 rounded-md"
+            href="/login"
+          >
+            Get Started
+          </a>
+          <a
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-input hover:bg-accent hover:text-accent-foreground h-11 px-8 rounded-md"
+            href="https://github.com/shadcn/taxonomy"
+          >
+            GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+///////////////
+
+file: components/header.tsx
+import { signOut } from "@/app/login/actions";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/utils/supabase/server";
+import Link from "next/link";
+
+export default async function Header() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return (
+    <header className="z-10 sticky top-0 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 max-w-screen-2xl items-center">
+        <nav className="flex items-center space-x-4 lg:space-x-6">
+          <a className="mr-6 flex items-center space-x-2" href="/">
+            <span className="font-bold">SupaTodo</span>
+          </a>
+          <Link href="/todos">Todos</Link>
+        </nav>
+        <div className="flex flex-1 items-center justify-end space-x-2">
+          {user !== null ? (
+            <form action={signOut} className="flex items-center gap-2">
+              <p>{user.email}</p>
+              <Button>Sign Out</Button>
+            </form>
+          ) : (
+            <Button asChild>
+              <Link href="/login">Sign In</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/////////////////
+file : components/todo-form.tsx
+"use client";
+import { addTodo } from "@/app/todos/actions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Send } from "lucide-react";
+import { useRef } from "react";
+import { useFormStatus } from "react-dom";
+import { TodoOptimisticUpdate } from "./todo-list";
+import { Todo } from "@/types/custom";
+
+function FormContent() {
+  const { pending } = useFormStatus();
+  return (
+    <>
+      <Textarea
+        disabled={pending}
+        minLength={4}
+        name="todo"
+        required
+        placeholder="Add a new todo"
+      />
+      <Button type="submit" size="icon" className="min-w-10" disabled={pending}>
+        <Send className="h-5 w-5" />
+        <span className="sr-only">Submit Todo</span>
+      </Button>
+    </>
+  );
+}
+
+export function TodoForm({
+  optimisticUpdate,
+}: {
+  optimisticUpdate: TodoOptimisticUpdate;
+}) {
+  const formRef = useRef<HTMLFormElement>(null);
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <form
+          ref={formRef}
+          className="flex gap-4"
+          action={async (data) => {
+            const newTodo: Todo = {
+              id: -1,
+              inserted_at: "",
+              user_id: "",
+              task: data.get("todo") as string,
+              is_complete: false,
+            };
+            optimisticUpdate({ action: "create", todo: newTodo });
+            await addTodo(data);
+            formRef.current?.reset();
+          }}
+        >
+          <FormContent />
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+/////////////////
+file : components/todo-list.tsx
+
+"use client";
+import { TodoItem } from "./todo-item";
+import { TodoForm } from "./todo-form";
+import { Todo } from "@/types/custom";
+import { useOptimistic } from "react";
+
+export type Action = "delete" | "update" | "create";
+
+export function todoReducer(
+  state: Array<Todo>,
+  { action, todo }: { action: Action; todo: Todo }
+) {
+  switch (action) {
+    case "delete":
+      return state.filter(({ id }) => id !== todo.id);
+    case "update":
+      return state.map((t) => (t.id === todo.id ? todo : t));
+    case "create":
+      return [todo, ...state];
+    default:
+      return state;
+  }
+}
+
+export type TodoOptimisticUpdate = (action: {
+  action: Action;
+  todo: Todo;
+}) => void;
+
+export function TodoList({ todos }: { todos: Array<Todo> }) {
+  const [optimisticTodos, optimisticTodosUpdate] = useOptimistic(
+    todos,
+    todoReducer
+  );
+  return (
+    <>
+      <TodoForm optimisticUpdate={optimisticTodosUpdate} />
+      <div className="w-full flex flex-col gap-4">
+        {optimisticTodos?.map((todo) => {
+          return (
+            <TodoItem
+              optimisticUpdate={optimisticTodosUpdate}
+              todo={todo}
+              key={todo.id}
+            />
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+//////////////////
+
+file : types/custom.ts
+import { Database } from "./supabase";
+
+
+export type Todo = Database["public"]["Tables"]["todos"]["Row"]
+
+///////////////
+
+file:types/supabase.ts
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  public: {
+    Tables: {
+      todos: {
+        Row: {
+          id: number
+          inserted_at: string
+          is_complete: boolean | null
+          task: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: number
+          inserted_at?: string
+          is_complete?: boolean | null
+          task?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: number
+          inserted_at?: string
+          is_complete?: boolean | null
+          task?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "todos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type PublicSchema = Database[Extract<keyof Database, "public">]
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+    | keyof PublicSchema["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+	
+	
+/////////////////////
+file : utils/supabase/middleware.ts
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function updateSession(request: NextRequest) {
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    })
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return request.cookies.get(name)?.value
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    request.cookies.set({
+                        name,
+                        value,
+                        ...options,
+                    })
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    })
+                    response.cookies.set({
+                        name,
+                        value,
+                        ...options,
+                    })
+                },
+                remove(name: string, options: CookieOptions) {
+                    request.cookies.set({
+                        name,
+                        value: '',
+                        ...options,
+                    })
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    })
+                    response.cookies.set({
+                        name,
+                        value: '',
+                        ...options,
+                    })
+                },
+            },
+        }
+    )
+
+    await supabase.auth.getUser()
+
+    return response
+}
+////////////////////
+file :utils/supabase/server.ts
+import { Database } from '@/types/supabase'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export function createClient() {
+    const cookieStore = cookies()
+
+    return createServerClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return cookieStore.get(name)?.value
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value, ...options })
+                    } catch (error) {
+                        // The `set` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
+                remove(name: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value: '', ...options })
+                    } catch (error) {
+                        // The `delete` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
+            },
+        }
+    )
+}
+/////////
+file:middleware.ts
+import { type NextRequest } from 'next/server'
+import { updateSession } from '@/utils/supabase/middleware'
+
+export async function middleware(request: NextRequest) {
+    return await updateSession(request)
+}
+
+export const config = {
+    matcher: [
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * Feel free to modify this pattern to include more paths.
+         */
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    ],
+}
+///////////////////
+file : next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
+
+module.exports = nextConfig;
+
+/////////////////////////
+file : tailwind.config.ts
+import type { Config } from "tailwindcss"
+import { fontFamily } from "tailwindcss/defaultTheme"
+
+const config = {
+  darkMode: ["class"],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", ...fontFamily.sans],
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config
+
+export default config
+
+////////////////////////////////
+file : tsconfig.json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
