@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from './context/AuthConext';
+import { useAuth } from './utils/auth';
 import Navbar from "./components/Navigation/NavbarComponent";
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/Shared/ProtectedRoute';
 import SettingsComponent from "./components/Settings/SettingsComponent";
 import ChatComponent from "./components/Chat/ChatComponent";
 import DocumentViewerComponent from "./components/Document/DocumentViewerComponent";
@@ -18,7 +18,7 @@ import { fonts, FontKey } from "./info";
 import PulseLoader from "react-spinners/PulseLoader";
 import MockExamPage from "./mock-exam/page";
 import MockExamStartPage from "./components/MockExam/MockExamStartPage";
-import AddMocksPage from "./add-mocks/page"; 
+import AddMocksPage from "./add-mocks/page";
 import Link from 'next/link';
 
 export default function Home() {
@@ -211,8 +211,8 @@ export default function Home() {
             setCurrentPage={setCurrentPage}
           />
 
-          {user ? (
-            <ProtectedRoute>
+          {user ? ( 
+            <ProtectedRoute> 
               {currentPage === "CHAT" && (
                 <ChatComponent
                   production={production}
@@ -300,11 +300,11 @@ export default function Home() {
               {currentPage === "PROFILE" && (
                 <div className="bg-bg-alt-verba p-6 rounded-lg shadow-md">
                   <h2 className="text-2xl font-bold mb-4">User Profile</h2>
-                  <p>Email: {user.email}</p>
+                  <p>Email: {user.email}</p> 
                   {/* Add more user profile information here */}
                 </div>
               )}
-            </ProtectedRoute>
+            </ProtectedRoute> 
           ) : (
             <div className="text-center mt-10">
               <h2 className="text-2xl font-bold mb-4">Welcome to Verba</h2>

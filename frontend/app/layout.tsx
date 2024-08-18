@@ -1,18 +1,22 @@
-import { AuthProvider } from './context/AuthConext'
-import './globals.css'
+"use client"; // This makes RootLayout a client component
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { useAuth } from './utils/auth'
+import { AuthProvider } from './components/Auth/AuthConext'; 
+
+const inter = Inter({ subsets: ['latin'] });
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
+      <body className={inter.className}>
+        <AuthProvider> {/* Wrap your application with AuthProvider */}
           {children}
-        </AuthProvider>
+        </AuthProvider> 
       </body>
     </html>
-  )
+  );
 }

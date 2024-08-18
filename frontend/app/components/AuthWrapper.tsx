@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react';
-import { AuthProvider } from './AuthProvider';
+import { AuthProvider } from './Auth/AuthProvider';
 
 const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (

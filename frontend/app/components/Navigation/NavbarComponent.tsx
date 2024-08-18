@@ -16,7 +16,7 @@ import { LuMenu } from "react-icons/lu";
 import NavbarButton from "./NavButton";
 import MockExamButton from "./MockExamButton";
 import { getGitHubStars } from "./util";
-import { useAuth } from '../../context/AuthConext';
+import { useAuth } from '../Auth/AuthConext';
 
 interface NavbarProps {
   user: User | null;
