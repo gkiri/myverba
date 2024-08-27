@@ -182,7 +182,7 @@ export default function Home() {
 
   return (
     <main
-      className={`min-h-screen p-5 bg-bg-verba text-text-verba ${fontClassName}`}
+      className={`h-screen overflow-hidden bg-bg-verba text-text-verba ${fontClassName}`}
       data-theme={
         baseSetting
           ? baseSetting[settingTemplate].Customization.settings.theme
@@ -192,7 +192,7 @@ export default function Home() {
       {gtag !== "" && <GoogleAnalytics gaId={gtag} />}
 
       {baseSetting ? (
-        <div>
+        <div className="h-full flex flex-col">
           <Navbar
             user={user}
             APIHost={APIHost}
@@ -209,116 +209,119 @@ export default function Home() {
             version="v1.0.0"
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
+            className="py-4" // Add this line to include top and bottom padding
           />
 
-          {user ? ( 
-            <ProtectedRoute> 
-              {currentPage === "CHAT" && (
-                <ChatComponent
-                  production={production}
-                  settingConfig={baseSetting[settingTemplate]}
-                  APIHost={APIHost}
-                  RAGConfig={RAGConfig}
-                  setCurrentPage={setCurrentPage}
-                />
-              )}
+          <div className="flex-grow overflow-hidden">
+            {user ? (
+              <ProtectedRoute>
+                {currentPage === "CHAT" && (
+                  <ChatComponent
+                    production={production}
+                    settingConfig={baseSetting[settingTemplate]}
+                    APIHost={APIHost}
+                    RAGConfig={RAGConfig}
+                    setCurrentPage={setCurrentPage}
+                  />
+                )}
 
-              {currentPage === "DOCUMENTS" && (
-                <DocumentViewerComponent
-                  RAGConfig={RAGConfig}
-                  production={production}
-                  setCurrentPage={setCurrentPage}
-                  settingConfig={baseSetting[settingTemplate]}
-                  APIHost={APIHost}
-                />
-              )}
+                {currentPage === "DOCUMENTS" && (
+                  <DocumentViewerComponent
+                    RAGConfig={RAGConfig}
+                    production={production}
+                    setCurrentPage={setCurrentPage}
+                    settingConfig={baseSetting[settingTemplate]}
+                    APIHost={APIHost}
+                  />
+                )}
 
-              {currentPage === "STATUS" && !production && (
-                <StatusComponent
-                  fetchHost={fetchHost}
-                  settingConfig={baseSetting[settingTemplate]}
-                  APIHost={APIHost}
-                />
-              )}
+                {currentPage === "STATUS" && !production && (
+                  <StatusComponent
+                    fetchHost={fetchHost}
+                    settingConfig={baseSetting[settingTemplate]}
+                    APIHost={APIHost}
+                  />
+                )}
 
-              {currentPage === "ADD" && !production && (
-                <RAGComponent
-                  baseSetting={baseSetting}
-                  settingTemplate={settingTemplate}
-                  buttonTitle="Import"
-                  settingConfig={baseSetting[settingTemplate]}
-                  APIHost={APIHost}
-                  RAGConfig={RAGConfig}
-                  setRAGConfig={setRAGConfig}
-                  setCurrentPage={setCurrentPage}
-                  showComponents={["Reader", "Chunker", "Embedder"]}
-                />
-              )}
+                {currentPage === "ADD" && !production && (
+                  <RAGComponent
+                    baseSetting={baseSetting}
+                    settingTemplate={settingTemplate}
+                    buttonTitle="Import"
+                    settingConfig={baseSetting[settingTemplate]}
+                    APIHost={APIHost}
+                    RAGConfig={RAGConfig}
+                    setRAGConfig={setRAGConfig}
+                    setCurrentPage={setCurrentPage}
+                    showComponents={["Reader", "Chunker", "Embedder"]}
+                  />
+                )}
 
-              {currentPage === "RAG" && !production && (
-                <RAGComponent
-                  baseSetting={baseSetting}
-                  settingTemplate={settingTemplate}
-                  buttonTitle="Save"
-                  settingConfig={baseSetting[settingTemplate]}
-                  APIHost={APIHost}
-                  RAGConfig={RAGConfig}
-                  setRAGConfig={setRAGConfig}
-                  setCurrentPage={setCurrentPage}
-                  showComponents={["Embedder", "Retriever", "Generator"]}
-                />
-              )}
+                {currentPage === "RAG" && !production && (
+                  <RAGComponent
+                    baseSetting={baseSetting}
+                    settingTemplate={settingTemplate}
+                    buttonTitle="Save"
+                    settingConfig={baseSetting[settingTemplate]}
+                    APIHost={APIHost}
+                    RAGConfig={RAGConfig}
+                    setRAGConfig={setRAGConfig}
+                    setCurrentPage={setCurrentPage}
+                    showComponents={["Embedder", "Retriever", "Generator"]}
+                  />
+                )}
 
-              {currentPage === "SETTINGS" && !production && (
-                <SettingsComponent
-                  settingTemplate={settingTemplate}
-                  setSettingTemplate={setSettingTemplate}
-                  baseSetting={baseSetting}
-                  setBaseSetting={setBaseSetting}
-                />
-              )}
+                {currentPage === "SETTINGS" && !production && (
+                  <SettingsComponent
+                    settingTemplate={settingTemplate}
+                    setSettingTemplate={setSettingTemplate}
+                    baseSetting={baseSetting}
+                    setBaseSetting={setBaseSetting}
+                  />
+                )}
 
-              {currentPage === 'MOCK_EXAM_START' && (
-                <MockExamStartPage APIHost={APIHost} setCurrentPage={setCurrentPage} />
-              )}
+                {currentPage === 'MOCK_EXAM_START' && (
+                  <MockExamStartPage APIHost={APIHost} setCurrentPage={setCurrentPage} />
+                )}
 
-              {currentPage === "MOCK_EXAM" && (
-                <MockExamPage 
-                  production={production}
-                  settingConfig={baseSetting[settingTemplate]} 
-                  APIHost={APIHost} 
-                />
-              )}
+                {currentPage === "MOCK_EXAM" && (
+                  <MockExamPage 
+                    production={production}
+                    settingConfig={baseSetting[settingTemplate]} 
+                    APIHost={APIHost} 
+                  />
+                )}
 
-              {currentPage === "ADD_MOCKS" && !production && (
-                <AddMocksPage 
-                  settingConfig={baseSetting[settingTemplate]} 
-                  APIHost={APIHost} 
-                />
-              )}
+                {currentPage === "ADD_MOCKS" && !production && (
+                  <AddMocksPage 
+                    settingConfig={baseSetting[settingTemplate]} 
+                    APIHost={APIHost} 
+                  />
+                )}
 
-              {currentPage === "PROFILE" && (
-                <div className="bg-bg-alt-verba p-6 rounded-lg shadow-md">
-                  <h2 className="text-2xl font-bold mb-4">User Profile</h2>
-                  <p>Email: {user.email}</p> 
-                  {/* Add more user profile information here */}
+                {currentPage === "PROFILE" && (
+                  <div className="bg-bg-alt-verba p-6 rounded-lg shadow-md">
+                    <h2 className="text-2xl font-bold mb-4">User Profile</h2>
+                    <p>Email: {user.email}</p> 
+                    {/* Add more user profile information here */}
+                  </div>
+                )}
+              </ProtectedRoute>
+            ) : (
+              <div className="text-center mt-10">
+                <h2 className="text-2xl font-bold mb-4">Welcome to Verba</h2>
+                <p className="mb-4">Please log in or sign up to access the full features.</p>
+                <div className="space-x-4">
+                  <Link href="/login" className="btn btn-primary">
+                    Log In
+                  </Link>
+                  <Link href="/signup" className="btn btn-secondary">
+                    Sign Up
+                  </Link>
                 </div>
-              )}
-            </ProtectedRoute> 
-          ) : (
-            <div className="text-center mt-10">
-              <h2 className="text-2xl font-bold mb-4">Welcome to Verba</h2>
-              <p className="mb-4">Please log in or sign up to access the full features.</p>
-              <div className="space-x-4">
-                <Link href="/login" className="btn btn-primary">
-                  Log In
-                </Link>
-                <Link href="/signup" className="btn btn-secondary">
-                  Sign Up
-                </Link>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       ) : (
         <div className="flex items-center justify-center h-screen gap-2">
