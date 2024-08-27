@@ -136,7 +136,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
 
   return (
     <div className="flex sm:flex-col md:flex-row justify-between items-start md:gap-3 pt-6">
-      <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col gap-2 h-[calc(100vh-2rem)]">
+      <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col gap-2">
         <InfoComponent
           settingConfig={settingConfig}
           tooltip_text={chat_interface_info}
