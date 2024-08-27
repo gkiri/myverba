@@ -6,12 +6,6 @@ import ChunksComponent from "../Document/ChunksComponent";
 import DocumentComponent from "../Document/DocumentComponent";
 import MermaidDiagram from "../Document/MermaidDiagram";  // Import the MermaidDiagram component
 import { RAGConfig } from "../RAG/types";
-import InfoComponent from "../Navigation/InfoComponent";
-import {
-  document_interface_info,
-  chunk_interface_info,
-  chat_interface_info,
-} from "@/app/info";
 import { Message, QueryPayload_Button } from "./types";
 
 interface ChatComponentProps {
@@ -137,11 +131,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   return (
     <div className="flex sm:flex-col md:flex-row justify-between items-start md:gap-3 pt-6">
       <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col gap-2">
-        <InfoComponent
-          settingConfig={settingConfig}
-          tooltip_text={chat_interface_info}
-          display_text="Chat Interface"
-        />
         <ChatInterfaceComponent
           setContext={setContext}
           production={production}
@@ -158,11 +147,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
 
       <div className="flex lg:flex-row sm:flex-col justify-between items-start sm:w-full md:w-1/2 lg:w-4/6 gap-3">
         <div className="sm:w-full md:w-1/3 lg:w-1/5 flex flex-col gap-2 ">
-          <InfoComponent
-            settingConfig={settingConfig}
-            tooltip_text={chunk_interface_info}
-            display_text="Relevant Context"
-          />
           <ChunksComponent
             context={context}
             production={production}
@@ -178,11 +162,6 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
         </div>
 
         <div className="sm:w-full lg:w-4/5 flex flex-col gap-2">
-          <InfoComponent
-            settingConfig={settingConfig}
-            tooltip_text={document_interface_info}
-            display_text="Document Viewer"
-          />
           <DocumentComponent
             production={production}
             setSelectedChunk={setSelectedChunk}

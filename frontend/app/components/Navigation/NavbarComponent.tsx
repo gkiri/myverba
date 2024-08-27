@@ -79,7 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <div className="flex justify-between items-center mb-10 py-4">
+    <div className="flex justify-between items-center mb-2 py-4">
       {/* Logo, Title, Subtitle */}
       <div className="flex flex-row items-center gap-5">
         <img src={imageSrc} width={80} className="flex" alt="Logo" />
