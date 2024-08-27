@@ -438,30 +438,20 @@ return (
             ref={index === messages.length - 1 ? lastMessageRef : null}
             className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
-            <div
-              className={`max-w-3/4 p-3 rounded-lg ${
-                message.type === "user"
-                  ? "bg-blue-500 text-white"
-                  : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              } shadow-md`}
-            >
-              <ChatMessage
-                message={message}
-                handleCopyToBillboard={handleCopyToBillboard}
-                settingConfig={settingConfig}
-              />
-            </div>
+            <ChatMessage
+              message={message}
+              handleCopyToBillboard={handleCopyToBillboard}
+              settingConfig={settingConfig}
+            />
           </div>
         ))}
         {previewText && (
           <div className="flex justify-start">
-            <div className="max-w-3/4 p-3 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 shadow-md">
-              <ChatMessage
-                settingConfig={settingConfig}
-                message={{ type: "system", content: previewText, cached: false }}
-                handleCopyToBillboard={handleCopyToBillboard}
-              />
-            </div>
+            <ChatMessage
+              settingConfig={settingConfig}
+              message={{ type: "system", content: previewText, cached: false }}
+              handleCopyToBillboard={handleCopyToBillboard}
+            />
           </div>
         )}
         {isFetching && (

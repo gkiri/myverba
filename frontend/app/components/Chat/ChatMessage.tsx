@@ -27,7 +27,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       className={`flex items-end gap-2 ${message.type === "user" ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`flex flex-col items-start p-4 rounded-xl animate-press-in shadow-md sm:text-sm md:text-base ${message.type === "user" ? "bg-primary-verba" : "bg-bg-verba"}`}
+        className={`max-w-3/4 p-3 rounded-lg ${
+          message.type === "user"
+            ? "bg-blue-500 text-white"
+            : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+        } shadow-md animate-press-in sm:text-sm md:text-base`}
       >
         {message.cached && <FaDatabase size={12} className="text-text-verba" />}
         {message.type === "system" ? (
