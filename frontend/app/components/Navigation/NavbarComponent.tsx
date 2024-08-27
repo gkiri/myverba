@@ -96,96 +96,96 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {/* Pages */}
         <div className="lg:flex hidden lg:flex-row items-center lg:gap-3 justify-between">
-          <div
-            className={`${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
-          ></div>
-          <NavbarButton
-            hide={false}
-            APIHost={APIHost}
-            Icon={IoChatbubbleSharp}
-            iconSize={icon_size}
-            title="Chat"
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="CHAT"
-          />
-          <NavbarButton
-            hide={false}
-            APIHost={APIHost}
-            Icon={IoDocumentSharp}
-            iconSize={icon_size}
-            title="Documents"
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="DOCUMENTS"
-          />
-          <NavbarButton
-            hide={production}
-            APIHost={APIHost}
-            Icon={HiOutlineStatusOnline}
-            iconSize={icon_size}
-            title="Overview"
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="STATUS"
-          />
-          <div
-            className={`${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
-          ></div>
-          <NavbarButton
-            hide={production}
-            APIHost={APIHost}
-            Icon={IoMdAddCircle}
-            iconSize={icon_size}
-            title="Add Documents"
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="ADD"
-          />
-          <NavbarButton
-            hide={production}
-            APIHost={APIHost}
-            Icon={IoBuildSharp}
-            iconSize={icon_size}
-            title="RAG"
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="RAG"
-          />
-          <NavbarButton
-            hide={production}
-            APIHost={APIHost}
-            Icon={IoSettingsSharp}
-            iconSize={icon_size}
-            title="Settings"
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="SETTINGS"
-          />
-          <div
-            className={`sm:h-[3vh] lg:h-[5vh] mx-1 hidden sm:block bg-text-alt-verba w-px`}
-          ></div>
-
-          {/* Mock Exam Button */}
-          <MockExamButton  
-            APIHost={APIHost} 
-            currentPage={currentPage} 
-            setCurrentPage={setCurrentPage}
-          /> 
-
-          <NavbarButton
-            hide={production}
-            APIHost={APIHost}
-            Icon={IoMdAddCircleOutline}
-            iconSize={icon_size}
-            title="Add Mocks" 
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="ADD_MOCKS" 
-          />
-
           {user ? (
             <>
+              <div
+                className={`${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
+              ></div>
+              <NavbarButton
+                hide={false}
+                APIHost={APIHost}
+                Icon={IoChatbubbleSharp}
+                iconSize={icon_size}
+                title="Chat"
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                setPage="CHAT"
+              />
+              <NavbarButton
+                hide={false}
+                APIHost={APIHost}
+                Icon={IoDocumentSharp}
+                iconSize={icon_size}
+                title="Documents"
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                setPage="DOCUMENTS"
+              />
+              <NavbarButton
+                hide={production}
+                APIHost={APIHost}
+                Icon={HiOutlineStatusOnline}
+                iconSize={icon_size}
+                title="Overview"
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                setPage="STATUS"
+              />
+              <div
+                className={`${production ? "h-[0vh]" : "sm:h-[3vh] lg:h-[5vh] mx-1"} hidden sm:block bg-text-alt-verba w-px`}
+              ></div>
+              <NavbarButton
+                hide={production}
+                APIHost={APIHost}
+                Icon={IoMdAddCircle}
+                iconSize={icon_size}
+                title="Add Documents"
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                setPage="ADD"
+              />
+              <NavbarButton
+                hide={production}
+                APIHost={APIHost}
+                Icon={IoBuildSharp}
+                iconSize={icon_size}
+                title="RAG"
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                setPage="RAG"
+              />
+              <NavbarButton
+                hide={production}
+                APIHost={APIHost}
+                Icon={IoSettingsSharp}
+                iconSize={icon_size}
+                title="Settings"
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                setPage="SETTINGS"
+              />
+              <div
+                className={`sm:h-[3vh] lg:h-[5vh] mx-1 hidden sm:block bg-text-alt-verba w-px`}
+              ></div>
+
+              {/* Mock Exam Button */}
+              <MockExamButton  
+                APIHost={APIHost} 
+                currentPage={currentPage} 
+                setCurrentPage={setCurrentPage}
+              /> 
+
+              <NavbarButton
+                hide={production}
+                APIHost={APIHost}
+                Icon={IoMdAddCircleOutline}
+                iconSize={icon_size}
+                title="Add Mocks" 
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                setPage="ADD_MOCKS" 
+              />
+
               <NavbarButton
                 hide={false}
                 APIHost={APIHost}
@@ -224,42 +224,42 @@ const Navbar: React.FC<NavbarProps> = ({
                   <LuMenu size={20} />
                 </summary>
                 <ul className="bg-bg-alt-verba">
-                  <li onClick={() => setCurrentPage("CHAT")}>
-                    <a>Chat</a>
-                  </li>
-                  <li onClick={() => setCurrentPage("DOCUMENTS")}>
-                    <a>Documents</a>
-                  </li>
-                  {!production && (
-                    <li onClick={() => setCurrentPage("STATUS")}>
-                      <a>Status</a>
-                    </li>
-                  )}
-                  {!production && (
-                    <li onClick={() => setCurrentPage("ADD")}>
-                      <a>Add Documents</a>
-                    </li>
-                  )}
-                  {!production && (
-                    <li onClick={() => setCurrentPage("RAG")}>
-                      <a>RAG</a>
-                    </li>
-                  )}
-                  {!production && (
-                    <li onClick={() => setCurrentPage("SETTINGS")}>
-                      <a>Settings</a>
-                    </li>
-                  )}
-                  <li onClick={() => setCurrentPage("MOCK_EXAM_START")}>
-                    <a>Mock Exams</a>
-                  </li>
-                  {!production && (
-                    <li onClick={() => setCurrentPage("ADD_MOCKS")}>
-                      <a>Add Mocks</a>
-                    </li>
-                  )}
                   {user ? (
                     <>
+                      <li onClick={() => setCurrentPage("CHAT")}>
+                        <a>Chat</a>
+                      </li>
+                      <li onClick={() => setCurrentPage("DOCUMENTS")}>
+                        <a>Documents</a>
+                      </li>
+                      {!production && (
+                        <li onClick={() => setCurrentPage("STATUS")}>
+                          <a>Status</a>
+                        </li>
+                      )}
+                      {!production && (
+                        <li onClick={() => setCurrentPage("ADD")}>
+                          <a>Add Documents</a>
+                        </li>
+                      )}
+                      {!production && (
+                        <li onClick={() => setCurrentPage("RAG")}>
+                          <a>RAG</a>
+                        </li>
+                      )}
+                      {!production && (
+                        <li onClick={() => setCurrentPage("SETTINGS")}>
+                          <a>Settings</a>
+                        </li>
+                      )}
+                      <li onClick={() => setCurrentPage("MOCK_EXAM_START")}>
+                        <a>Mock Exams</a>
+                      </li>
+                      {!production && (
+                        <li onClick={() => setCurrentPage("ADD_MOCKS")}>
+                          <a>Add Mocks</a>
+                        </li>
+                      )}
                       <li onClick={() => setCurrentPage("PROFILE")}>
                         <a>Profile</a>
                       </li>
