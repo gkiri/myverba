@@ -319,12 +319,6 @@ export default function Home() {
               </div>
             </div>
           )}
-
-          <footer className="footer footer-center p-1 mt-2 bg-bg-verba text-text-alt-verba">
-            <aside>
-              <p>Build with ♥ and Weaviate © 2024</p>
-            </aside>
-          </footer>
         </div>
       ) : (
         <div className="flex items-center justify-center h-screen gap-2">
