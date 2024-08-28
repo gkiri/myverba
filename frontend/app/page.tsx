@@ -182,7 +182,7 @@ export default function Home() {
 
   return (
     <main
-      className={`h-screen overflow-hidden bg-bg-verba text-text-verba ${fontClassName}`}
+      className={`h-screen overflow-hidden bg-bg-verba text-text-verba ${fontClassName} px-2 sm:px-6 md:px-8 lg:px-12`}
       data-theme={
         baseSetting
           ? baseSetting[settingTemplate].Customization.settings.theme
@@ -209,10 +209,10 @@ export default function Home() {
             version="v1.0.0"
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            className="py-4" // Add this line to include top and bottom padding
+            className="py-4"
           />
 
-          <div className="flex-grow overflow-hidden">
+          <div className="flex-grow overflow-hidden pt-16">
             {user ? (
               <ProtectedRoute>
                 {currentPage === "CHAT" && (
