@@ -184,7 +184,7 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
 
   if (featureContent) {
     return (
-      <div className="flex flex-col bg-bg-alt-verba rounded-lg shadow-lg p-5 text-text-verba gap-5 sm:h-[53.5vh] lg:h-[65vh] overflow-auto">
+      <div className="flex flex-col bg-bg-alt-verba rounded-lg shadow-lg p-5 text-text-verba gap-5 h-full overflow-auto">
         {renderFeatureContent()}
       </div>
     );
@@ -192,7 +192,7 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
 
   if (currentDocument !== null && !isFetching) {
     return (
-      <div className="flex flex-col bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 rounded-lg shadow-lg p-5 text-text-verba gap-5 sm:h-[53.5vh] lg:h-[65vh] overflow-auto">
+      <div className="flex flex-col bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 rounded-lg shadow-lg p-5 text-text-verba gap-5 h-full overflow-auto">
         {/*Title*/}
         <div className="flex justify-between">
           <div className="flex flex-col">
@@ -373,7 +373,7 @@ const DocumentComponent: React.FC<DocumentComponentProps> = ({
   // Add this new return statement for the initial/empty state
   if (!currentDocument && !featureContent && !isFetching) {
     return (
-      <div className="flex flex-col bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 rounded-lg shadow-lg p-5 text-text-verba sm:h-[53.5vh] lg:h-[65vh] overflow-auto">
+      <div className="flex flex-col bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 rounded-lg shadow-lg p-5 text-text-verba h-full overflow-auto">
         <div className="flex flex-col items-center justify-center h-full text-center">
           <svg className="w-12 h-12 mb-4 text-secondary-verba" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

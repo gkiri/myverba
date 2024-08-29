@@ -130,7 +130,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
 
   return (
     <div className="flex sm:flex-col md:flex-row justify-between items-stretch md:gap-3 pt-6 h-[calc(100vh-8rem)]">
-      <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col">
+      <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col h-full">
         <ChatInterfaceComponent
           setContext={setContext}
           production={production}
@@ -146,7 +146,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       </div>
 
       <div className="flex lg:flex-row sm:flex-col justify-between items-start sm:w-full md:w-1/2 lg:w-4/6 gap-3 h-full">
-        <div className="sm:w-full md:w-1/3 lg:w-1/5 flex flex-col gap-2 ">
+        <div className="sm:w-full md:w-1/3 lg:w-1/5 flex flex-col gap-2">
           <ChunksComponent
             context={context}
             production={production}
@@ -161,7 +161,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
           />
         </div>
 
-        <div className="sm:w-full lg:w-4/5 flex flex-col gap-2">
+        <div className="sm:w-full lg:w-4/5 flex flex-col gap-2 h-full">
           <DocumentComponent
             production={production}
             setSelectedChunk={setSelectedChunk}
