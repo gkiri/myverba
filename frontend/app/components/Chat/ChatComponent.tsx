@@ -129,8 +129,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   };
 
   return (
-    <div className="flex sm:flex-col md:flex-row justify-between items-stretch md:gap-3 pt-0.1 h-[calc(100vh-12rem)]">
-      <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col h-full">
+    <div className="flex sm:flex-col md:flex-row justify-between items-stretch md:gap-3 h-full">
+      <div className="sm:w-full md:w-2/3 lg:w-3/5 flex flex-col">
         <ChatInterfaceComponent
           setContext={setContext}
           production={production}

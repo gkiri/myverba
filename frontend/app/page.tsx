@@ -213,7 +213,7 @@ export default function Home() {
             className="py-4"
           />
 
-          <div className="flex-grow overflow-hidden pt-16">
+          <div className="flex-grow overflow-hidden p-4 relative">
             {user ? (
               <ProtectedRoute>
                 {currentPage === "CHAT" && (
