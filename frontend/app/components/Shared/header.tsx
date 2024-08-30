@@ -1,7 +1,7 @@
 import { signOut } from "@/utils/auth"; 
 import { Button } from "@/components/ui/button"; 
 import Link from "next/link";
-import { useAuth } from "@/utils/auth";
+import { useAuth } from '../Auth/AuthConext';
 
 export default  function Header() {
   const { user } = useAuth(); 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from '../utils/auth';
+import { useAuth } from '../components/Auth/AuthConext';
 import { useEffect, useState } from 'react';
 import { supabase } from '../utils/supabase';
 

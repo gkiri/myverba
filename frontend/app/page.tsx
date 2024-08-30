@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from './utils/auth';
+import { useAuth } from './components/Auth/AuthConext';
 import Navbar from "./components/Navigation/NavbarComponent";
 import ProtectedRoute from './components/Shared/ProtectedRoute';
 import SettingsComponent from "./components/Settings/SettingsComponent";
