@@ -45,10 +45,10 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="flex justify-between h-16">
           <div className="flex items-center pl-4 sm:pl-6 lg:pl-8"> {/* Added padding-left */}
             <div className="flex-shrink-0 flex items-center">
-              <img className="h-8 w-auto mr-3" src={imageSrc} alt="Logo" />
+              <img className="h-10 w-auto mr-4" src={imageSrc} alt="Logo" />
               <div>
-                <h1 className="text-xl font-bold text-indigo-600">{title}</h1>
-                <p className="text-sm text-indigo-500">{subtitle}</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600">{title}</h1>
+                <p className="text-base sm:text-lg text-indigo-500">{subtitle}</p>
               </div>
             </div>
           </div>
