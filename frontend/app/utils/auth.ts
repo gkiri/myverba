@@ -1,16 +1,14 @@
 "use client";
 
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 import { User, Session } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    console.error('Error signing out:', error.message);
-  }
-};
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export const useAuth = () => {
   const router = useRouter();
@@ -24,7 +22,7 @@ export const useAuth = () => {
         setUser(session?.user ?? null);
 
         if (event === 'SIGNED_OUT') {
-          router.push('/login'); 
+          router.push('/login');
         }
       }
     );
@@ -37,7 +35,16 @@ export const useAuth = () => {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [router]); 
+  }, [router]);
 
-  return { user, session, signOut }; 
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error.message);
+    } else {
+      router.push('/login');
+    }
+  };
+
+  return { user, session, signOut };
 };

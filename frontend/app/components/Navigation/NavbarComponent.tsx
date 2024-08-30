@@ -2,13 +2,14 @@
 
 import React from "react";
 import NavbarButton from "./NavButton";
-import { FaComments, FaFileAlt, FaChartBar, FaPlus, FaCog } from "react-icons/fa";
+import { FaComments, FaFileAlt, FaChartBar, FaPlus, FaCog, FaTachometerAlt } from "react-icons/fa";
 import { IoBuildSharp } from "react-icons/io5";
 import MockExamButton from "./MockExamButton";
 import Link from "next/link";
+import { useAuth } from '../Auth/AuthConext';
+import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
-  user: any;
   APIHost: string | null;
   production: boolean;
   title: string;
@@ -21,7 +22,6 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({
-  user,
   APIHost,
   production,
   title,
@@ -33,6 +33,11 @@ const Navbar: React.FC<NavbarProps> = ({
   className,
 }) => {
   const icon_size = 18;
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <nav className={`bg-white shadow-md w-full ${className}`}>
@@ -114,14 +119,15 @@ const Navbar: React.FC<NavbarProps> = ({
               setCurrentPage={setCurrentPage}
             />
             {user && (
-              <Link href="/profile" className="text-gray-600 hover:text-gray-900">
-                Profile
+              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+                <FaTachometerAlt className="inline-block mr-1" />
+                Dashboard
               </Link>
             )}
             {user && (
-              <button onClick={() => {/* Implement sign out logic */}} className="text-gray-600 hover:text-gray-900">
+              <Button onClick={handleSignOut} variant="outline" size="sm">
                 Sign Out
-              </button>
+              </Button>
             )}
           </div>
         </div>
