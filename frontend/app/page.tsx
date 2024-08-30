@@ -183,7 +183,7 @@ export default function Home() {
 
   return (
     <main
-      className={`h-screen overflow-hidden ${fontClassName} px-2 sm:px-6 md:px-8 lg:px-12`}
+      className={`h-screen overflow-hidden ${fontClassName} px-2 sm:px-6 md:px-8 lg:px-12 bg-gradient-to-br from-indigo-100 to-white dark:from-gray-900 dark:to-indigo-900`}
       data-theme={
         baseSetting
           ? baseSetting[settingTemplate].Customization.settings.theme

@@ -24,37 +24,38 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
   return (
     <div
-      className={`flex items-end gap-2 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+      className={`flex ${
+        message.type === "user" ? "justify-end" : "justify-start"
+      } mb-4`}
     >
       <div
         className={`max-w-3/4 p-3 rounded-lg ${
           message.type === "user"
-            ? "bg-blue-500 text-white"
-            : "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-        } shadow-md animate-press-in sm:text-sm md:text-base`}
+            ? "bg-gray-200 text-gray-800"
+            : "bg-blue-100 text-gray-800 dark:bg-blue-800 dark:text-gray-200"
+        } shadow-md animate-press-in text-base font-sans`}
       >
         {message.cached && <FaDatabase size={12} className="text-text-verba" />}
         {message.type === "system" ? (
           <ReactMarkdown
-            className="prose md:prose-base sm:prose-sm p-3 prose-pre:bg-bg-alt-verba"
             components={{
               code({ node, inline, className, children, ...props }) {
                 const match = /language-(\w+)/.exec(className || "");
                 return !inline && match ? (
                   <SyntaxHighlighter
+                    {...props}
                     style={
                       settingConfig.Customization.settings.theme === "dark"
-                        ? (oneDark as any)
-                        : (oneLight as any)
+                        ? oneDark
+                        : oneLight
                     }
                     language={match[1]}
                     PreTag="div"
-                    {...props}
                   >
                     {String(children).replace(/\n$/, "")}
                   </SyntaxHighlighter>
                 ) : (
-                  <code className={className} {...props}>
+                  <code {...props} className={className}>
                     {children}
                   </code>
                 );
@@ -67,16 +68,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <div className="whitespace-pre-wrap">{message.content}</div> // Use whitespace-pre-wrap for user messages
         )}
       </div>
-      <div className="flex flex-col items-center justify-center">
-        {message.type === "system" && (
-          <button
-            onClick={() => handleCopyToBillboard(message.content)}
-            className={`btn border-none shadow-none flex gap-1 bg-bg-alt-verba hover:bg-secondary-verba hover:text-text-verba text-text-alt-verba`}
-          >
-            <p className="text-xs">Copy</p>
-          </button>
-        )}
-      </div>
+      {message.type === "system" && (
+        <button
+          onClick={() => handleCopyToBillboard(message.content)}
+          className="ml-2 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 font-sans"
+        >
+          Copy
+        </button>
+      )}
     </div>
   );
 };

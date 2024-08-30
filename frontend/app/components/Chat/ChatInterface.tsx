@@ -396,7 +396,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceComponentProps> = ({
   };
 
 return (
-  <div className="flex flex-col h-full w-full bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 shadow-2xl rounded-xl overflow-hidden">
+  <div className="flex flex-col h-full w-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden font-sans">
     <div className="flex flex-col h-full">
       <div className="bg-white dark:bg-gray-800 bg-opacity-70 dark:bg-opacity-70 backdrop-blur-sm p-2 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
@@ -469,7 +469,7 @@ return (
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 bg-opacity-70 dark:bg-opacity-70 backdrop-blur-sm p-2 border-t border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 bg-opacity-70 dark:bg-opacity-70 backdrop-blur-sm p-4 border-t border-gray-200 dark:border-gray-700">
         <form
           className="flex items-center space-x-2"
           onSubmit={(e) => {
@@ -486,9 +486,9 @@ return (
               fetchSuggestions(e.target.value);
             }}
             onKeyDown={handleKeyDown}
-            className="flex-grow bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded-full py-2 px-4"
+            className="flex-grow bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 rounded-full py-2 px-4 font-sans text-sm"
           />
-          <Button type="submit" size="icon" className="bg-blue-500 hover:bg-blue-600 text-white rounded-full">
+          <Button type="submit" size="icon" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full">
             <IoMdSend size={18} />
           </Button>
           <Button
@@ -526,7 +526,7 @@ return (
               key={index + suggestion}
               variant="secondary"
               size="sm"
-              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-full text-xs"
+              className="bg-indigo-50 dark:bg-indigo-900 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-indigo-700 dark:text-indigo-200 rounded-full text-xs"
               onClick={() => handleSuggestionClick(suggestion)}
             >
               {renderBoldedSuggestion(suggestion, userInput)}
