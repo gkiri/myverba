@@ -34,14 +34,14 @@ const NavbarButton: React.FC<NavbarButtonProps> = ({
         hide ? "hidden" : "flex"
       } items-center justify-center ${
         currentPage === setPage
-          ? "bg-gray-100 text-gray-900"
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          ? "bg-indigo-100 text-indigo-900"
+          : "text-indigo-600 hover:bg-indigo-50 hover:text-indigo-900"
       }`}
       onClick={(e) => {
         setCurrentPage(setPage);
       }}
     >
-      <Icon size={iconSize} className="mr-2" />
+      <Icon size={iconSize} className="mr-2 text-indigo-600" />
       <span className="hidden md:inline">{title}</span>
     </button>
   );

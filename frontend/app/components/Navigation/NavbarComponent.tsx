@@ -45,10 +45,10 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <img className="h-8 w-auto" src={imageSrc} alt="Logo" />
-              <div className="ml-2">
-                <h1 className="text-xl font-bold text-gray-900">{title}</h1>
-                <p className="text-sm text-gray-600">{subtitle}</p>
+              <img className="h-8 w-auto mr-3" src={imageSrc} alt="Logo" />
+              <div>
+                <h1 className="text-xl font-bold text-indigo-600">{title}</h1>
+                <p className="text-sm text-indigo-500">{subtitle}</p>
               </div>
             </div>
           </div>
@@ -119,13 +119,13 @@ const Navbar: React.FC<NavbarProps> = ({
               setCurrentPage={setCurrentPage}
             />
             {user && (
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+              <Link href="/dashboard" className="text-indigo-600 hover:text-indigo-900">
                 <FaTachometerAlt className="inline-block mr-1" />
                 Dashboard
               </Link>
             )}
             {user && (
-              <Button onClick={handleSignOut} variant="outline" size="sm">
+              <Button onClick={handleSignOut} variant="outline" size="sm" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
                 Sign Out
               </Button>
             )}
