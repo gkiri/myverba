@@ -183,7 +183,7 @@ export default function Home() {
 
   return (
     <main
-      className={`h-screen overflow-hidden ${fontClassName} px-2 sm:px-6 md:px-8 lg:px-12 bg-gradient-to-br from-indigo-100 to-white dark:from-gray-900 dark:to-indigo-900`}
+      className={`h-screen overflow-hidden ${fontClassName} bg-gradient-to-br from-indigo-100 to-white dark:from-gray-900 dark:to-indigo-900`}
       data-theme={
         baseSetting
           ? baseSetting[settingTemplate].Customization.settings.theme
@@ -210,10 +210,10 @@ export default function Home() {
             version="v1.0.0"
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            className="py-4"
+            className="w-full"
           />
 
-          <div className="flex-grow overflow-hidden pt-4 pb-8 relative">
+          <div className="flex-grow overflow-hidden pt-4 pb-8 relative px-2 sm:px-6 md:px-8 lg:px-12">
             {user ? (
               <ProtectedRoute>
                 {currentPage === "CHAT" && (
