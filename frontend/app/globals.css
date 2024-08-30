@@ -67,3 +67,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.container {
+  max-width: calc(100% - 2rem); /* Adjust as needed */
+}

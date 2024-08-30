@@ -43,7 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({
     <nav className={`bg-white shadow-md w-full ${className}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex">
+          <div className="flex items-center pl-4 sm:pl-6 lg:pl-8"> {/* Added padding-left */}
             <div className="flex-shrink-0 flex items-center">
               <img className="h-8 w-auto mr-3" src={imageSrc} alt="Logo" />
               <div>
