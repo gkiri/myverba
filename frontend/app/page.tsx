@@ -183,7 +183,7 @@ export default function Home() {
 
   return (
     <main
-      className={`h-screen overflow-hidden bg-bg-verba text-text-verba ${fontClassName} px-2 sm:px-6 md:px-8 lg:px-12`}
+      className={`h-screen overflow-hidden ${fontClassName} px-2 sm:px-6 md:px-8 lg:px-12`}
       data-theme={
         baseSetting
           ? baseSetting[settingTemplate].Customization.settings.theme
@@ -213,7 +213,7 @@ export default function Home() {
             className="py-4"
           />
 
-          <div className="flex-grow overflow-hidden p-4 relative">
+          <div className="flex-grow overflow-hidden pt-4 pb-8 relative">
             {user ? (
               <ProtectedRoute>
                 {currentPage === "CHAT" && (

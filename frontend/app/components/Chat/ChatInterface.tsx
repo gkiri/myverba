@@ -396,8 +396,8 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceComponentProps> = ({
   };
 
 return (
-  <Card className="flex flex-col h-full bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 shadow-2xl rounded-xl overflow-hidden">
-    <CardContent className="flex flex-col h-full p-0">
+  <div className="flex flex-col h-full w-full bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 shadow-2xl rounded-xl overflow-hidden">
+    <div className="flex flex-col h-full">
       <div className="bg-white dark:bg-gray-800 bg-opacity-70 dark:bg-opacity-70 backdrop-blur-sm p-2 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -516,7 +516,7 @@ return (
           </Button>
         </form>
       </div>
-    </CardContent>
+    </div>
 
     {suggestions.length > 0 && (
       <div className="bg-white dark:bg-gray-800 bg-opacity-70 dark:bg-opacity-70 backdrop-blur-sm p-2 border-t border-gray-200 dark:border-gray-700">
@@ -545,7 +545,7 @@ return (
         <p>{notificationText}</p>
       </div>
     )}
-  </Card>
+  </div>
 );
 };
 
