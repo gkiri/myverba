@@ -84,7 +84,7 @@ const ChunksComponent: React.FC<ChunksComponentProps> = ({
   ];
 
   return (
-    <div className="flex flex-col gap-4 bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-gray-900 dark:to-indigo-900 rounded-lg shadow-lg p-5 text-text-verba h-full overflow-auto">
+    <div className="flex flex-col gap-4 bg-white rounded-lg shadow-lg p-5 text-text-verba h-full overflow-auto">
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-lg font-semibold">Relevant Context</h2>
         {chunks && chunks.length > 0 && (

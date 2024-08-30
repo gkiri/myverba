@@ -202,7 +202,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code: initialCode }) =>
       ) : (
         <div 
           ref={containerRef}
-          className="overflow-auto border border-secondary-verba rounded-lg p-4"
+          className="overflow-auto border border-secondary-verba rounded-lg p-4 bg-white"
           style={{ maxHeight: '60vh' }}
         >
           {error ? (
