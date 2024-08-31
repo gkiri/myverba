@@ -20,11 +20,12 @@ import MockExamPage from "./mock-exam/page";
 import MockExamStartPage from "./components/MockExam/MockExamStartPage";
 import AddMocksPage from "./add-mocks/page";
 import Link from 'next/link';
+import AIMentorPage from "./components/AIMentor/AIMentorPage";
 
 export default function Home() {
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState<
-    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "PROFILE" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS"
+    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "PROFILE" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS" | "AI_MENTOR"
   >("CHAT");
 
   const [production, setProduction] = useState(false);
@@ -159,7 +160,8 @@ export default function Home() {
       );
       document.documentElement.style.setProperty(
         "--text-alt-verba",
-        baseSetting[settingTemplate].Customization.settings.text_alt_color.color
+        baseSetting[settingTemplate].Customization.settings.text_alt_color
+          .color
       );
       document.documentElement.style.setProperty(
         "--button-verba",
@@ -306,6 +308,16 @@ export default function Home() {
                     <p>Email: {user.email}</p> 
                     {/* Add more user profile information here */}
                   </div>
+                )}
+
+                {currentPage === "AI_MENTOR" && (
+                  <AIMentorPage
+                    settingConfig={baseSetting[settingTemplate]}
+                    APIHost={APIHost}
+                    setCurrentPage={setCurrentPage}
+                    RAGConfig={RAGConfig}
+                    production={production}
+                  />
                 )}
               </ProtectedRoute>
             ) : (
