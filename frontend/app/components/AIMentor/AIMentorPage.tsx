@@ -1,8 +1,7 @@
 import React from "react";
-import ChatInterfaceComponent from "../Chat/ChatInterface";
+import AIMentorChatInterface from "./AIMentorChatInterface";
 import { SettingsConfiguration } from "../Settings/types";
 import { RAGConfig } from "../RAG/types";
-import { Message } from "../Chat/types";
 
 interface AIMentorPageProps {
   settingConfig: SettingsConfiguration;
@@ -19,29 +18,19 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
   RAGConfig,
   production,
 }) => {
-  const [messages, setMessages] = React.useState<Message[]>([
-    {
-      type: "system",
-      content: "Welcome to AI Mentor! How can I assist you with your UPSC preparation today?",
-    },
-  ]);
-
   return (
-    <div className="flex flex-col h-full w-full">
-      <h1 className="text-2xl font-bold mb-4">AI Mentor</h1>
-      <div className="flex-grow">
-        <ChatInterfaceComponent
-          settingConfig={settingConfig}
-          APIHost={APIHost}
-          setChunks={() => {}}
-          setChunkTime={() => {}}
-          setCurrentPage={setCurrentPage}
-          setContext={() => {}}
-          RAGConfig={RAGConfig}
-          production={production}
-          setMessages={setMessages}
-          messages={messages}
-        />
+    <div className="flex flex-col items-center h-full w-full px-4">
+      <div className="w-full sm:w-3/4 md:w-2/3 lg:w-1/2 h-full flex flex-col">
+        <h1 className="text-2xl font-bold mb-4 text-center">AI Mentor</h1>
+        <div className="flex-grow">
+          <AIMentorChatInterface
+            settingConfig={settingConfig}
+            APIHost={APIHost}
+            setCurrentPage={setCurrentPage}
+            RAGConfig={RAGConfig}
+            production={production}
+          />
+        </div>
       </div>
     </div>
   );
