@@ -1,5 +1,6 @@
 import React from "react";
 import AIMentorChatInterface from "./AIMentorChatInterface";
+import SyllabusViewer from "./SyllabusViewer"; // Add this import
 import { SettingsConfiguration } from "../Settings/types";
 import { RAGConfig } from "../RAG/types";
 
@@ -20,16 +21,28 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center h-full w-full px-4">
-      <div className="w-full sm:w-3/4 md:w-2/3 lg:w-1/2 h-full flex flex-col">
+      <div className="w-full h-full flex flex-col">
         <h1 className="text-2xl font-bold mb-4 text-center">AI Mentor</h1>
-        <div className="flex-grow">
-          <AIMentorChatInterface
-            settingConfig={settingConfig}
-            APIHost={APIHost}
-            setCurrentPage={setCurrentPage}
-            RAGConfig={RAGConfig}
-            production={production}
-          />
+        <div className="flex-grow flex space-x-4">
+          <div className="w-1/2">
+            <div className="h-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden">
+              <AIMentorChatInterface
+                settingConfig={settingConfig}
+                APIHost={APIHost}
+                setCurrentPage={setCurrentPage}
+                RAGConfig={RAGConfig}
+                production={production}
+              />
+            </div>
+          </div>
+          <div className="w-1/2">
+            <div className="h-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden">
+              <SyllabusViewer
+                APIHost={APIHost}
+                production={production}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
