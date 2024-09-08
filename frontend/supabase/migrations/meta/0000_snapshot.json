@@ -1,0 +1,95 @@
+{
+  "id": "82eb714d-97fe-48b1-bfe5-bf8549e8e0ba",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.gs1_progress": {
+      "name": "gs1_progress",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "h1": {
+          "name": "h1",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"status\":\"not_started\",\"last_activity\":null,\"mock_scores\":[],\"wrong_questions\":[]}'::jsonb"
+        },
+        "h2": {
+          "name": "h2",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"status\":\"not_started\",\"last_activity\":null,\"mock_scores\":[],\"wrong_questions\":[]}'::jsonb"
+        },
+        "h3": {
+          "name": "h3",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"status\":\"not_started\",\"last_activity\":null,\"mock_scores\":[],\"wrong_questions\":[]}'::jsonb"
+        },
+        "g1": {
+          "name": "g1",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"status\":\"not_started\",\"last_activity\":null,\"mock_scores\":[],\"wrong_questions\":[]}'::jsonb"
+        },
+        "g2": {
+          "name": "g2",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"status\":\"not_started\",\"last_activity\":null,\"mock_scores\":[],\"wrong_questions\":[]}'::jsonb"
+        },
+        "g3": {
+          "name": "g3",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{\"status\":\"not_started\",\"last_activity\":null,\"mock_scores\":[],\"wrong_questions\":[]}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
