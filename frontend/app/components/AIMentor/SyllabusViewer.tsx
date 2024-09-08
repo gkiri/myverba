@@ -200,13 +200,8 @@ const SyllabusViewer: React.FC<SyllabusViewerProps> = ({ APIHost, production }) 
               transition={{ duration: 0.3 }}
               className="mt-2"
             >
-              {node.children.map((child, index) => (
-                <React.Fragment key={child.id}>
-                  <TreeNode node={child} level={level + 1} />
-                  {index < node.children.length - 1 && (
-                    <div className="border-b border-gray-700 my-2"></div>
-                  )}
-                </React.Fragment>
+              {node.children.map((child) => (
+                <TreeNode key={child.id} node={child} level={level + 1} />
               ))}
             </motion.div>
           )}
