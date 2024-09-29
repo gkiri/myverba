@@ -791,7 +791,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
             "where": {
                 "path": ["ch_id"],
                 "operator": "Equal",
-                "valueString": chapter_id
+                "valueText": chapter_id
             }
         }
 
