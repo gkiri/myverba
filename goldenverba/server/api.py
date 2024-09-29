@@ -31,7 +31,7 @@ from goldenverba.components.types import Question # Add  Question model to types
 from pydantic import ValidationError
 from goldenverba.server.prompts import get_prompt
 from goldenverba.server.supabase.supabase_client import supabase
-
+import asyncio
 load_dotenv()
 
 gpt3_generator = GPT3Generator()
@@ -806,8 +806,8 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
             .do()
         )
 
-        print("Gkiri:chapter_query Format:", chapter_query)
-        msg.info(f"Gkiri: chapter_query: {chapter_query} ")
+        #print("Gkiri:chapter_query Format:", chapter_query)
+        #msg.info(f"Gkiri: chapter_query: {chapter_query} ")
         # Check for the result
         if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
             raise HTTPException(status_code=404, detail="Chapter not found")
