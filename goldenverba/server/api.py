@@ -858,3 +858,27 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
     except Exception as e:
         msg.warn(f"Failed to retrieve user progress for Chapter ID {chapter_id}: {e}")
         return {}
+
+
+@app.get("/api/test_api5")
+async def get_mock_exam_data(request: GetSyllabusChapterRequest):
+    try:
+
+        result_agg = (
+            client.query
+            .aggregate("VERBA_Syllabus_Chapters")
+            .with_fields("meta {count}")
+            .do()
+        )
+        msg.info(f"Gkiri: chapter_query: {result_agg} ")
+        return JSONResponse(status_code=200, content={"data": " ", "error": ""})
+
+    except Exception as e:
+        msg.warn(f"Could not retrieve configuration: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "data": {},
+                "error": f"Could not retrieve configuration: {str(e)}",
+            },
+        )
