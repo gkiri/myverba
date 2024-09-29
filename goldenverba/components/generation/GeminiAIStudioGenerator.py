@@ -31,8 +31,9 @@ class GeminiGenerator(Generator):
             "GOOGLE_API_KEY",
         ]
         self.streamable = True
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-002")
         self.context_window = 100000
+        self.api_key = os.getenv("GOOGLE_API_KEY", "")
 
     async def generate_stream(
         self,
@@ -51,42 +52,42 @@ class GeminiGenerator(Generator):
             conversation = {}
         messages = self.prepare_messages(queries, context, conversation)
 
+        if not self.api_key:
+            msg.fail("GOOGLE_API_KEY environment variable not set.")
+            raise ValueError("GOOGLE_API_KEY environment variable not set.")
+
+        genai.configure(api_key=self.api_key)
+
         #https://github.com/google/generative-ai-docs/blob/main/site/en/tutorials/quickstart_colab.ipynb
         try:
-            generative_multimodal_model = genai.GenerativeModel(
-                "gemini-1.5-flash",
-            )
+            generative_multimodal_model = genai.GenerativeModel.get_model(self.model_name)
 
             completion = await generative_multimodal_model.generate_content_async(
                 stream=True, contents=messages
             )
 
-            iter = completion.__aiter__()
-
-            try:
-                while True:
-                    chunk = await iter.__anext__()
-                    if len(chunk.candidates) > 0:
-                        if len(chunk.candidates[0].content.parts) > 0:
-                            yield {
-                                "message": chunk.candidates[0].content.parts[0].text,
-                                "finish_reason": chunk.candidates[0].finish_reason,
-                            }
-                        else:
-                            yield {
-                                "message": " < Canceled due SAFETY REASONS >",
-                                "finish_reason": "",
-                            }
-
-            except StopAsyncIteration:
-                yield {
+            async for chunk in completion:
+                if len(chunk.candidates) > 0:
+                    if len(chunk.candidates[0].content.parts) > 0: # Check if parts exist.
+                        yield {
+                            "message": chunk.candidates[0].content.parts[0].text,
+                            "finish_reason": chunk.candidates[0].finish_reason,
+                        }
+                    else:
+                        yield {  # Handle cases where the model returns no parts.
+                            "message": " < Canceled due to SAFETY REASONS >",
+                            "finish_reason": "",
+                        }
+                
+            yield {  # Ensure a final "stop" signal
                     "message": "",
                     "finish_reason": "stop",
-                }
-                pass
+            }
 
-        except Exception:
-            raise
+
+        except Exception as e:
+            msg.fail(f"Gemini API call failed: {str(e)}")
+            raise  # Re-raise the exception after logging
 
     def prepare_messages(
         self, queries: list[str], context: list[str], conversation: dict[str, str]
@@ -104,44 +105,36 @@ class GeminiGenerator(Generator):
         """
         messages = []
 
-        for message in conversation:
-            messages.append(
-                Content(role=message.type, parts=[Part.from_text(message.content)])
-            )
-
         query = " ".join(queries)
         user_context = " ".join(context)
-
-        messages.append(
-            Content(
-                role="user",
-                parts=[
-                    Part.from_text(
-                        f"{user_context} Please answer this query: '{query}' with this provided context. Only use the context if it is necessary to answer the question."
-                    )
-                ],
-            )
-        )
+        full_prompt = f"{user_context} Please answer this query: '{query}' with this provided context. Only use the context if it is necessary to answer the question."
+        
+        messages.append(Content(parts=[Part.from_text(full_prompt)]))
+        
+        for message in conversation:
+            messages.append(Content(role=message.type, parts=[Part.from_text(message.content)]))
 
         messages = self.ensure_user_model_alteration(messages)
 
         return messages
 
     def ensure_user_model_alteration(self, messages):
-        current_role: str = ""
-
-        new_messages: list[Content] = []
+        """Ensures correct role alternation for Gemini."""
+        current_role = ""
+        new_messages = []
 
         for message in messages:
-            if message.role == "system":
+            if message.role == "system": # Convert system to model
                 message.role = "model"
 
-        if messages[0].role == "model":
+
+        if messages and messages[0].role == "model":  # Handle leading model messages
             messages = messages[1:]
 
+
         for message in messages:
-            if message.role == current_role:
-                new_messages[-1] = message
+            if message.role == current_role: # Merge consecutive same role messages.
+                new_messages[-1].content.parts.extend(message.content.parts)
             else:
                 new_messages.append(message)
                 current_role = message.role
