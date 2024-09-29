@@ -807,7 +807,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         )
 
         print("Gkiri:chapter_query Format:", chapter_query)
-
+        msg.info(f"Gkiri: chapter_query: {chapter_query} ")
         # Check for the result
         if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
             raise HTTPException(status_code=404, detail="Chapter not found")
