@@ -860,8 +860,8 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
         return {}
 
 
-@app.get("/api/test_api5")
-async def get_mock_exam_data(request: GetSyllabusChapterRequest):
+@app.post("/api/test_api5")
+async def get_mock_exam_data2(request: GetSyllabusChapterRequest):
     try:
 
         result_agg = (
