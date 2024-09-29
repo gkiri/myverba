@@ -2,11 +2,12 @@ import os
 
 try:
     import vertexai.preview
-    from vertexai.preview.generative_models import GenerativeModel, Content, Part
+    #from vertexai.preview.generative_models import GenerativeModel, Content, Part
 except:
     pass
 
 import google.generativeai as genai
+from google.generativeai.types import Content, Part
 
 from wasabi import msg
 
