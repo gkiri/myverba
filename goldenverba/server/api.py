@@ -75,7 +75,7 @@ async def generate_gemini_response(prompt: str,context: str) -> str:
             full_response += chunk["message"]
         return full_response
     except Exception as e:
-        msg.fail(f"gpt3 API call failed: {str(e)}")
+        msg.fail(f"Gemini API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
 
@@ -791,6 +791,50 @@ class SyllabusChapterResponse(BaseModel):
     prompt: str
     llm_response: str
 
+test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
+Views And Their Contribution\n\nAlthough educated Indians retained their
+traditional history in the form of handwritten epics, Puranas, and
+semi-biographical works, modern research in the history of ancient India began
+only in the second half of the eighteenth century to serve the needs of the
+British colonial administration. When Bengal and Bihar fell under the rule of
+the East India Company in 1765, they found it difficult to administer the Hindu
+law of inheritance. Therefore, in 1776, the Manu Smriti, (the law-book of Manu),
+which was considered authoritative, was translated into English as A Code of
+Gentoo Laws. Pandits were associated with British judges to administer Hindu
+civil law and maulvis to administer that of Muslims. The initial efforts to
+understand ancient laws and customs, which continued largely until the
+eighteenth century, culminated in the establishment in Calcutta in 1784 of the
+Asiatic Society of Bengal. It was set up by a civil servant of the East India
+Company, Sir William Jones (1746-94). He was the first to suggest that Sanskrit,
+Latin, and Greek belonged to the same family of languages. He also translated
+the play known as the Abhijnanashakuntalam into English in 1789; the
+Bhagvadgita, the most popular Hindu religious text was translated into English
+by Wilkins in 1785. The Bombay Asiatic Society was set up in 1804, and the
+Asiatic Society of Great Britain was set up in London in 1823. William Jones
+emphasized that originally the European languages were very similar to Sanskrit
+and the Iranian language. This enthused European countries such as Germany,
+France, and Russia, to foster Indological studies. During the first half of the
+nineteenth century, chairs in Sanskrit were established in the UK and several
+other European countries.\n\nThe greatest impetus to Indological studies was
+given by the Germanborn scholar F. Max Mueller (1823-1902), who was largely
+based in England. The Revolt of 1857 caused Britain to realize that it badly
+needed a deeper knowledge of the manners and social systems of an alien people
+over whom it ruled. Similarly, the Christian missionaries sought to uncover the
+vulnerabilities in the Hindu religion to win converts and strengthen the British
+empire. To meet these needs, ancient scriptures were translated on a massive
+scale under the editorship of Max Mueller. Altogether fifty volumes, some in
+several parts, were published under the Sacred Books of the East series.
+Although a few Chinese and Iranjan texts were included, ancient Indian texts
+were predominant.\n\nIn the introductions to these volumes and the books based
+on them, Max Mueller and other Western scholars made certain generalizations
+about the nature of ancient Indian history and society. They stated that the
+ancient Indians lacked a sense of history, especially of the element of time and
+chronology. They added that Indians were accustomed to despotic rule, and also
+natives were so engrossed in the problems of spiritualism or of the next world
+that they felt no concern about the problems of this world. The Western scholars
+stressed that Indians had experienced neither a sense of nationhood nor any form
+of self-government."""
+
 @app.post("/api/get_syllabus_chapter_with_userstatus", response_model=SyllabusChapterResponse)
 async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterRequest):
     debug_log(f"Received get_syllabus_chapter_with_userstatus request: {request}")
@@ -844,7 +888,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
 
         # 4. Call LLM API
         #llm_response = await generate_gpt3_response(prompt, chapter_content)
-        llm_response = await generate_gemini_response(prompt, chapter_content)
+        llm_response = await generate_gemini_response(prompt, test_chapter)
 
         msg.info(f"Gkiri: Gemini llm_response: {llm_response} ")
 
