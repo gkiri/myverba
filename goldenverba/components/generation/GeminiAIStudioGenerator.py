@@ -58,7 +58,6 @@ class GeminiGenerator(Generator):
 
         genai.configure(api_key=self.api_key)
 
-        #https://github.com/google/generative-ai-docs/blob/main/site/en/tutorials/quickstart_colab.ipynb
         try:
             generative_multimodal_model = genai.GenerativeModel(self.model_name)
 
@@ -67,13 +66,13 @@ class GeminiGenerator(Generator):
             )
 
             async for chunk in completion:
-                yield {
-                        "message": chunk.text,  # Access the text directly
-                        "finish_reason": chunk.finish_reason,
-                    }
+                if hasattr(chunk, 'text'):
+                    yield {
+                            "message": chunk.text,
+                            "finish_reason": "continue",
+                        }
             
             yield {"message": "", "finish_reason": "stop"}
-
 
         except Exception as e:
             msg.fail(f"Gemini API call failed: {str(e)}")
@@ -96,14 +95,18 @@ class GeminiGenerator(Generator):
         messages = []
 
         for message in conversation:
-            messages.append(f"{message.type}: {message.content}")  # Format as strings
+            messages.append(Content(
+                role=message.type,
+                parts=[Part.from_text(message.content)]
+            ))
 
         query = " ".join(queries)
         user_context = " ".join(context)
 
-        messages.append(
-            f"user: {user_context} Please answer this query: '{query}' with this provided context. Only use the context if it is necessary to answer the question."
-        )  # Format as a string
+        messages.append(Content(
+            role="user",
+            parts=[Part.from_text(f"{user_context} Please answer this query: '{query}' with this provided context. Only use the context if it is necessary to answer the question.")]
+        ))
 
         return messages # Return list of strings
 

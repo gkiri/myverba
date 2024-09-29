@@ -65,7 +65,7 @@ async def generate_groq_response(prompt: str,context: str) -> str:
         msg.fail(f"groq API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
-async def generate_gemini_response(prompt: str,context: str) -> str:
+async def generate_gemini_response(prompt: str, context: str) -> str:
     """Helper function to generate LLM response."""
     try:
         full_response = ""
@@ -798,7 +798,7 @@ semi-biographical works, modern research in the history of ancient India began
 only in the second half of the eighteenth century to serve the needs of the
 British colonial administration. When Bengal and Bihar fell under the rule of
 the East India Company in 1765, they found it difficult to administer the Hindu
-law of inheritance. Therefore, in 1776, the Manu Smriti, (the law-book of Manu),
+law of inheritance. Therefore, in 776, the Manu Smriti, (the law-book of Manu),
 which was considered authoritative, was translated into English as A Code of
 Gentoo Laws. Pandits were associated with British judges to administer Hindu
 civil law and maulvis to administer that of Muslims. The initial efforts to
