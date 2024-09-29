@@ -860,8 +860,10 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
         return {}
 
 
-@app.post("/api/test_api5")
-async def get_mock_exam_data2(request: GetSyllabusChapterRequest):
+# Define health check endpoint
+@app.get("/api/test_api5")
+async def testing_api():
+
     msg.info("Received request for /api/test_api5")
     try:
         result_agg = (
@@ -871,13 +873,16 @@ async def get_mock_exam_data2(request: GetSyllabusChapterRequest):
             .do()
         )
         msg.info(f"Gkiri: chapter_query: {result_agg} ")
-        return JSONResponse(status_code=200, content={"data": result_agg, "error": ""})
-    except Exception as e:
-        msg.warn(f"Could not retrieve configuration: {str(e)}")
         return JSONResponse(
-            status_code=500,
+            content={"message": result_agg}
+        )
+    except Exception as e:
+        msg.fail(f"Healthcheck failed with {str(e)}")
+        return JSONResponse(
             content={
-                "data": {},
-                "error": f"Could not retrieve configuration: {str(e)}",
+                "message": f"Healthcheck failed with {str(e)}",
+                "production": production,
+                "gtag": tag,
             },
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
