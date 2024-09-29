@@ -786,21 +786,33 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         msg.info(f"Fetching content for Chapter ID: {chapter_id} for User ID: {user_id}")
 
         # Assuming manager.weaviate_client is the Weaviate client
-        chapter_query = {
-            "class": "VERBA_Syllabus_Chapters",
-            "where": {
+        # chapter_query = {
+        #     "class_name": "VERBA_Syllabus_Chapters",
+        #     "where": {
+        #         "path": ["ch_id"],
+        #         "operator": "Equal",
+        #         "valueText": chapter_id
+        #     }
+        # }
+        chapter_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Chapters", ["chapter_content"])  # Class name and fields to retrieve
+            .with_where({
                 "path": ["ch_id"],
                 "operator": "Equal",
                 "valueText": chapter_id
-            }
-        }
+            })
+            .with_limit(1)
+            .do()
+        )
 
-        chapter_result = manager.client.query.get(**chapter_query).with_limit(1).do()
-        
-        if not chapter_result["data"]["Get"]["VERBA_Syllabus_Chapters"]:
+        # Check for the result
+        if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
             raise HTTPException(status_code=404, detail="Chapter not found")
 
-        chapter_content = chapter_result["data"]["Get"]["VERBA_Syllabus_Chapters"][0].get("chapter_content", "")
+        #chapter_result = manager.client.query.get(**chapter_query).with_limit(1).do()
+
+        chapter_content = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0].get("chapter_content", "")
 
         # 2. Fetch user progress from Supabase
         user_progress = await get_user_chapter_progress(user_id, chapter_id)
