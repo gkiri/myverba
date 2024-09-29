@@ -850,7 +850,7 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
         response = await asyncio.get_event_loop().run_in_executor(
             None, lambda: supabase.table("gs1_progress").select("*").eq("user_id", user_id).single().execute()
         )
-        if response.status_code == 200 and response.data:
+        if response.data:
             user_progress = response.data
             chapter_progress = user_progress.get(chapter_id, {})
             return chapter_progress
