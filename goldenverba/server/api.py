@@ -819,6 +819,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         # 2. Fetch user progress from Supabase
         user_progress = await get_user_chapter_progress(user_id, chapter_id)
 
+        msg.info(f"Gkiri: user_progress: {user_progress} ")
         # 3. Get relevant prompt
         prompt_template = "Provide a personalized learning plan based on the user's progress and the chapter content."
 
@@ -826,7 +827,8 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         prompt = f"{prompt_template}\n\nChapter Content:\n{chapter_content}\n\nUser Progress:\n{json.dumps(user_progress)}"
 
         # 4. Call LLM API
-        llm_response = await generate_gpt3_response(prompt, chapter_content)
+        #llm_response = await generate_gpt3_response(prompt, chapter_content)
+        llm_response = "test"
 
         return SyllabusChapterResponse(
             chapter_content=chapter_content,
