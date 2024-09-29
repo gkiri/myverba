@@ -14,6 +14,7 @@ import time
 import random
 from goldenverba.components.generation.GPT3Generator import GPT3Generator
 from goldenverba.components.generation.GroqGenerator import GroqGenerator
+from goldenverba.components.generation.GeminiAIStudioGenerator import GeminiGenerator
 from goldenverba.server.debug_utils import debug_log, info_log, warn_log, error_log
 
 from goldenverba import verba_manager
@@ -36,6 +37,7 @@ load_dotenv()
 
 gpt3_generator = GPT3Generator()
 groq_generator = GroqGenerator()
+gemini_generator = GeminiGenerator()
 
 async def generate_gpt3_response(prompt: str,context: str) -> str:
     """Helper function to generate LLM response."""
@@ -62,6 +64,20 @@ async def generate_groq_response(prompt: str,context: str) -> str:
     except Exception as e:
         msg.fail(f"groq API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
+async def generate_gemini_response(prompt: str,context: str) -> str:
+    """Helper function to generate LLM response."""
+    try:
+        full_response = ""
+        async for chunk in gemini_generator.generate_stream([prompt], [context], []):
+            if chunk["finish_reason"] == "stop":
+                break
+            full_response += chunk["message"]
+        return full_response
+    except Exception as e:
+        msg.fail(f"gpt3 API call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
 
 # Check if runs in production
 production_key = os.environ.get("VERBA_PRODUCTION", "")
@@ -819,7 +835,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         # 2. Fetch user progress from Supabase
         user_progress = await get_user_chapter_progress(user_id, chapter_id)
 
-        msg.info(f"Gkiri: user_progress: {user_progress} ")
+        #msg.info(f"Gkiri: user_progress: {user_progress} ")
         # 3. Get relevant prompt
         prompt_template = "Provide a personalized learning plan based on the user's progress and the chapter content."
 
@@ -828,7 +844,9 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
 
         # 4. Call LLM API
         #llm_response = await generate_gpt3_response(prompt, chapter_content)
-        llm_response = "test"
+        llm_response = await generate_gemini_response(prompt, chapter_content)
+
+        msg.info(f"Gkiri: Gemini llm_response: {llm_response} ")
 
         return SyllabusChapterResponse(
             chapter_content=chapter_content,
@@ -862,29 +880,3 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
         return {}
 
 
-@app.get("/api/myhealth")
-async def health_check2():
-    try:
-        if manager.client.is_ready():
-            return JSONResponse(
-                content={"message": "Alive!", "production": production, "gtag": tag}
-            )
-        else:
-            return JSONResponse(
-                content={
-                    "message": "Database not ready!",
-                    "production": production,
-                    "gtag": tag,
-                },
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-    except Exception as e:
-        msg.fail(f"Healthcheck failed with {str(e)}")
-        return JSONResponse(
-            content={
-                "message": f"Healthcheck failed with {str(e)}",
-                "production": production,
-                "gtag": tag,
-            },
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        )
