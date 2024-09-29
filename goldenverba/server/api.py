@@ -787,7 +787,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
 
         # Assuming manager.weaviate_client is the Weaviate client
         chapter_query = {
-            "class": "VERBA_Syllabus_Chapters",
+            "class_name": "VERBA_Syllabus_Chapters",
             "where": {
                 "path": ["ch_id"],
                 "operator": "Equal",
