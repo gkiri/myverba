@@ -800,7 +800,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
             .with_where({
                 "path": ["ch_id"],
                 "operator": "Equal",
-                "valueText": chapter_id
+                "valueString": chapter_id
             })
             .with_limit(1)
             .do()
