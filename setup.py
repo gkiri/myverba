@@ -38,7 +38,9 @@ setup(
         "requests==2.31.0",
         "pypdf==4.2.0",
         "python-multipart==0.0.9",
-        "supabase==2.7.4"
+        "supabase==2.7.4",
+        "google-generativeai==0.8.2",
+        "vertexai==1.68.0"
     ],
     extras_require={
         "dev": ["pytest", "wheel", "twine", "black>=23.7.0", "setuptools"],
