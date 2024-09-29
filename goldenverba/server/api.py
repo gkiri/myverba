@@ -860,22 +860,22 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
         return {}
 
 
-# Define health check endpoint
-@app.get("/api/test_api5")
-async def testing_api():
-
-    msg.info("Received request for /api/test_api5")
+@app.get("/api/myhealth")
+async def health_check2():
     try:
-        result_agg = (
-            manager.client.query
-            .aggregate("VERBA_Syllabus_Chapters")
-            .with_fields("meta {count}")
-            .do()
-        )
-        msg.info(f"Gkiri: chapter_query: {result_agg} ")
-        return JSONResponse(
-            content={"message": result_agg}
-        )
+        if manager.client.is_ready():
+            return JSONResponse(
+                content={"message": "Alive!", "production": production, "gtag": tag}
+            )
+        else:
+            return JSONResponse(
+                content={
+                    "message": "Database not ready!",
+                    "production": production,
+                    "gtag": tag,
+                },
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
     except Exception as e:
         msg.fail(f"Healthcheck failed with {str(e)}")
         return JSONResponse(
