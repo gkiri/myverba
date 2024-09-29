@@ -862,17 +862,16 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
 
 @app.post("/api/test_api5")
 async def get_mock_exam_data2(request: GetSyllabusChapterRequest):
+    msg.info("Received request for /api/test_api5")
     try:
-
         result_agg = (
-            client.query
+            manager.client.query
             .aggregate("VERBA_Syllabus_Chapters")
             .with_fields("meta {count}")
             .do()
         )
         msg.info(f"Gkiri: chapter_query: {result_agg} ")
-        return JSONResponse(status_code=200, content={"data": " ", "error": ""})
-
+        return JSONResponse(status_code=200, content={"data": result_agg, "error": ""})
     except Exception as e:
         msg.warn(f"Could not retrieve configuration: {str(e)}")
         return JSONResponse(
