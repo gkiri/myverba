@@ -2,12 +2,11 @@ import os
 
 try:
     import vertexai.preview
-    #from vertexai.preview.generative_models import GenerativeModel, Content, Part
+    from vertexai.preview.generative_models import GenerativeModel, Content, Part
 except:
     pass
 
 import google.generativeai as genai
-from google.generativeai.types import Content, Part
 
 from wasabi import msg
 
@@ -36,7 +35,6 @@ class GeminiGenerator(Generator):
         self.context_window = 100000
         self.api_key = os.getenv("GOOGLE_API_KEY", "")
 
-
     async def generate_stream(
         self,
         queries: list[str],
@@ -58,44 +56,27 @@ class GeminiGenerator(Generator):
             msg.fail("GOOGLE_API_KEY environment variable not set.")
             raise ValueError("GOOGLE_API_KEY environment variable not set.")
 
-        self.api_key = os.environ.get("GOOGLE_API_KEY", "")
         genai.configure(api_key=self.api_key)
 
+        #https://github.com/google/generative-ai-docs/blob/main/site/en/tutorials/quickstart_colab.ipynb
         try:
-            #generative_multimodal_model = genai.GenerativeModel.get_model(self.model_name)
-            generative_multimodal_model = genai.GenerativeModel(
-                "gemini-1.5-flash-002"
-            )
+            generative_multimodal_model = genai.GenerativeModel(self.model_name)
 
             completion = await generative_multimodal_model.generate_content_async(
                 stream=True, contents=messages
             )
 
-            iter = completion.__aiter__()
-
-            try:
-                while True:
-                    chunk = await iter.__anext__()
-                    if len(chunk.candidates) > 0:
-                        if len(chunk.candidates[0].content.parts) > 0:
-                            yield {
-                                "message": chunk.candidates[0].content.parts[0].text,
-                                "finish_reason": chunk.candidates[0].finish_reason,
-                            }
-                        else:
-                            yield {
-                                "message": " < Canceled due SAFETY REASONS >",
-                                "finish_reason": "",
-                            }
-
-            except StopAsyncIteration:
+            async for chunk in completion:
                 yield {
-                    "message": "",
-                    "finish_reason": "stop",
-                }
-                pass
+                        "message": chunk.text,  # Access the text directly
+                        "finish_reason": chunk.finish_reason,
+                    }
+            
+            yield {"message": "", "finish_reason": "stop"}
 
-        except Exception:
+
+        except Exception as e:
+            msg.fail(f"Gemini API call failed: {str(e)}")
             raise
 
     def prepare_messages(
@@ -115,152 +96,36 @@ class GeminiGenerator(Generator):
         messages = []
 
         for message in conversation:
-            messages.append(
-                Content(role=message.type, parts=[Part.from_text(message.content)])
-            )
+            messages.append(f"{message.type}: {message.content}")  # Format as strings
 
         query = " ".join(queries)
         user_context = " ".join(context)
 
         messages.append(
-            Content(
-                role="user",
-                parts=[
-                    Part.from_text(
-                        f"{user_context} Please answer this query: '{query}' with this provided context. Only use the context if it is necessary to answer the question."
-                    )
-                ],
-            )
-        )
+            f"user: {user_context} Please answer this query: '{query}' with this provided context. Only use the context if it is necessary to answer the question."
+        )  # Format as a string
 
-        messages = self.ensure_user_model_alteration(messages)
-
-        return messages
+        return messages # Return list of strings
 
     def ensure_user_model_alteration(self, messages):
-        current_role: str = ""
-
-        new_messages: list[Content] = []
+        """Ensures correct role alternation for Gemini."""
+        current_role = ""
+        new_messages = []
 
         for message in messages:
-            if message.role == "system":
+            if message.role == "system": # Convert system to model
                 message.role = "model"
 
-        if messages[0].role == "model":
+
+        if messages and messages[0].role == "model":  # Handle leading model messages
             messages = messages[1:]
 
+
         for message in messages:
-            if message.role == current_role:
-                new_messages[-1] = message
+            if message.role == current_role: # Merge consecutive same role messages.
+                new_messages[-1].content.parts.extend(message.content.parts)
             else:
                 new_messages.append(message)
                 current_role = message.role
 
         return new_messages
-
-
-    # async def generate_stream(
-    #     self,
-    #     queries: list[str],
-    #     context: list[str],
-    #     conversation: dict = None,
-    # ):
-    #     """Generate a stream of response dicts based on a list of queries and list of contexts, and includes conversational context
-    #     @parameter: queries : list[str] - List of queries
-    #     @parameter: context : list[str] - List of contexts
-    #     @parameter: conversation : dict - Conversational context
-    #     @returns Iterator[dict] - Token response generated by the Generator in this format {system:TOKEN, finish_reason:stop or empty}.
-    #     """
-
-    #     if conversation is None:
-    #         conversation = {}
-    #     messages = self.prepare_messages(queries, context, conversation)
-
-    #     if not self.api_key:
-    #         msg.fail("GOOGLE_API_KEY environment variable not set.")
-    #         raise ValueError("GOOGLE_API_KEY environment variable not set.")
-
-    #     genai.configure(api_key=self.api_key)
-
-    #     #https://github.com/google/generative-ai-docs/blob/main/site/en/tutorials/quickstart_colab.ipynb
-    #     try:
-    #         generative_multimodal_model = genai.GenerativeModel.get_model(self.model_name)
-
-    #         completion = await generative_multimodal_model.generate_content_async(
-    #             stream=True, contents=messages
-    #         )
-
-    #         async for chunk in completion:
-    #             if len(chunk.candidates) > 0:
-    #                 if len(chunk.candidates[0].content.parts) > 0: # Check if parts exist.
-    #                     yield {
-    #                         "message": chunk.candidates[0].content.parts[0].text,
-    #                         "finish_reason": chunk.candidates[0].finish_reason,
-    #                     }
-    #                 else:
-    #                     yield {  # Handle cases where the model returns no parts.
-    #                         "message": " < Canceled due to SAFETY REASONS >",
-    #                         "finish_reason": "",
-    #                     }
-                
-    #         yield {  # Ensure a final "stop" signal
-    #                 "message": "",
-    #                 "finish_reason": "stop",
-    #         }
-
-
-    #     except Exception as e:
-    #         msg.fail(f"Gemini API call failed: {str(e)}")
-    #         raise  # Re-raise the exception after logging
-
-    # def prepare_messages(
-    #     self, queries: list[str], context: list[str], conversation: dict[str, str]
-    # ):
-    #     """
-    #     Prepares a list of messages formatted for a Retrieval Augmented Generation chatbot system, including system instructions, previous conversation, and a new user query with context.
-
-    #     @parameter queries: A list of strings representing the user queries to be answered.
-    #     @parameter context: A list of strings representing the context information provided for the queries.
-    #     @parameter conversation: A list of previous conversation messages that include the role and content.
-
-    #     @returns A list of message dictionaries formatted for the chatbot. This includes an initial system message, the previous conversation messages, and the new user query encapsulated with the provided context.
-
-    #     Each message in the list is a dictionary with 'role' and 'content' keys, where 'role' is either 'system' or 'user', and 'content' contains the relevant text. This will depend on the LLM used.
-    #     """
-    #     messages = []
-
-    #     query = " ".join(queries)
-    #     user_context = " ".join(context)
-    #     full_prompt = f"{user_context} Please answer this query: '{query}' with this provided context. Only use the context if it is necessary to answer the question."
-        
-    #     messages.append(Content(parts=[Part.from_text(full_prompt)]))
-        
-    #     for message in conversation:
-    #         messages.append(Content(role=message.type, parts=[Part.from_text(message.content)]))
-
-    #     messages = self.ensure_user_model_alteration(messages)
-
-    #     return messages
-
-    # def ensure_user_model_alteration(self, messages):
-    #     """Ensures correct role alternation for Gemini."""
-    #     current_role = ""
-    #     new_messages = []
-
-    #     for message in messages:
-    #         if message.role == "system": # Convert system to model
-    #             message.role = "model"
-
-
-    #     if messages and messages[0].role == "model":  # Handle leading model messages
-    #         messages = messages[1:]
-
-
-    #     for message in messages:
-    #         if message.role == current_role: # Merge consecutive same role messages.
-    #             new_messages[-1].content.parts.extend(message.content.parts)
-    #         else:
-    #             new_messages.append(message)
-    #             current_role = message.role
-
-    #     return new_messages
