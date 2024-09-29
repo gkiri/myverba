@@ -14,7 +14,8 @@ import time
 import random
 from goldenverba.components.generation.GPT3Generator import GPT3Generator
 from goldenverba.components.generation.GroqGenerator import GroqGenerator
-from goldenverba.components.generation.GeminiAIStudioGenerator import GeminiGenerator
+from goldenverba.components.generation.GeminiGenerator import GeminiGenerator
+#from goldenverba.components.generation.GeminiAIStudioGenerator import GeminiGenerator
 from goldenverba.server.debug_utils import debug_log, info_log, warn_log, error_log
 
 from goldenverba import verba_manager

@@ -31,7 +31,7 @@ class GeminiGenerator(Generator):
         ]
         self.streamable = True
         self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-pro-preview-0409")
-        self.context_window = 10000
+        self.context_window = 100000
 
     async def generate_stream(
         self,
