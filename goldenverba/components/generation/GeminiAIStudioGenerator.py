@@ -57,10 +57,14 @@ class GeminiGenerator(Generator):
             msg.fail("GOOGLE_API_KEY environment variable not set.")
             raise ValueError("GOOGLE_API_KEY environment variable not set.")
 
+        self.api_key = os.environ.get("GOOGLE_API_KEY", "")
         genai.configure(api_key=self.api_key)
 
         try:
-            generative_multimodal_model = genai.GenerativeModel.get_model(self.model_name)
+            #generative_multimodal_model = genai.GenerativeModel.get_model(self.model_name)
+            generative_multimodal_model = genai.GenerativeModel(
+                "gemini-1.5-flash-002"
+            )
 
             completion = await generative_multimodal_model.generate_content_async(
                 stream=True, contents=messages
