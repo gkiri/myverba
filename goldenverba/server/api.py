@@ -97,6 +97,9 @@ async def generate_gemini_response(prompt, context):
         msg.info(f"Full response: {full_response}")  # Log the full response
 
         return full_response
+    except Exception as e:
+        msg.fail(f"Error in generate_gemini_response: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate Gemini response: {str(e)}")
 
 # Check if runs in production
 production_key = os.environ.get("VERBA_PRODUCTION", "")
