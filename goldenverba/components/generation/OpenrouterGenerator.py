@@ -10,9 +10,9 @@ class OpenrouterGenerator(GPT4Generator):
         super().__init__()
         self.name = "Openrouter"
         self.description = "Generator using Openrouter suppported model"
-        self.model_name = os.getenv("Openrouter_MODEL")
+        self.model_name = os.getenv("OPENROUTER_MODEL")
         self.requires_library = ["openai"]
-        self.requires_env = ["OPENROUTER_API_KEY"]
+        self.requires_env = ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]
         self.streamable = True
         self.context_window = 100000
         print("MODEL :: ",self.model_name)
@@ -46,17 +46,20 @@ class OpenrouterGenerator(GPT4Generator):
             import openai
 
             openai.api_key = os.getenv("OPENROUTER_API_KEY")
+            openai.api_base = "https://openrouter.ai/api/v1"
             #base_url = os.environ.get("OPENAI_BASE_URL", "")
             base_url = "https://openrouter.ai/api/v1"
             if base_url:
                 openai.api_base = base_url
 
-            if "OPENAI_API_TYPE" in os.environ:
-                openai.api_type = os.getenv("OPENAI_API_TYPE")
-            if "OPENAI_API_BASE" in os.environ:
-                openai.api_base = os.getenv("OPENAI_API_BASE")
-            if "OPENAI_API_VERSION" in os.environ:
-                openai.api_version = os.getenv("OPENAI_API_VERSION")
+            print("MODEL NAME :: ", self.model_name)
+            
+            # if "OPENAI_API_TYPE" in os.environ:
+            #     openai.api_type = os.getenv("OPENAI_API_TYPE")
+            # if "OPENAI_API_BASE" in os.environ:
+            #     openai.api_base = os.getenv("OPENAI_API_BASE")
+            # if "OPENAI_API_VERSION" in os.environ:
+            #     openai.api_version = os.getenv("OPENAI_API_VERSION")
 
             chat_completion_arguments = {
                 "model": self.model_name,
