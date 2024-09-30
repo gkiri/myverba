@@ -16,7 +16,7 @@ class OpenrouterGenerator(GPT4Generator):
         self.requires_env = ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"]
         self.streamable = True
         self.context_window = 100000
-        self.client = AsyncOpenAI(api_key=os.getenv("OPENROUTER_API_KEY"),base="https://openrouter.ai/api/v1")
+        self.client = AsyncOpenAI(api_key=os.getenv("OPENROUTER_API_KEY"),base_url="https://openrouter.ai/api/v1")
         print("MODEL :: ",self.model_name)
 
     # async def generate_stream(
