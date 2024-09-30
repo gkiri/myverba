@@ -14,7 +14,7 @@ class OpenrouterGenerator(GPT4Generator):
         self.requires_library = ["openai"]
         self.requires_env = ["OPENROUTER_API_KEY"]
         self.streamable = True
-        self.context_window = 8000
+        self.context_window = 100000
         print("MODEL :: ",self.model_name)
 
     async def generate_stream(
@@ -37,6 +37,7 @@ class OpenrouterGenerator(GPT4Generator):
                 "finish_reason": "stop",
             }
 
+        
         if conversation is None:
             conversation = {}
         messages = self.prepare_messages(queries, context, conversation)
