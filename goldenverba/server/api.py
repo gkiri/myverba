@@ -87,10 +87,10 @@ async def generate_gemini_response(prompt: str, context: str) -> str:
     """Helper function to generate LLM response."""
     try:
         full_response = ""
-        async for chunk in openrouter_generator.generate_stream([prompt], [context], []):
-            if chunk["finish_reason"] == "stop":
+        async for chunk in openrouter_generator.generate_stream([prompt], [context], []): # Proper iteration
+            if chunk.get("finish_reason") == "stop":  # Access finish_reason safely
                 break
-            full_response += chunk["message"]
+            full_response += chunk.get("message", "") # Access message safely
         return full_response
     except Exception as e:
         msg.fail(f"openrouter API call failed: {str(e)}")
@@ -712,7 +712,7 @@ async def get_mock_exam_data():
 #     msg.good(f"Received visualize request: {payload.query}")
 #     try:
 #         # Construct prompt directly with user input
-#         prompt = f"Generate a Mermaid code block to visualize the following: {payload.query}"
+#         prompt = f"Generate a Mermaid code block to visualize the following: {payload.query}. Provide only the Mermaid code without any explanations."
 
 #         # Generate Mermaid code (no context needed)
 #         mermaid_response = await manager.generate_answer([prompt], [], [])
