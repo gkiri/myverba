@@ -15,6 +15,8 @@ import random
 from goldenverba.components.generation.GPT3Generator import GPT3Generator
 from goldenverba.components.generation.GroqGenerator import GroqGenerator
 from goldenverba.components.generation.GeminiGenerator import GeminiGenerator
+from goldenverba.components.generation.OpenrouterGenerator import OpenrouterGenerator
+
 #from goldenverba.components.generation.GeminiAIStudioGenerator import GeminiGenerator
 from goldenverba.server.debug_utils import debug_log, info_log, warn_log, error_log
 
@@ -39,6 +41,7 @@ load_dotenv()
 gpt3_generator = GPT3Generator()
 groq_generator = GroqGenerator()
 gemini_generator = GeminiGenerator()
+openrouter_generator = OpenrouterGenerator()
 
 async def generate_gpt3_response(prompt: str,context: str) -> str:
     """Helper function to generate LLM response."""
@@ -66,17 +69,31 @@ async def generate_groq_response(prompt: str,context: str) -> str:
         msg.fail(f"groq API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
+# async def generate_gemini_response(prompt: str, context: str) -> str:
+#     """Helper function to generate LLM response."""
+#     try:
+#         full_response = ""
+#         async for chunk in gemini_generator.generate_stream([prompt], [context], []):
+#             if chunk["finish_reason"] == "stop":
+#                 break
+#             full_response += chunk["message"]
+#         return full_response
+#     except Exception as e:
+#         msg.fail(f"Gemini API call failed: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
+
 async def generate_gemini_response(prompt: str, context: str) -> str:
     """Helper function to generate LLM response."""
     try:
         full_response = ""
-        async for chunk in gemini_generator.generate_stream([prompt], [context], []):
+        async for chunk in openrouter_generator.generate_stream([prompt], [context], []):
             if chunk["finish_reason"] == "stop":
                 break
             full_response += chunk["message"]
         return full_response
     except Exception as e:
-        msg.fail(f"Gemini API call failed: {str(e)}")
+        msg.fail(f"openrouter API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
 
