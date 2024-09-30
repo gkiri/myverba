@@ -83,19 +83,20 @@ async def generate_groq_response(prompt: str,context: str) -> str:
 #         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
 
-async def generate_gemini_response(prompt: str, context: str) -> str:
-    """Helper function to generate LLM response."""
+async def generate_gemini_response(prompt, context):
     try:
         full_response = ""
-        async for chunk in openrouter_generator.generate_stream([prompt], [context], []): # Proper iteration
-            if chunk.get("finish_reason") == "stop":  # Access finish_reason safely
+        async for chunk in openrouter_generator.generate_stream([prompt], [context], []):
+            msg.info(f"Chunk received: {chunk}")  # Log the chunk
+            if chunk.get("finish_reason") == "stop":
+                msg.info("Finish reason: stop")
                 break
-            full_response += chunk.get("message", "") # Access message safely
-        return full_response
-    except Exception as e:
-        msg.fail(f"openrouter API call failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+            message = chunk.get("message", "")
+            msg.info(f"Message received: {message}")  # Log the message extracted from the chunk
+            full_response += message
+        msg.info(f"Full response: {full_response}")  # Log the full response
 
+        return full_response
 
 # Check if runs in production
 production_key = os.environ.get("VERBA_PRODUCTION", "")
