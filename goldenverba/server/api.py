@@ -909,8 +909,11 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         prompt = f"{prompt_template}\n\nChapter Content:\n{chapter_content}\n\nUser Progress:\n{json.dumps(user_progress)}"
 
         # 4. Call LLM API
-        #llm_response = await generate_gpt3_response(prompt, chapter_content)
-        llm_response = await generate_gemini_response(prompt, test_chapter)
+        llm_response = await generate_gemini_response(prompt, chapter_content)
+        
+        # Test chapter
+        #llm_response = await generate_gemini_response(prompt, test_chapter)
+
 
         msg.info(f"Gkiri: Gemini llm_response: {llm_response} ")
 
