@@ -69,37 +69,37 @@ async def generate_groq_response(prompt: str,context: str) -> str:
         msg.fail(f"groq API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
-# async def generate_gemini_response(prompt: str, context: str) -> str:
-#     """Helper function to generate LLM response."""
-#     try:
-#         full_response = ""
-#         async for chunk in gemini_generator.generate_stream([prompt], [context], []):
-#             if chunk["finish_reason"] == "stop":
-#                 break
-#             full_response += chunk["message"]
-#         return full_response
-#     except Exception as e:
-#         msg.fail(f"Gemini API call failed: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
-
-
-async def generate_gemini_response(prompt, context):
+async def generate_gemini_response(prompt: str, context: str) -> str:
+    """Helper function to generate LLM response."""
     try:
         full_response = ""
-        async for chunk in openrouter_generator.generate_stream([prompt], [context], []):
-            msg.info(f"Chunk received: {chunk}")  # Log the chunk
-            if chunk.get("finish_reason") == "stop":
-                msg.info("Finish reason: stop")
+        async for chunk in gemini_generator.generate_stream([prompt], [context], []):
+            if chunk["finish_reason"] == "stop":
                 break
-            message = chunk.get("message", "")
-            msg.info(f"Message received: {message}")  # Log the message extracted from the chunk
-            full_response += message
-        msg.info(f"Full response: {full_response}")  # Log the full response
-
+            full_response += chunk["message"]
         return full_response
     except Exception as e:
-        msg.fail(f"Error in generate_gemini_response: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate Gemini response: {str(e)}")
+        msg.fail(f"Gemini API call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
+
+# async def generate_gemini_response(prompt, context):
+#     try:
+#         full_response = ""
+#         async for chunk in openrouter_generator.generate_stream([prompt], [context], []):
+#             msg.info(f"Chunk received: {chunk}")  # Log the chunk
+#             if chunk.get("finish_reason") == "stop":
+#                 msg.info("Finish reason: stop")
+#                 break
+#             message = chunk.get("message", "")
+#             msg.info(f"Message received: {message}")  # Log the message extracted from the chunk
+#             full_response += message
+#         msg.info(f"Full response: {full_response}")  # Log the full response
+
+#         return full_response
+#     except Exception as e:
+#         msg.fail(f"Error in generate_gemini_response: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"Failed to generate Gemini response: {str(e)}")
 
 # Check if runs in production
 production_key = os.environ.get("VERBA_PRODUCTION", "")
