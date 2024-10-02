@@ -27,7 +27,7 @@ class GeminiGenerator(Generator):
         self.description = "Generator using Google's Gemini 1.5 Pro model"
         self.requires_library = ["vertexai"]
         self.requires_env = [
-            #"GOOGLE_APPLICATION_CREDENTIALS",
+            "GOOGLE_APPLICATION_CREDENTIALS",
             "GOOGLE_CLOUD_PROJECT",
         ]
         self.streamable = True
@@ -62,7 +62,7 @@ class GeminiGenerator(Generator):
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
             REGION = "us-central1"
-            credentials_path = "../myupsc-mentor-ded3f62e859b.json"
+            credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
             if credentials_path:  # Check if credentials path is set
                 import google.auth
                 credentials, project_id_from_creds = google.auth.load_credentials_from_file(credentials_path) # credentials will be used if the path is provided
