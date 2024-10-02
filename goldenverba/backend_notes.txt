@@ -29,3 +29,23 @@ myupsc-mentor-ded3f62e859b.json
 
 6.local to docker container
 docker cp myverba/goldenverba/components/generation/myupsc-mentor-ded3f62e859b.json myverba-verba-1:/data
+
+7.check docker inside /data
+docker exec -it myverba-verba-1 ls -l /data
+
+
+
+#Note:
+Dockefile has ENV GOOGLE_APPLICATION_CREDENTIALS /data/myupsc-mentor-ded3f62e859b.json
+which is the folder inside docker container
+
+.env file has GOOGLE_APPLICATION_CREDENTIALS="/data/myupsc-mentor-ded3f62e859b.json"
+
+Keep the json file udner /home/ec2-user/myverba/data
+
+
+
+
+
+
+
