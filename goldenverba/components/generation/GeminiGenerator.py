@@ -3,8 +3,9 @@ import os
 try:
     import vertexai.preview
     from vertexai.preview.generative_models import GenerativeModel, Content, Part
-except:
-    pass
+except ImportError as e:  # Catch the specific ImportError
+    msg.fail(f"Could not import necessary Vertex AI libraries: {e}")
+    raise  # Re-raise the error so it's not ignored
 
 from wasabi import msg
 
@@ -26,7 +27,7 @@ class GeminiGenerator(Generator):
         self.description = "Generator using Google's Gemini 1.5 Pro model"
         self.requires_library = ["vertexai"]
         self.requires_env = [
-            "GOOGLE_APPLICATION_CREDENTIALS",
+            #"GOOGLE_APPLICATION_CREDENTIALS",
             "GOOGLE_CLOUD_PROJECT",
         ]
         self.streamable = True
@@ -61,7 +62,13 @@ class GeminiGenerator(Generator):
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
             REGION = "us-central1"
-            vertexai.init(project=project_id, location=REGION)
+            credentials_path = "../myupsc-mentor-ded3f62e859b.json"
+            if credentials_path:  # Check if credentials path is set
+                import google.auth
+                credentials, project_id_from_creds = google.auth.load_credentials_from_file(credentials_path) # credentials will be used if the path is provided
+                vertexai.init(project=project_id, location=REGION, credentials=credentials)
+            else:
+                vertexai.init(project=project_id, location=REGION) # ADC will be used if no path is provided.
 
             generative_multimodal_model = GenerativeModel(
                 "gemini-1.5-pro-preview-0409",
