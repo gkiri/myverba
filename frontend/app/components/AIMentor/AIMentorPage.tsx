@@ -1,8 +1,11 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import AIMentorChatInterface from "./AIMentorChatInterface";
-import SyllabusViewer from "./SyllabusViewer"; // Add this import
+import SyllabusViewer from "./SyllabusViewer";
 import { SettingsConfiguration } from "../Settings/types";
 import { RAGConfig } from "../RAG/types";
+import { useAuth } from '../Auth/AuthConext';
 
 interface AIMentorPageProps {
   settingConfig: SettingsConfiguration;
@@ -19,6 +22,35 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
   RAGConfig,
   production,
 }) => {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        if (user) {
+          console.log("User ID:", user.id);
+        } else {
+          console.log("User not authenticated");
+        }
+      } catch (error) {
+        console.error("Error fetching user information:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkUser();
+  }, [user]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <div>Please log in to access the AI Mentor.</div>;
+  }
+
   return (
     <div className="flex flex-col items-center h-full w-full px-4">
       <div className="w-full h-full flex flex-col">
