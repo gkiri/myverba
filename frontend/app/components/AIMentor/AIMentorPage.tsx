@@ -6,6 +6,7 @@ import SyllabusViewer from "./SyllabusViewer";
 import { SettingsConfiguration } from "../Settings/types";
 import { RAGConfig } from "../RAG/types";
 import { useAuth } from '../Auth/AuthConext';
+import { getUserId } from '@/utils/getUserId';
 
 interface AIMentorPageProps {
   settingConfig: SettingsConfiguration;
@@ -24,31 +25,52 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [llmResponse, setLlmResponse] = useState<string>("");
+
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
 
   useEffect(() => {
-    const checkUser = async () => {
+    const fetchSyllabusChapter = async () => {
+      if (initialFetchDone) return;
+
       try {
-        if (user) {
-          console.log("User ID:", user.id);
-        } else {
-          console.log("User not authenticated");
+        const userId = user?.id;
+        if (!userId) {
+          console.error("User ID not found");
+          return;
         }
+
+        const chapterId = "h1"; // Hardcoded for now, can be made dynamic later
+
+        const response = await fetch(`${APIHost}/api/get_syllabus_chapter_with_userstatus`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ user_id: userId, chapter_id: chapterId }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setLlmResponse(data.llm_response);
+        setInitialFetchDone(true);
       } catch (error) {
-        console.error("Error fetching user information:", error);
+        console.error("Error fetching syllabus chapter:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkUser();
-  }, [user]);
+    if (user && !initialFetchDone) {
+      fetchSyllabusChapter();
+    }
+  }, [APIHost, user, initialFetchDone]);
 
   if (isLoading) {
     return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return <div>Please log in to access the AI Mentor.</div>;
   }
 
   return (
@@ -64,6 +86,8 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
                 setCurrentPage={setCurrentPage}
                 RAGConfig={RAGConfig}
                 production={production}
+                initialMessage={llmResponse}
+                isInitialMessage={initialFetchDone}
               />
             </div>
           </div>

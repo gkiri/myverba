@@ -20,6 +20,8 @@ interface AIMentorChatInterfaceProps {
   setCurrentPage: (p: any) => void;
   RAGConfig: RAGConfig | null;
   production: boolean;
+  initialMessage: string;
+  isInitialMessage: boolean;
 }
 
 const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
@@ -28,6 +30,8 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
   setCurrentPage,
   RAGConfig,
   production,
+  initialMessage,
+  isInitialMessage,
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -44,6 +48,19 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
   const [showNotification, setShowNotification] = useState(false);
   const [notificationText, setNotificationText] = useState("");
   const [notificationState, setNotificationState] = useState<"GOOD" | "BAD">("GOOD");
+
+  useEffect(() => {
+    if (isInitialMessage && initialMessage) {
+      const greetingMessage = "Welcome to AI Mentor! How can I assist you with your UPSC preparation today?";
+      const combinedMessage = `${greetingMessage}\n\n${initialMessage}`;
+      setMessages([
+        {
+          type: "system",
+          content: combinedMessage,
+        },
+      ]);
+    }
+  }, [isInitialMessage, initialMessage]);
 
   useEffect(() => {
     const socketHost = getWebSocketApiHost();
@@ -158,7 +175,7 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
 
         if (data.context) {
           streamResponses(userInput, data.context);
-          setFetchingStatus("RESPONSE");
+          setFetchingStatus("DONE");
         }
       } else {
         triggerNotification("Failed to fetch from API: No data received", true);
@@ -217,12 +234,12 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
           </div>
         </div>
 
-        <div className="flex-grow overflow-auto p-3 space-y-3">
+        <div className="flex-grow overflow-y-auto p-3 space-y-3 h-[calc(100vh-200px)]">
           {messages.map((message, index) => (
             <div
               key={index}
               ref={index === messages.length - 1 ? lastMessageRef : null}
-              className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} mb-4`}
             >
               <ChatMessage
                 message={message}
