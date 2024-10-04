@@ -15,7 +15,7 @@ import random
 from goldenverba.components.generation.GPT3Generator import GPT3Generator
 from goldenverba.components.generation.GroqGenerator import GroqGenerator
 from goldenverba.components.generation.GeminiGenerator import GeminiGenerator
-from goldenverba.components.generation.OpenrouterGenerator import OpenrouterGenerator
+#from goldenverba.components.generation.OpenrouterGenerator import OpenrouterGenerator
 
 #from goldenverba.components.generation.GeminiAIStudioGenerator import GeminiGenerator
 from goldenverba.server.debug_utils import debug_log, info_log, warn_log, error_log
@@ -41,7 +41,7 @@ load_dotenv()
 gpt3_generator = GPT3Generator()
 groq_generator = GroqGenerator()
 gemini_generator = GeminiGenerator()
-openrouter_generator = OpenrouterGenerator()
+#openrouter_generator = OpenrouterGenerator()
 
 async def generate_gpt3_response(prompt: str,context: str) -> str:
     """Helper function to generate LLM response."""
@@ -808,9 +808,7 @@ class GetSyllabusChapterRequest(BaseModel):
     chapter_id: str
 
 class SyllabusChapterResponse(BaseModel):
-    chapter_content: str
     user_progress: dict
-    prompt: str
     llm_response: str
 
 test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
@@ -918,9 +916,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         msg.info(f"Gkiri: Gemini llm_response: {llm_response} ")
 
         return SyllabusChapterResponse(
-            chapter_content=chapter_content,
             user_progress=user_progress,
-            prompt=prompt,
             llm_response=llm_response
         )
 
