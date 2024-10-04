@@ -31,7 +31,7 @@ class GeminiGenerator(Generator):
             "GOOGLE_CLOUD_PROJECT",
         ]
         self.streamable = True
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-pro-preview-0409")
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-002")
         self.context_window = 100000
 
     async def generate_stream(
@@ -71,7 +71,7 @@ class GeminiGenerator(Generator):
                 vertexai.init(project=project_id, location=REGION) # ADC will be used if no path is provided.
 
             generative_multimodal_model = GenerativeModel(
-                "gemini-1.5-pro-preview-0409",
+                self.model_name,
             )
 
             completion = await generative_multimodal_model.generate_content_async(
