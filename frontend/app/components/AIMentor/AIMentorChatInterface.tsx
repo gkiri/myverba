@@ -234,7 +234,7 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
           </div>
         </div>
 
-        <div className="flex-grow overflow-y-auto p-3 space-y-3 h-[calc(100vh-200px)]">
+        <div className="flex-grow overflow-y-auto p-3 space-y-3">
           {messages.map((message, index) => (
             <div
               key={index}

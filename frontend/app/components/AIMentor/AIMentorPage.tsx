@@ -74,30 +74,25 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-center h-full w-full px-4">
-      <div className="w-full h-full flex flex-col">
-        <h1 className="text-2xl font-bold mb-4 text-center">AI Mentor</h1>
-        <div className="flex-grow flex space-x-4">
-          <div className="w-1/2">
-            <div className="h-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden">
-              <AIMentorChatInterface
-                settingConfig={settingConfig}
-                APIHost={APIHost}
-                setCurrentPage={setCurrentPage}
-                RAGConfig={RAGConfig}
-                production={production}
-                initialMessage={llmResponse}
-                isInitialMessage={initialFetchDone}
-              />
-            </div>
+    <div className="flex flex-col items-center h-full w-full px-4 pt-6">
+      <h1 className="text-2xl font-bold mb-4 text-center">AI Mentor</h1>
+      <div className="w-full h-[calc(100vh-120px)] flex flex-row space-x-4">
+        <div className="w-1/2">
+          <div className="h-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden">
+            <AIMentorChatInterface
+              settingConfig={settingConfig}
+              APIHost={APIHost}
+              setCurrentPage={setCurrentPage}
+              RAGConfig={RAGConfig}
+              production={production}
+              initialMessage={llmResponse}
+              isInitialMessage={!isLoading && initialFetchDone}
+            />
           </div>
-          <div className="w-1/2">
-            <div className="h-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden">
-              <SyllabusViewer
-                APIHost={APIHost}
-                production={production}
-              />
-            </div>
+        </div>
+        <div className="w-1/2">
+          <div className="h-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden">
+            <SyllabusViewer APIHost={APIHost} production={production} />
           </div>
         </div>
       </div>
