@@ -74,9 +74,12 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
   }
 
   return (
-    <div className="flex flex-col items-center h-full w-full px-4 pt-6">
+    <div className="flex flex-col items-center h-full w-full">
+      {/* Spacer div */}
+      <div className="h-8"></div> {/* Adjust the height as needed */}
+      
       <h1 className="text-2xl font-bold mb-4 text-center">AI Mentor</h1>
-      <div className="w-full h-[calc(100vh-120px)] flex flex-row space-x-4">
+      <div className="w-full h-[calc(100vh-160px)] flex flex-row space-x-4 px-4"> {/* Adjusted height and added horizontal padding */}
         <div className="w-1/2">
           <div className="h-full bg-white dark:bg-gray-800 shadow-2xl rounded-xl overflow-hidden">
             <AIMentorChatInterface
