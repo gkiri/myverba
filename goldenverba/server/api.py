@@ -906,13 +906,14 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         # You can customize the prompt as needed, possibly using predefined prompts
         #prompt = f"{prompt_template}\n\nChapter Content:\n{chapter_content}\n\nUser Progress:\n{json.dumps(user_progress)}"
         
+        conversation_history ="No previous conversation history."
         # 4. Generate the prompt using the function
         prompt = generate_prompt_chapter_user(
             chapter_id=chapter_id,
             user_id=user_id,
             chapter_content=chapter_content,
-            user_progress_data=user_progress
-            #conversation_history=conversation_history
+            user_progress_data=user_progress,
+            conversation_history=conversation_history
         )
 
         # 4. Call LLM API
