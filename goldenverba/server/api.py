@@ -33,7 +33,7 @@ from goldenverba.server.types import (
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question # Add  Question model to types
 from pydantic import ValidationError
-from goldenverba.server.prompts import get_prompt
+from goldenverba.server.prompts import get_prompt ,generate_prompt_chapter_user
 from goldenverba.server.supabase.supabase_client import supabase
 import asyncio
 load_dotenv()
@@ -901,10 +901,19 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
 
         #msg.info(f"Gkiri: user_progress: {user_progress} ")
         # 3. Get relevant prompt
-        prompt_template = "Provide a personalized learning plan based on the user's progress and the chapter content."
+        #prompt_template = "Provide a personalized learning plan based on the user's progress and the chapter content."
 
         # You can customize the prompt as needed, possibly using predefined prompts
-        prompt = f"{prompt_template}\n\nChapter Content:\n{chapter_content}\n\nUser Progress:\n{json.dumps(user_progress)}"
+        #prompt = f"{prompt_template}\n\nChapter Content:\n{chapter_content}\n\nUser Progress:\n{json.dumps(user_progress)}"
+        
+        # 4. Generate the prompt using the function
+        prompt = generate_prompt_chapter_user(
+            chapter_id=chapter_id,
+            user_id=user_id,
+            chapter_content=chapter_content,
+            user_progress_data=user_progress
+            #conversation_history=conversation_history
+        )
 
         # 4. Call LLM API
         llm_response = await generate_gemini_response(prompt, chapter_content)
