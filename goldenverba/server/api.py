@@ -33,7 +33,7 @@ from goldenverba.server.types import (
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question # Add  Question model to types
 from pydantic import ValidationError
-from goldenverba.server.prompts import get_prompt ,generate_prompt_chapter_user
+from goldenverba.server.prompts import get_prompt ,generate_prompt_chapter_user ,generate_prompt_chapter_user_query
 from goldenverba.server.supabase.supabase_client import supabase
 import asyncio
 load_dotenv()
@@ -806,6 +806,11 @@ from pydantic import BaseModel
 class GetSyllabusChapterRequest(BaseModel):
     user_id: str
     chapter_id: str
+    
+class GetSyllabusChapterQueryRequest(BaseModel):
+    user_id: str
+    chapter_id: str
+    query: str
 
 class SyllabusChapterResponse(BaseModel):
     user_progress: dict
