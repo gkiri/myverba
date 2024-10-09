@@ -855,7 +855,7 @@ that they felt no concern about the problems of this world. The Western scholars
 stressed that Indians had experienced neither a sense of nationhood nor any form
 of self-government."""
 
-@app.post("/api/get_syllabus_chapter_with_userstatus", response_model=SyllabusChapterResponse)
+@app.post("/api/get_syllabus_chapter_with_userstatus")
 async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterRequest):
     debug_log(f"Received get_syllabus_chapter_with_userstatus request: {request}")
     try:
@@ -954,4 +954,56 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
         msg.warn(f"Failed to retrieve user progress for Chapter ID {chapter_id}: {e}")
         return {}
 
+@app.post("/api/get_syllabus_chapter_with_userstatus_query")
+async def get_syllabus_chapter_with_userstatus_query(request: GetSyllabusChapterQueryRequest):
+    debug_log(f"Received get_syllabus_chapter_with_userstatus_query request: {request}")
+    try:
+        chapter_id = request.chapter_id
+        user_id = request.user_id
+        query = request.query
 
+        msg.info(f"Fetching content for Chapter ID: {chapter_id} for User ID: {user_id} with query: {query}")
+
+        # Fetch chapter content from Weaviate
+        chapter_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Chapters", ["chapter_content"])
+            .with_where({
+                "path": ["ch_id"],
+                "operator": "Equal",
+                "valueString": chapter_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+
+        chapter_content = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0].get("chapter_content", "")
+
+        # Fetch user progress from Supabase
+        user_progress = await get_user_chapter_progress(user_id, chapter_id)
+
+        conversation_history = "No previous conversation history."
+        
+        # Generate the prompt using the function
+        prompt = generate_prompt_chapter_user_query(
+            chapter_id=chapter_id,
+            user_id=user_id,
+            chapter_content=chapter_content,
+            user_progress_data=user_progress,
+            conversation_history=conversation_history,
+            user_query=query
+        )
+
+        # Call LLM API
+        llm_response = await generate_gemini_response(prompt, chapter_content)
+
+        return SyllabusChapterResponse(
+            user_progress=user_progress,
+            llm_response=llm_response
+        )
+    except Exception as e:
+        msg.error(f"Error in get_syllabus_chapter_with_userstatus_query: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
