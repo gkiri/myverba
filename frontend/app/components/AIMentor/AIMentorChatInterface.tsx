@@ -22,6 +22,8 @@ interface AIMentorChatInterfaceProps {
   production: boolean;
   initialMessage: string;
   isInitialMessage: boolean;
+  userId: string;
+  chapterId: string;
 }
 
 const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
@@ -32,6 +34,8 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
   production,
   initialMessage,
   isInitialMessage,
+  userId,
+  chapterId,
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -50,17 +54,39 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
   const [notificationState, setNotificationState] = useState<"GOOD" | "BAD">("GOOD");
 
   useEffect(() => {
-    if (isInitialMessage && initialMessage) {
-      const greetingMessage = "Welcome to AI Mentor! How can I assist you with your UPSC preparation today?";
-      const combinedMessage = `${greetingMessage}\n\n${initialMessage}`;
-      setMessages([
-        {
-          type: "system",
-          content: combinedMessage,
-        },
-      ]);
-    }
-  }, [isInitialMessage, initialMessage]);
+    const fetchInitialData = async () => {
+      if (isInitialMessage && initialMessage) {
+        const greetingMessage = "Welcome to AI Mentor! How can I assist you with your UPSC preparation today?";
+        const combinedMessage = `${greetingMessage}\n\n${initialMessage}`;
+        setMessages([
+          {
+            type: "system",
+            content: combinedMessage,
+          },
+        ]);
+      } else if (APIHost && userId && chapterId) {
+        try {
+          const response = await fetch(`${APIHost}/api/get_syllabus_chapter_with_userstatus`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, chapter_id: chapterId }),
+          });
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          setMessages([
+            {
+              type: "system",
+              content: data.llm_response,
+            },
+          ]);
+        } catch (error) {
+          console.error("Error fetching initial data:", error);
+        }
+      }
+    };
+
+    fetchInitialData();
+  }, [isInitialMessage, initialMessage, APIHost, userId, chapterId]);
 
   useEffect(() => {
     const socketHost = getWebSocketApiHost();
@@ -156,35 +182,39 @@ const AIMentorChatInterface: React.FC<AIMentorChatInterfaceProps> = ({
 
     try {
       setIsFetching(true);
-      setFetchingStatus("CHUNKS");
+      setFetchingStatus("RESPONSE");
 
-      const response = await fetch(`${APIHost}/api/query`, {
+      const response = await fetch(`${APIHost}/api/get_syllabus_chapter_with_userstatus_query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userInput }),
+        body: JSON.stringify({ 
+          query: userInput,
+          user_id: userId,
+          chapter_id: chapterId
+        }),
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-      const data: QueryPayload = await response.json();
+      const data = await response.json();
 
       if (data) {
-        if (data.error !== "") {
+        if (data.error) {
           triggerNotification(data.error, true);
-        }
-
-        if (data.context) {
-          streamResponses(userInput, data.context);
-          setFetchingStatus("DONE");
+        } else {
+          const newMessage: Message = {
+            type: "system",
+            content: data.llm_response,
+          };
+          setMessages((prev) => [...prev, newMessage]);
         }
       } else {
         triggerNotification("Failed to fetch from API: No data received", true);
-        setIsFetching(false);
-        setFetchingStatus("DONE");
       }
     } catch (error) {
       console.error("Failed to fetch from API:", error);
       triggerNotification("Failed to fetch from API: " + error, true);
+    } finally {
       setIsFetching(false);
       setFetchingStatus("DONE");
     }

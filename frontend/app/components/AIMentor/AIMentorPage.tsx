@@ -90,6 +90,8 @@ const AIMentorPage: React.FC<AIMentorPageProps> = ({
               production={production}
               initialMessage={llmResponse}
               isInitialMessage={!isLoading && initialFetchDone}
+              userId={user?.id || ''}
+              chapterId="h1" // You might want to make this dynamic based on your requirements
             />
           </div>
         </div>
