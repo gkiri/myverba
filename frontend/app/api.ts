@@ -13,13 +13,13 @@ export const detectHost = async (): Promise<string> => {
   };
 
   //const localUrl = "http://localhost:8000/api/health";
-  const localUrl = "http://3.83.67.48:8000/api/health";
+  const localUrl = "http://3.89.115.184:8000/api/health";
   const rootUrl = "/api/health";
 
   const isLocalHealthy = await checkUrl(localUrl);
   if (isLocalHealthy) {
     //return "http://localhost:8000";
-    return "http://3.83.67.48:8000";
+    return "http://3.89.115.184:8000";
   }
 
   const isRootHealthy = await checkUrl(rootUrl);

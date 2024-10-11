@@ -7,7 +7,7 @@ import TimerComponent from "../components/MockExam/TimerComponent";
 import { Question } from "../components/MockExam/types";
 
 //const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://3.83.67.48:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://3.89.115.184:8000';
 const QUESTIONS_PER_PAGE = 10; // Change this to 5 if you want 5 questions per page
 
 const MockExamPage = () => {
