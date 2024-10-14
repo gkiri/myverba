@@ -121,6 +121,7 @@ origins = [
     "http://localhost:3001",
     "https://verba-golden-ragtriever.onrender.com",
     "http://localhost:8000",
+    "http://localhost:8080",
     "http://3.83.67.48:8000",
     "http://3.89.115.184:8000",
     "https://gkiri-vercel-deploy.vercel.app",
