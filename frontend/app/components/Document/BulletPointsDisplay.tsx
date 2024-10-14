@@ -1,7 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const BulletPointsDisplay = ({ bulletPoints }) => {
+interface BulletPointsDisplayProps {
+  bulletPoints: string[];
+}
+
+const BulletPointsDisplay: React.FC<BulletPointsDisplayProps> = ({ bulletPoints }) => {
   return (
     <div className="bg-bg-alt-verba rounded-lg p-6 shadow-lg">
       <h2 className="text-2xl font-bold mb-4 text-primary-verba">Key Points</h2>

@@ -7,11 +7,12 @@ import DocumentComponent from "../Document/DocumentComponent";
 import MermaidDiagram from "../Document/MermaidDiagram";  // Import the MermaidDiagram component
 import { RAGConfig } from "../RAG/types";
 import { Message, QueryPayload_Button } from "./types";
+import { PageType } from '../../types';
 
 interface ChatComponentProps {
   settingConfig: SettingsConfiguration;
   APIHost: string | null;
-  setCurrentPage: (p: any) => void;
+  setCurrentPage: (p: PageType) => void;
   RAGConfig: RAGConfig | null;
   production: boolean;
 }
@@ -97,7 +98,11 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       }
     } catch (error) {
       console.error(`Error fetching ${feature}:`, error);
-      setFeatureContent(`Error: ${error.message}`);
+      if (error instanceof Error) {
+        setFeatureContent(`Error: ${error.message}`);
+      } else {
+        setFeatureContent('An unexpected error occurred.');
+      }
       setFeatureType(null);
     }
   };

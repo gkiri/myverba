@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button"; 
 import { Provider } from "@supabase/supabase-js";
-import { Github, Google } from "lucide-react";
+import { Github, Globe } from "lucide-react"; // Changed Google to Globe
 import { supabase } from "../../utils/supabase"; 
 
 type OAuthProvider = {
@@ -18,10 +18,10 @@ export function OAuthButtons() {
       icon: <Github className="size-5" />,
     },
     {
-        name: "google", 
-        displayName: "Google",
-        icon: <Google className="size-5" />,
-      },
+      name: "google", 
+      displayName: "Google",
+      icon: <Globe className="size-5" />, // Updated icon
+    },
   ];
 
   const handleOAuthSignIn = async (provider: Provider) => {

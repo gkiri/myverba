@@ -1,21 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
+interface Question {
+  global_questionID: string;
+  options: string[];
+  answer_key: string;
+  question: string;
+  description?: string;
+}
+
 const ExamSummaryPage = () => {
-  const [questions, setQuestions] = useState([]);
-  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [score, setScore] = useState(0);
-  const [expandedQuestions, setExpandedQuestions] = useState(new Set());
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const storedQuestions = JSON.parse(localStorage.getItem('mockExamQuestions') || '[]');
-    const storedAnswers = JSON.parse(localStorage.getItem('selectedAnswers') || '{}');
+    const storedQuestions: Question[] = JSON.parse(localStorage.getItem('mockExamQuestions') || '[]');
+    const storedAnswers: Record<string, string> = JSON.parse(localStorage.getItem('selectedAnswers') || '{}');
 
     setQuestions(storedQuestions);
     setSelectedAnswers(storedAnswers);
 
     // Calculate score
-    const correctCount = storedQuestions.reduce((count, question) => {
+    const correctCount = storedQuestions.reduce((count: number, question: Question) => {
       const correctAnswerText = question.options[question.answer_key.charCodeAt(0) - 97];
       return storedAnswers[question.global_questionID] === correctAnswerText ? count + 1 : count;
     }, 0);
@@ -23,8 +31,8 @@ const ExamSummaryPage = () => {
     setScore(correctCount);
   }, []);
 
-  const toggleQuestionExpansion = (questionId) => {
-    setExpandedQuestions(prev => {
+  const toggleQuestionExpansion = (questionId: string) => {
+    setExpandedQuestions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(questionId)) {
         newSet.delete(questionId);

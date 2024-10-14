@@ -2,12 +2,22 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { PageType } from '../../types';
 
-const MockExamStartPage = ({ APIHost, setCurrentPage }) => {
+interface MockExamStartPageProps {
+  APIHost: string | null;
+  setCurrentPage: (page: PageType) => void;
+}
+
+const MockExamStartPage: React.FC<MockExamStartPageProps> = ({ APIHost, setCurrentPage }) => {
   const [examType, setExamType] = useState('full');
   const router = useRouter();
 
   const handleStartExam = () => {
+    if (!APIHost) {
+      console.error("APIHost is not available");
+      return;
+    }
     localStorage.setItem('examType', examType);
     router.push('/mock-exam');
   };

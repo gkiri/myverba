@@ -21,12 +21,11 @@ import MockExamStartPage from "./components/MockExam/MockExamStartPage";
 import AddMocksPage from "./add-mocks/page";
 import Link from 'next/link';
 import AIMentorPage from "./components/AIMentor/AIMentorPage";
+import { PageType, PAGE_TYPES } from './types';
 
 export default function Home() {
   const { user } = useAuth();
-  const [currentPage, setCurrentPage] = useState<
-    "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG" | "PROFILE" | "MOCK_EXAM_START" | "MOCK_EXAM" | "ADD_MOCKS" | "AI_MENTOR"
-  >("CHAT");
+  const [currentPage, setCurrentPage] = useState<PageType>(PAGE_TYPES.CHAT);
 
   const [production, setProduction] = useState(false);
   const [gtag, setGtag] = useState("");
@@ -218,7 +217,7 @@ export default function Home() {
           <div className="flex-grow overflow-hidden pt-4 pb-8 relative px-2 sm:px-6 md:px-8 lg:px-12">
             {user ? (
               <ProtectedRoute>
-                {currentPage === "CHAT" && (
+                {currentPage === PAGE_TYPES.CHAT && (
                   <ChatComponent
                     production={production}
                     settingConfig={baseSetting[settingTemplate]}
@@ -228,7 +227,7 @@ export default function Home() {
                   />
                 )}
 
-                {currentPage === "DOCUMENTS" && (
+                {currentPage === PAGE_TYPES.DOCUMENTS && (
                   <DocumentViewerComponent
                     RAGConfig={RAGConfig}
                     production={production}
@@ -238,7 +237,7 @@ export default function Home() {
                   />
                 )}
 
-                {currentPage === "STATUS" && !production && (
+                {currentPage === PAGE_TYPES.STATUS && !production && (
                   <StatusComponent
                     fetchHost={fetchHost}
                     settingConfig={baseSetting[settingTemplate]}
@@ -246,7 +245,7 @@ export default function Home() {
                   />
                 )}
 
-                {currentPage === "ADD" && !production && (
+                {currentPage === PAGE_TYPES.ADD && !production && (
                   <RAGComponent
                     baseSetting={baseSetting}
                     settingTemplate={settingTemplate}
@@ -260,7 +259,7 @@ export default function Home() {
                   />
                 )}
 
-                {currentPage === "RAG" && !production && (
+                {currentPage === PAGE_TYPES.RAG && !production && (
                   <RAGComponent
                     baseSetting={baseSetting}
                     settingTemplate={settingTemplate}
@@ -274,7 +273,7 @@ export default function Home() {
                   />
                 )}
 
-                {currentPage === "SETTINGS" && !production && (
+                {currentPage === PAGE_TYPES.SETTINGS && !production && (
                   <SettingsComponent
                     settingTemplate={settingTemplate}
                     setSettingTemplate={setSettingTemplate}
@@ -288,18 +287,11 @@ export default function Home() {
                 )}
 
                 {currentPage === "MOCK_EXAM" && (
-                  <MockExamPage 
-                    production={production}
-                    settingConfig={baseSetting[settingTemplate]} 
-                    APIHost={APIHost} 
-                  />
+                  <MockExamPage />
                 )}
 
                 {currentPage === "ADD_MOCKS" && !production && (
-                  <AddMocksPage 
-                    settingConfig={baseSetting[settingTemplate]} 
-                    APIHost={APIHost} 
-                  />
+                  <AddMocksPage />
                 )}
 
                 {currentPage === "PROFILE" && (

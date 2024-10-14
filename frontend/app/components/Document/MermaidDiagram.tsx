@@ -52,7 +52,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code: initialCode }) =>
     return cleanCode;
   };
 
-  const detectDiagramType = (code: string) => {
+  const detectDiagramType = (code: string): string => {
     const firstLine = code.split('\n')[0].trim().toLowerCase();
     if (firstLine.startsWith('graph') || firstLine.startsWith('flowchart')) return 'flowchart';
     if (firstLine.startsWith('sequencediagram')) return 'sequenceDiagram';
@@ -64,7 +64,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code: initialCode }) =>
     return 'unknown';
   };
 
-  const sanitizeFlowchart = (code: string) => {
+  const sanitizeFlowchart = (code: string): string => {
     let cleanCode = code;
     if (!cleanCode.startsWith('graph') && !cleanCode.startsWith('flowchart')) {
       cleanCode = 'graph LR\n' + cleanCode;
@@ -87,7 +87,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code: initialCode }) =>
     return cleanCode;
   };
   
-  const sanitizeSequenceDiagram = (code: string) => {
+  const sanitizeSequenceDiagram = (code: string): string => {
     let cleanCode = code;
     if (!cleanCode.startsWith('sequenceDiagram')) {
       cleanCode = 'sequenceDiagram\n' + cleanCode;
@@ -106,7 +106,11 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ code: initialCode }) =>
       setError(null);
     } catch (err) {
       console.error('Mermaid rendering error:', err);
-      setError(`Failed to render diagram. Error: ${err.message}\n\nTry editing the diagram code to fix the issue.`);
+      if (err instanceof Error) {
+        setError(`Failed to render diagram. Error: ${err.message}\n\nTry editing the diagram code to fix the issue.`);
+      } else {
+        setError('Failed to render diagram due to an unknown error.\n\nTry editing the diagram code to fix the issue.');
+      }
       setSvg('');
     }
   };

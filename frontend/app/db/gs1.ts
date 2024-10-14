@@ -16,3 +16,7 @@ export async function updateGS1Progress(userId: string, chapterId: string, data:
 export async function createGS1Progress(userId: string) {
   await db.insert(gs1Progress).values({ userId });
 }
+
+export async function deleteGS1Progress(userId: string) {
+  // Function implementation
+}

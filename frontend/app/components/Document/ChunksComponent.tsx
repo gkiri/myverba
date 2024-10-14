@@ -6,7 +6,7 @@ import { IoSparkles } from "react-icons/io5";
 import { MdSummarize } from "react-icons/md";
 import { BsGraphUp } from "react-icons/bs";
 import UserModalComponent from "../Navigation/UserModal";
-import ChunkDropdown from "./ChunkDropdown";
+import ChunkDropdown from "./ChunkDropDown";
 import { Message } from "../Chat/types";
 
 interface ChunksComponentProps {

@@ -9,6 +9,8 @@ import Link from "next/link";
 import { useAuth } from '../Auth/AuthConext';
 import { Button } from "@/components/ui/button";
 import { IoPersonSharp } from "react-icons/io5";
+import { PageType, PAGE_TYPES } from '../../types';
+import { User } from '@supabase/supabase-js';
 
 interface NavbarProps {
   APIHost: string | null;
@@ -17,9 +19,10 @@ interface NavbarProps {
   subtitle: string;
   imageSrc: string;
   version: string;
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
+  currentPage: PageType;
+  setCurrentPage: (page: PageType) => void;
   className?: string;
+  user: User | null;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -32,9 +35,10 @@ const Navbar: React.FC<NavbarProps> = ({
   currentPage,
   setCurrentPage,
   className,
+  user,
 }) => {
   const icon_size = 18;
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -62,7 +66,7 @@ const Navbar: React.FC<NavbarProps> = ({
               title="Chat"
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
-              setPage="CHAT"
+              setPage={PAGE_TYPES.CHAT}
             />
             <NavbarButton
               hide={false}
@@ -72,7 +76,7 @@ const Navbar: React.FC<NavbarProps> = ({
               title="Documents"
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
-              setPage="DOCUMENTS"
+              setPage={PAGE_TYPES.DOCUMENTS}
             />
             <NavbarButton
               hide={production}
@@ -82,7 +86,7 @@ const Navbar: React.FC<NavbarProps> = ({
               title="Overview"
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
-              setPage="STATUS"
+              setPage={PAGE_TYPES.STATUS}
             />
             <NavbarButton
               hide={production}
@@ -92,7 +96,7 @@ const Navbar: React.FC<NavbarProps> = ({
               title="Add Documents"
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
-              setPage="ADD"
+              setPage={PAGE_TYPES.ADD}
             />
             <NavbarButton
               hide={production}
@@ -102,33 +106,24 @@ const Navbar: React.FC<NavbarProps> = ({
               title="RAG"
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
-              setPage="RAG"
-            />
-            <NavbarButton
-              hide={production}
-              APIHost={APIHost}
-              Icon={FaCog}
-              iconSize={icon_size}
-              title="Settings"
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              setPage="SETTINGS"
+              setPage={PAGE_TYPES.RAG}
             />
             <MockExamButton
               APIHost={APIHost}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
             />
-            {user && (
-              <Link href="/dashboard" className="text-indigo-600 hover:text-indigo-900">
-                <FaTachometerAlt className="inline-block mr-1" />
-                Dashboard
+            {user ? (
+              <div className="flex items-center">
+                <span className="mr-2">{user.email}</span>
+                <Button onClick={handleSignOut} variant="outline" size="sm">
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <Link href="/login">
+                <Button variant="outline" size="sm">Sign In</Button>
               </Link>
-            )}
-            {user && (
-              <Button onClick={handleSignOut} variant="outline" size="sm" className="text-indigo-600 border-indigo-600 hover:bg-indigo-50">
-                Sign Out
-              </Button>
             )}
             <NavbarButton
               hide={false}
@@ -138,7 +133,7 @@ const Navbar: React.FC<NavbarProps> = ({
               title="AI Mentor"
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
-              setPage="AI_MENTOR"
+              setPage={PAGE_TYPES.AI_MENTOR}
             />
           </div>
         </div>

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { SettingsConfiguration } from "../Settings/types";
 import RAGConfigComponent from "./RAGConfigComponent";
 import { RAGConfig, ConsoleMessage, ImportResponse } from "./types";
+import { PageType } from '../../types';
 import { FaFileImport } from "react-icons/fa";
 import { MdCancel } from "react-icons/md";
 
@@ -21,7 +22,7 @@ interface RAGComponentProps {
   buttonTitle: string;
   settingTemplate: string;
   baseSetting: Settings;
-  setCurrentPage: (p: any) => void;
+  setCurrentPage: (page: PageType) => void;
 }
 
 const RAGComponent: React.FC<RAGComponentProps> = ({

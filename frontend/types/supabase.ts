@@ -6,41 +6,56 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
-      todos: {
+      gs1_progress: {
         Row: {
-          id: number
-          inserted_at: string
-          is_complete: boolean | null
-          task: string | null
+          id: string
           user_id: string
+          h1: Json
+          h2: Json
+          h3: Json
+          g1: Json
+          g2: Json
+          g3: Json
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          id?: number
-          inserted_at?: string
-          is_complete?: boolean | null
-          task?: string | null
+          id?: string
           user_id: string
+          h1?: Json
+          h2?: Json
+          h3?: Json
+          g1?: Json
+          g2?: Json
+          g3?: Json
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          id?: number
-          inserted_at?: string
-          is_complete?: boolean | null
-          task?: string | null
+          id?: string
           user_id?: string
+          h1?: Json
+          h2?: Json
+          h3?: Json
+          g1?: Json
+          g2?: Json
+          g3?: Json
+          created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "todos_user_id_fkey"
+            foreignKeyName: "gs1_progress_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
+      // Add other tables here if they exist
     }
     Views: {
       [_ in never]: never
@@ -57,7 +72,7 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type PublicSchema = Database['public']
 
 export type Tables<
   PublicTableNameOrOptions extends

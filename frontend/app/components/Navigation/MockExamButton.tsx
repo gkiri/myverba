@@ -3,11 +3,12 @@
 import React from "react";
 import { IoSchoolSharp } from "react-icons/io5"; //  Or any suitable icon 
 import NavbarButton from "./NavButton";  // Import the existing NavbarButton component
+import { PageType, PAGE_TYPES } from '../../types';
 
 interface MockExamButtonProps {
   APIHost: string | null;
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
+  currentPage: PageType;
+  setCurrentPage: (page: PageType) => void;
 }
 
 const MockExamButton: React.FC<MockExamButtonProps> = ({
@@ -24,7 +25,7 @@ const MockExamButton: React.FC<MockExamButtonProps> = ({
       title="Mock Tests"
       currentPage={currentPage}
       setCurrentPage={setCurrentPage} 
-      setPage="MOCK_EXAM_START"  // New startpage identifier 
+      setPage={PAGE_TYPES.MOCK_EXAM_START}  // New startpage identifier 
     />
   );
 };

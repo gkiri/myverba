@@ -17,7 +17,11 @@ const SignIn: React.FC = () => {
       if (error) throw error;
       router.push('/');
     } catch (error) {
-      setError(error.message);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unexpected error occurred.');
+      }
     }
   };
 

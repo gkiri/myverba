@@ -119,6 +119,7 @@ If you haven't already, initialize your Supabase project:
 ```bash
 supabase init
 ```
+Note:start windows gui docker  and "supabase start" in windows powershell
 
 ### 2. Set Up Database Connection
 

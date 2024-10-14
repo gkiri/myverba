@@ -61,7 +61,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceComponentProps> = ({
     setContext(getContextFromLocalStorage("VERBA_CONTEXT"));
 
     const socketHost = getWebSocketApiHost();
-    const localSocket = new WebSocket(socketHost);
+    const localSocket = new WebSocket(`${socketHost}/ws/generate_stream`);
 
     localSocket.onopen = () => {
       console.log("WebSocket connection opened to " + socketHost);

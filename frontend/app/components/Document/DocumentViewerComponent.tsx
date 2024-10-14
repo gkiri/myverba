@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { SettingsConfiguration } from "../Settings/types";
 import { DocumentChunk, Document } from "../Document/types";
+import { PageType } from '../../types';
 
 import DocumentComponent from "../Document/DocumentComponent";
 import DocumentSearchComponent from "./DocumentSearchComponent";
@@ -12,7 +13,7 @@ import { RAGConfig } from "../RAG/types";
 interface DocumentViewerComponentProps {
   settingConfig: SettingsConfiguration;
   APIHost: string | null;
-  setCurrentPage: (p: any) => void;
+  setCurrentPage: (page: PageType) => void;
   RAGConfig: RAGConfig | null;
   production: boolean;
 }

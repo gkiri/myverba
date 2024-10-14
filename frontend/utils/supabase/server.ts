@@ -1,5 +1,6 @@
 import { Database } from '@/types/supabase'
-import { createClient as createClientBase, type CookieOptions } from '@supabase/supabase-js'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createClient as createClientBase } from '@supabase/supabase-js'
 
 export function createClient() {
     return createClientBase<Database>(

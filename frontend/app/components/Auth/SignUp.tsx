@@ -17,7 +17,11 @@ const SignUp: React.FC = () => {
       if (error) throw error;
       router.push('/login'); // Redirect to login after sign-up
     } catch (error) {
-      setError(error.message);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unexpected error occurred.');
+      }
     }
   };
 

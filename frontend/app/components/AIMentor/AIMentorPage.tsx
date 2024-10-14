@@ -7,11 +7,12 @@ import { SettingsConfiguration } from "../Settings/types";
 import { RAGConfig } from "../RAG/types";
 import { useAuth } from '../Auth/AuthConext';
 import { getUserId } from '@/utils/getUserId';
+import { PageType } from '../../types';
 
 interface AIMentorPageProps {
   settingConfig: SettingsConfiguration;
   APIHost: string | null;
-  setCurrentPage: (p: any) => void;
+  setCurrentPage: (page: PageType) => void;
   RAGConfig: RAGConfig | null;
   production: boolean;
 }

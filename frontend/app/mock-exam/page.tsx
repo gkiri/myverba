@@ -1,59 +1,72 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import QuestionComponent from "../components/MockExam/QuestionComponent";
 import TimerComponent from "../components/MockExam/TimerComponent";
 import { Question } from "../components/MockExam/types";
+import { useRouter } from "next/navigation";
+import { useAuth } from '../components/Auth/AuthConext';
+import { detectHost } from "../api";
 
-//const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://3.89.115.184:8000';
-const QUESTIONS_PER_PAGE = 10; // Change this to 5 if you want 5 questions per page
+const QUESTIONS_PER_PAGE = 10;
 
-const MockExamPage = () => {
+export default function MockExamPage() {
   const router = useRouter();
-  
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState(7200); // 120 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState(7200);
   const [isTimerExpired, setIsTimerExpired] = useState(false);
+  const [APIHost, setAPIHost] = useState<string | null>(null);
 
-  const fetchExamData = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/mock_exam`, {
-        method: "GET",
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      if (!Array.isArray(data.questions) || data.questions.length === 0) {
-        throw new Error('Invalid or empty question data received');
-      }
-      setQuestions(data.questions);
-    } catch (error) {
-      console.error("Error fetching mock exam data:", error);
-      setError("Failed to load exam questions. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  useEffect(() => {
+    const fetchAPIHost = async () => {
+      const host = await detectHost();
+      setAPIHost(host);
+    };
+    fetchAPIHost();
   }, []);
 
   useEffect(() => {
-    fetchExamData();
-  }, [fetchExamData]);
+    const fetchExamData = async () => {
+      if (!APIHost) return;
 
-  const handleAnswerSelect = useCallback((questionId: string, answer: string) => {
+      try {
+        const response = await fetch(`${APIHost}/api/mock_exam`, {
+          method: "GET",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (!Array.isArray(data.questions) || data.questions.length === 0) {
+          throw new Error('Invalid or empty question data received');
+        }
+        setQuestions(data.questions);
+      } catch (error) {
+        console.error("Error fetching exam data:", error);
+        setError("Failed to load exam questions. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (APIHost) {
+      fetchExamData();
+    }
+  }, [APIHost]);
+
+  const handleAnswerSelect = (questionId: string, answer: string) => {
     setSelectedAnswers(prev => ({ ...prev, [questionId]: answer }));
-  }, []);
+  };
 
-  const handleNavigation = useCallback((direction: 'next' | 'prev') => {
+  const handleNavigation = (direction: 'next' | 'prev') => {
     setCurrentPage(prevPage => {
       if (direction === 'next' && (prevPage + 1) * QUESTIONS_PER_PAGE < questions.length) {
         return prevPage + 1;
@@ -62,18 +75,24 @@ const MockExamPage = () => {
       }
       return prevPage;
     });
-  }, [questions.length]);
+  };
 
-  const handleSubmitExam = useCallback(() => {
+  const handleSubmitExam = () => {
     localStorage.setItem("selectedAnswers", JSON.stringify(selectedAnswers));
     localStorage.setItem("mockExamQuestions", JSON.stringify(questions));
     router.push("/exam_summary");
-  }, [selectedAnswers, questions, router]);
+  };
 
-  const handleTimerExpire = useCallback(() => {
+  const handleTimerExpire = () => {
     setIsTimerExpired(true);
     handleSubmitExam();
-  }, [handleSubmitExam]);
+  };
+
+  useEffect(() => {
+    if (timeRemaining <= 0) {
+      setIsTimerExpired(true);
+    }
+  }, [timeRemaining]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading exam questions...</div>;
@@ -84,7 +103,7 @@ const MockExamPage = () => {
       <div className="flex flex-col items-center justify-center h-screen">
         <p className="text-red-500 mb-4">{error}</p>
         <button 
-          onClick={fetchExamData}
+          onClick={() => setIsLoading(true)} // This will trigger a re-fetch
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Retry
@@ -140,6 +159,4 @@ const MockExamPage = () => {
       </div>
     </div>
   );
-};
-
-export default MockExamPage;
+}

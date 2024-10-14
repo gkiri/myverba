@@ -4,15 +4,18 @@ import React from "react";
 import { Question } from "./types";  
 
 interface QuestionComponentProps {
+  key: string;
   question: Question;
-  onAnswerSelect: (questionId: number, answer: string) => void;
-  selectedAnswer: string | undefined;
+  onAnswerSelect: (questionId: string, answer: string) => void;
+  selectedAnswer: string;
+  disabled: boolean;
 }
 
 const QuestionComponent: React.FC<QuestionComponentProps> = ({
   question,
   onAnswerSelect,
   selectedAnswer,
+  disabled
 }) => {
   return (
     <div className="flex flex-col gap-2 p-4 bg-bg-alt-verba rounded-lg shadow-lg mb-4">
@@ -32,6 +35,7 @@ const QuestionComponent: React.FC<QuestionComponentProps> = ({
             checked={selectedAnswer === option} 
             onChange={() => onAnswerSelect(question.global_questionID, option)} 
             className="radio" 
+            disabled={disabled}
           /> 
           <span>{option}</span>
         </label>
