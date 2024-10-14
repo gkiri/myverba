@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start -H 0.0.0.0 -p 8000",
+    "build": "next build && next export",
+    "start": "next start",
     "lint": "next lint",
     "generate": "drizzle-kit generate:pg",
     "push": "drizzle-kit push:pg"
