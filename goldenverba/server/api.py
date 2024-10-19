@@ -122,16 +122,18 @@ origins = [
     "https://verba-golden-ragtriever.onrender.com",
     "http://localhost:8000",
     "http://localhost:8080",
+    "http://3.83.67.48:8000",
+    "http://3.89.115.184:8000",
+    "http://3.84.81.112:8000",
     "https://gkiri-vercel-deploy.vercel.app",
     "https://*.vercel.app",
-    "^http://3\..*",
-    "^https://3\..*",
 ]
 
 # Add middleware for handling Cross Origin Resource Sharing (CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex="^https?://3\..*",  # Allow dynamic IPs like 3.x.x.x
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
