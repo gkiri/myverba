@@ -127,13 +127,15 @@ origins = [
     "http://3.84.81.112:8000",
     "https://gkiri-vercel-deploy.vercel.app",
     "https://*.vercel.app",
+    "http://54.224.217.30:8000",
+    
 ]
 
 # Add middleware for handling Cross Origin Resource Sharing (CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex="^https?://3\..*",  # Allow dynamic IPs like 3.x.x.x
+    allow_origin_regex="^https?://(3|5)\..*",  # Allow dynamic IPs like 3.x.x.x
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
