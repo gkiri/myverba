@@ -824,6 +824,19 @@ class SyllabusChapterResponse(BaseModel):
     user_progress: dict
     llm_response: str
 
+### SUbtopic section
+class GetSyllabusSubtopicRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    
+class GetSyllabusSubtopicQueryRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    query: str
+
+class SyllabusSubtopicResponse(BaseModel):
+    llm_response: str
+
 test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
 Views And Their Contribution\n\nAlthough educated Indians retained their
 traditional history in the form of handwritten epics, Puranas, and
@@ -967,6 +980,7 @@ async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
         msg.warn(f"Failed to retrieve user progress for Chapter ID {chapter_id}: {e}")
         return {}
 
+
 @app.post("/api/get_syllabus_chapter_with_userstatus_query")
 async def get_syllabus_chapter_with_userstatus_query(request: GetSyllabusChapterQueryRequest):
     debug_log(f"Received get_syllabus_chapter_with_userstatus_query request: {request}")
@@ -1019,4 +1033,233 @@ async def get_syllabus_chapter_with_userstatus_query(request: GetSyllabusChapter
         )
     except Exception as e:
         msg.error(f"Error in get_syllabus_chapter_with_userstatus_query: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+
+"""
+Get Syllabus Subtopic API Endpoint
+
+This endpoint retrieves a subtopic's content and generates an AI mentor response based on the subtopic content.
+
+Parameters:
+    request (GetSyllabusSubtopicRequest): Request object containing:
+        - user_id (str): ID of the user making the request
+        - subtopic_id (str): ID of the subtopic to retrieve
+
+Returns:
+    SyllabusSubtopicResponse: Response object containing:
+        - llm_response (str): AI mentor's response based on the subtopic content
+
+Raises:
+    HTTPException: 
+        - 404 if subtopic not found
+        - 500 for other server errors
+
+Flow:
+1. Extracts chapter_id from subtopic_id
+2. Fetches chapter name from Weaviate
+3. Fetches subtopic content from Weaviate
+4. Generates AI mentor prompt
+5. Gets LLM response
+6. Returns formatted response
+"""
+
+
+## Default retrieve subtopic based on subtopic_id
+@app.post("/api/get_syllabus_subtopic")
+async def get_syllabus_subtopic(request: GetSyllabusSubtopicRequest):
+    debug_log(f"Received get_syllabus_subtopic request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+
+        msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id}")
+
+        # Extract chapter_id from subtopic_id
+        chapter_id = subtopic_id.split('_')[0]
+        msg.info(f"Extracted chapter_id: {chapter_id} from subtopic_id: {subtopic_id}")
+
+        # Fetch chapter name from Weaviate
+        # Verify chapter exists and get chapter name
+        chapter_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Chapters", ["chapter_name"])
+            .with_where({
+                "path": ["ch_id"],
+                "operator": "Equal",
+                "valueString": chapter_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        chapter_name = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]["chapter_name"]
+        
+        # Fetch chapter content from Weaviate
+        subtopic_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
+            .with_where({
+                "path": ["subtopic_id"],
+                "operator": "Equal",
+                "valueString": subtopic_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
+            raise HTTPException(status_code=404, detail="subtopic not found")
+
+        subtopic_content = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
+
+        conversation_history = "No previous conversation history."
+        
+        subtopic_name= ''
+        # Generate the prompt using the function
+        prompt = create_subtopic_mentor_prompt(
+            subtopic_content=subtopic_content,
+            chapter_name=chapter_name,
+            subtopic_name=subtopic_name,
+            #conversation_history=conversation_history,
+        )
+
+        # Call LLM API
+        llm_response = await generate_gemini_response(prompt, "") #2nd arg is context which is alread injected in prompt
+
+        return SyllabusSubtopicResponse(
+            llm_response=llm_response
+        )
+    except Exception as e:
+        msg.error(f"Error in get_syllabus_subtopic: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/get_syllabus_subtopic_with_query")
+async def get_syllabus_subtopic_with_userstatus_query(request: GetSyllabusSubtopicQueryRequest):
+    debug_log(f"Received get_syllabus_chapter_with_userstatus_query request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        query = request.query
+
+        msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id} with query: {query}")
+
+        # Extract chapter_id from subtopic_id
+        chapter_id = subtopic_id.split('_')[0]
+        msg.info(f"Extracted chapter_id: {chapter_id} from subtopic_id: {subtopic_id}")
+
+        # Fetch chapter name from Weaviate
+        # Verify chapter exists and get chapter name
+        chapter_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Chapters", ["chapter_name"])
+            .with_where({
+                "path": ["ch_id"],
+                "operator": "Equal",
+                "valueString": chapter_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        chapter_name = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]["chapter_name"]
+        
+        # Fetch chapter content from Weaviate
+        subtopic_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
+            .with_where({
+                "path": ["subtopic_id"],
+                "operator": "Equal",
+                "valueString": subtopic_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
+            raise HTTPException(status_code=404, detail="subtopic not found")
+
+        subtopic_content = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
+
+        conversation_history = "No previous conversation history."
+        
+        subtopic_name=''
+        # Generate the prompt using the function
+        prompt = create_subtopic_mentor_prompt_followup(
+            subtopic_content=subtopic_content,
+            chapter_name=chapter_name,
+            subtopic_name=subtopic_name,
+            #conversation_history=conversation_history,
+            user_query=query
+        )
+
+        # Call LLM API
+        llm_response = await generate_gemini_response(prompt, "") #2nd arg is context which is alread injected in prompt
+
+        return SyllabusSubtopicResponse(
+            llm_response=llm_response
+        )
+    except Exception as e:
+        msg.error(f"Error in get_syllabus_chapter_with_userstatus_query: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get_chapter/{ch_id}")
+async def get_chapter(ch_id: str):
+    try:
+        #Note: Condition to test ch_id is part of syllabus tree and its valid
+        chapter_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Chapters", ["chapter_content"])
+            .with_where({
+                "path": ["ch_id"],
+                "operator": "Equal",
+                "valueString": ch_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+
+        chapter_data = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]
+        
+        return JSONResponse(content=chapter_data)
+
+    except Exception as e:
+        msg.fail(f"Error retrieving chapter: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/get_subtopic/{subtopic_id}")
+async def get_subtopic(subtopic_id: str):
+    try:
+
+        #Note: Condition to test subtopic_id is part of syllabus tree and its valid
+        subtopic_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
+            .with_where({
+                "path": ["subtopic_id"],
+                "operator": "Equal",
+                "valueString": subtopic_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
+            raise HTTPException(status_code=404, detail="Subtopic not found")
+
+        subtopic_data = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0]
+        
+        return JSONResponse(content=subtopic_data)
+
+    except Exception as e:
+        msg.fail(f"Error retrieving subtopic: {e}")
         raise HTTPException(status_code=500, detail=str(e))
