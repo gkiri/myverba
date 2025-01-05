@@ -44,8 +44,47 @@ which is the folder inside docker container
 Keep the json file udner /home/ec2-user/myverba/data
 
 
+############################################################
+curl -X POST http://3.83.67.48:8000/api/get_syllabus_chapter_with_userstatus \
+-H "Content-Type: application/json" \
+-d '{
+  "user_id": "2efebcaa-36e1-4075-807d-80e0e7b25f01",
+  "ch_id": "H1"
+}'
+
+http://3.89.115.184/
+
+curl -X POST http://3.89.115.184:8000/api/get_syllabus_chapter_with_userstatus \
+    -H "Content-Type: application/json" \
+    -d '{"user_id": "2efebcaa-36e1-4075-807d-80e0e7b25f01", "chapter_id": "H1"}'
 
 
+
+
+#Aggregate filter data aggregate chapters count
+where_filter = {
+    "path": ["ch_id"],
+    "operator": "Equal",
+    "valueText": "H100",
+}
+
+result_agg = (
+    client.query
+    .aggregate("VERBA_Syllabus_Chapters")
+    .with_fields("meta {count}")
+    .with_where(where_filter)
+    .do()
+)
+
+print(json.dumps(result_agg, indent=4))
+
+
+##################################################aws docker comands
+
+docker builder prune --all
+docker logs -f myverba-verba-1
+
+curl -X POST http://3.89.115.184:8000/api/get_syllabus_subtopic     -H "Content-Type: application/json"     -d '{"user_id": "2efebcaa-36e1-4075-807d-80e0e7b25f01", "subtopic_id": "H55_S1"}'
 
 
 

@@ -33,7 +33,6 @@ from goldenverba.server.types import (
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question # Add  Question model to types
 from pydantic import ValidationError
-#from goldenverba.server.prompts import get_prompt ,generate_prompt_chapter_user ,generate_prompt_chapter_user_query
 import goldenverba.server.prompts as prompts
 from goldenverba.server.supabase.supabase_client import supabase
 import asyncio
@@ -1140,8 +1139,8 @@ async def get_syllabus_subtopic(request: GetSyllabusSubtopicRequest):
 
 
 @app.post("/api/get_syllabus_subtopic_with_query")
-async def get_syllabus_subtopic_with_userstatus_query(request: GetSyllabusSubtopicQueryRequest):
-    debug_log(f"Received get_syllabus_chapter_with_userstatus_query request: {request}")
+async def get_syllabus_subtopic_with_query(request: GetSyllabusSubtopicQueryRequest):
+    debug_log(f"Received get_syllabus_subtopic_with_query request: {request}")
     try:
         subtopic_id = request.subtopic_id
         user_id = request.user_id
@@ -1206,7 +1205,7 @@ async def get_syllabus_subtopic_with_userstatus_query(request: GetSyllabusSubtop
             llm_response=llm_response
         )
     except Exception as e:
-        msg.error(f"Error in get_syllabus_chapter_with_userstatus_query: {str(e)}")
+        msg.error(f"Error in get_syllabus_subtopic_with_query: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_chapter/{ch_id}")
