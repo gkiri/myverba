@@ -33,7 +33,8 @@ from goldenverba.server.types import (
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question # Add  Question model to types
 from pydantic import ValidationError
-from goldenverba.server.prompts import get_prompt ,generate_prompt_chapter_user ,generate_prompt_chapter_user_query
+#from goldenverba.server.prompts import get_prompt ,generate_prompt_chapter_user ,generate_prompt_chapter_user_query
+from goldenverba.server.prompts import prompts
 from goldenverba.server.supabase.supabase_client import supabase
 import asyncio
 load_dotenv()
@@ -790,7 +791,7 @@ async def visualize(payload: QueryPayload):
 
         #prompt = "You are an assistant to help user build diagram with Mermaid.You only need to return the output Mermaid code block.Do not include any description, do not include the Code (no ```).";
         
-        summary_prompt = get_prompt("VISUALIZE", topic=payload.query)
+        summary_prompt = prompts.get_prompt("VISUALIZE", topic=payload.query)
 
         mermaid_response = await generate_gpt3_response(summary_prompt,payload.query)
         #mermaid_response = await generate_groq_response(summary_prompt,payload.query)
@@ -934,7 +935,7 @@ async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterReques
         
         conversation_history ="No previous conversation history."
         # 4. Generate the prompt using the function
-        prompt = generate_prompt_chapter_user(
+        prompt = prompts.generate_prompt_chapter_user(
             chapter_id=chapter_id,
             user_id=user_id,
             chapter_content=chapter_content,
@@ -1015,7 +1016,7 @@ async def get_syllabus_chapter_with_userstatus_query(request: GetSyllabusChapter
         conversation_history = "No previous conversation history."
         
         # Generate the prompt using the function
-        prompt = generate_prompt_chapter_user_query(
+        prompt = prompts.generate_prompt_chapter_user_query(
             chapter_id=chapter_id,
             user_id=user_id,
             chapter_content=chapter_content,
@@ -1120,7 +1121,7 @@ async def get_syllabus_subtopic(request: GetSyllabusSubtopicRequest):
         
         subtopic_name= ''
         # Generate the prompt using the function
-        prompt = create_subtopic_mentor_prompt(
+        prompt = prompts.create_subtopic_mentor_prompt(
             subtopic_content=subtopic_content,
             chapter_name=chapter_name,
             subtopic_name=subtopic_name,
@@ -1190,7 +1191,7 @@ async def get_syllabus_subtopic_with_userstatus_query(request: GetSyllabusSubtop
         
         subtopic_name=''
         # Generate the prompt using the function
-        prompt = create_subtopic_mentor_prompt_followup(
+        prompt = prompts.create_subtopic_mentor_prompt_followup(
             subtopic_content=subtopic_content,
             chapter_name=chapter_name,
             subtopic_name=subtopic_name,
