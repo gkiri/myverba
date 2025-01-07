@@ -1267,16 +1267,15 @@ async def get_subtopic(subtopic_id: str):
 
 
 ## Streaming Subtopic api
-@app.post("/api/get_syllabus_subtopic", response_class=StreamingResponse)
-async def get_syllabus_subtopic(request: Request):
+@app.post("/api/get_syllabus_subtopic_stream", response_class=StreamingResponse)
+async def get_syllabus_subtopic_stream(request: GetSyllabusSubtopicRequest):
     """
     Modified route to stream the LLM response back to the client using SSE.
     """
     try:
         # 1. Parse the incoming request body (similar to your existing code).
-        body = await request.json()
-        subtopic_id = body["subtopic_id"]
-        user_id = body["user_id"]
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
 
         msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id}")
 
