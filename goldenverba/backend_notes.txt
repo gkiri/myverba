@@ -86,5 +86,8 @@ docker logs -f myverba-verba-1
 
 curl -X POST http://3.89.115.184:8000/api/get_syllabus_subtopic     -H "Content-Type: application/json"     -d '{"user_id": "2efebcaa-36e1-4075-807d-80e0e7b25f01", "subtopic_id": "H55_S1"}'
 
+curl -X POST http://3.89.115.184:8000/api/get_syllabus_subtopic_with_query_stream    -H "Content-Type: application/json"     -d '{"user_id": "2efebcaa-36e1-4075-807d-80e0e7b25f01", "subtopic_id": "H55_S1" , "query": "explain the subtopic"}'
 
 
+use -N for stream
+curl -N POST http://3.89.115.184:8000/api/get_syllabus_subtopic_with_query_stream    -H "Content-Type: application/json"     -d '{"user_id": "2efebcaa-36e1-4075-807d-80e0e7b25f01", "subtopic_id": "H55_S1" , "query": "explain the subtopic"}'

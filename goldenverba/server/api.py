@@ -128,6 +128,8 @@ origins = [
     "https://gkiri-vercel-deploy.vercel.app",
     "https://*.vercel.app",
     "http://54.224.217.30:8000",
+    "https://*.lovable.app",  # Added wildcard for all subdomains
+    "https://preview--savvy-mentor-visualizer.lovable.app",  # Added specific subdomain
     
 ]
 
