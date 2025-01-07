@@ -1275,7 +1275,7 @@ async def get_syllabus_subtopic_stream(request: GetSyllabusSubtopicRequest):
     Modified route to stream the LLM response back to the client using SSE.
     """
     try:
-        # 1. Parse the incoming request body (similar to your existing code).
+        # 1. Parse the incoming request body
         subtopic_id = request.subtopic_id
         user_id = request.user_id
 
@@ -1344,25 +1344,44 @@ async def get_syllabus_subtopic_stream(request: GetSyllabusSubtopicRequest):
                     if finish_reason == "stop":
                         break
 
-                    # SSE output format: "data: <text>\n\n"
-                    yield f"data: {message}\n\n"
+                    # Stream partial text as JSON with type='text-delta'
+                    # SSE format: data: <json>\n\n
+                    yield (
+                        "data: " + json.dumps({
+                            "type": "text-delta",
+                            "content": message
+                        }) + "\n\n"
+                    )
 
                     # optional small sleep to reduce CPU usage or control chunk rate
                     await asyncio.sleep(0.02)
 
+                # After we're done, tell the client "finish"
+                yield (
+                    "data: " + json.dumps({
+                        "type": "finish",
+                        "content": ""
+                    }) + "\n\n"
+                )
+
             except Exception as e:
                 msg.fail(f"Gemini API call failed: {str(e)}")
                 # Return an SSE "error" message
-                yield f"data: [ERROR]: {str(e)}\n\n"
+                yield (
+                    "data: " + json.dumps({
+                        "type": "error",
+                        "content": str(e)
+                    }) + "\n\n"
+                )
 
         # 7. Return a StreamingResponse with text/event-stream
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     except Exception as e:
         msg.error(f"Error in get_syllabus_subtopic_stream: {str(e)}")
-        # In a streaming context, you typically cannot raise after partial streaming.
-        # But if we fail before starting to stream, we can raise an HTTPException:
+        # If we fail before streaming starts, raise an HTTPException
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
