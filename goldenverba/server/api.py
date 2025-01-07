@@ -1357,7 +1357,102 @@ async def get_syllabus_subtopic_stream(request: GetSyllabusSubtopicRequest):
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     except Exception as e:
-        msg.error(f"Error in get_syllabus_subtopic: {str(e)}")
+        msg.error(f"Error in get_syllabus_subtopic_stream: {str(e)}")
         # In a streaming context, you typically cannot raise after partial streaming.
         # But if we fail before starting to stream, we can raise an HTTPException:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+#####
+@app.post("/api/get_syllabus_subtopic_with_query_stream", response_class=StreamingResponse)
+async def get_syllabus_subtopic_with_query_stream(request: GetSyllabusSubtopicQueryRequest):
+    debug_log(f"Received get_syllabus_subtopic_with_query request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        query = request.query
+
+        msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id} with query: {query}")
+
+        # Extract chapter_id from subtopic_id
+        chapter_id = subtopic_id.split('_')[0]
+        msg.info(f"Extracted chapter_id: {chapter_id} from subtopic_id: {subtopic_id}")
+
+        # Fetch chapter name from Weaviate
+        chapter_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Chapters", ["chapter_name"])
+            .with_where({
+                "path": ["ch_id"],
+                "operator": "Equal",
+                "valueString": chapter_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+
+        chapter_name = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]["chapter_name"]
+
+        # Fetch subtopic content from Weaviate
+        subtopic_data = (
+            manager.client.query
+            .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
+            .with_where({
+                "path": ["subtopic_id"],
+                "operator": "Equal",
+                "valueString": subtopic_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not subtopic_data["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
+            raise HTTPException(status_code=404, detail="Subtopic not found")
+
+        subtopic_content = subtopic_data["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
+
+        # For demonstration, we won't handle any conversation history here
+        conversation_history = "No previous conversation history."
+        subtopic_name = ""
+
+        # 1) Generate the prompt
+        prompt = prompts.create_subtopic_mentor_prompt_followup(
+            subtopic_content=subtopic_content,
+            chapter_name=chapter_name,
+            subtopic_name=subtopic_name,
+            user_query=query
+        )
+
+        # 2) Define an async generator to yield streamed chunks
+        async def event_stream():
+            try:
+                # gemini_generator.generate_stream(...) returns an async generator
+                async for chunk in gemini_generator.generate_stream([prompt], [""], []):
+                    finish_reason = chunk.get("finish_reason")
+                    message = chunk.get("message", "")
+
+                    # If the LLM signals stop, break
+                    if finish_reason == "stop":
+                        break
+
+                    # SSE format: "data: <chunk>\n\n"
+                    yield f"data: {message}\n\n"
+                    
+                    # Optional tiny delay to reduce CPU usage or control chunk rate
+                    # await asyncio.sleep(0.01)
+
+            except Exception as e:
+                msg.error(f"Error streaming from Gemini: {str(e)}")
+                yield f"data: [ERROR]: {str(e)}\n\n"
+
+        # 3) Return a StreamingResponse
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+    except Exception as e:
+        msg.error(f"Error in get_syllabus_subtopic_with_query_stream: {str(e)}")
+        # If we haven't started streaming yet, we can raise directly.
         raise HTTPException(status_code=500, detail=str(e))
