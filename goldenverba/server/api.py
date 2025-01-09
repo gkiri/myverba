@@ -130,6 +130,7 @@ origins = [
     "http://54.224.217.30:8000",
     "https://*.lovable.app",  # Added wildcard for all subdomains
     "https://preview--savvy-mentor-visualizer.lovable.app",  # Added specific subdomain
+    "https://preview--conversational-insight-panel.lovable.app",
     
 ]
 
