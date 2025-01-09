@@ -128,17 +128,14 @@ origins = [
     "https://gkiri-vercel-deploy.vercel.app",
     "https://*.vercel.app",
     "http://54.224.217.30:8000",
-    "https://*.lovable.app",  # Added wildcard for all subdomains
-    "https://preview--savvy-mentor-visualizer.lovable.app",  # Added specific subdomain
-    "https://preview--conversational-insight-panel.lovable.app",
-    
+    "https://*.lovable.app",
 ]
 
 # Add middleware for handling Cross Origin Resource Sharing (CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex="^https?://(3|5)\..*",  # Allow dynamic IPs like 3.x.x.x
+    allow_origin_regex=r"^https?://(3|5)\..*|^https://preview-[a-zA-Z0-9-]+--.*\.lovable\.app$",  # Updated regex pattern
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
