@@ -129,6 +129,7 @@ origins = [
     "https://*.vercel.app",
     "http://54.224.217.30:8000",
     "https://*.lovable.app",
+    "https://preview--conversational-insight-panel.lovable.app",
 ]
 
 # Add middleware for handling Cross Origin Resource Sharing (CORS)
