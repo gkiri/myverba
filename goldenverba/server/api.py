@@ -128,6 +128,7 @@ origins = [
     "https://gkiri-vercel-deploy.vercel.app",
     "https://*.vercel.app",
     "http://54.224.217.30:8000",
+    "http://54.224.217.30:8080",
     "https://*.lovable.app",
     "https://preview--conversational-insight-panel.lovable.app",
 ]
