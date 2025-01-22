@@ -748,7 +748,8 @@ async def bullet_points(payload: QueryPayload):
         #prompt = f"you will be given topic/text/ ,please generate concise bullet points for the following topic: {payload.query}"
         prompt = "you will be given topic/text/ ,please generate concise bullet points for the following topic:"
 
-        bullet_points_response = await generate_groq_response(prompt,payload.query)
+        #bullet_points_response = await generate_groq_response(prompt,payload.query)
+        bullet_points_response = await generate_gemini_response(prompt, payload.query)
         debug_log("Gkiri:LLM output:", bullet_points_response)
         return JSONResponse(content={"bullet_points": bullet_points_response})
     except HTTPException as e:
@@ -767,9 +768,10 @@ async def summarize(payload: QueryPayload):
     
     try:
         #prompt = f"Provide a concise summary of the following: {payload.query}"
-        
-        prompt = "Provide a concise summary of the following: "
-        summary_response = await generate_groq_response(prompt,payload.query)
+        prompt = "You are AI Mentor for UPSC Exam preparing students , who helps in providing a concise summary of the below given content: "
+        #summary_response = await generate_groq_response(prompt,payload.query)
+        summary_response = await generate_gemini_response(prompt, payload.query)
+
         debug_log("Gkiri:LLM output:", summary_response)
         return JSONResponse(content={"summary": summary_response})
     except HTTPException as e:
@@ -883,161 +885,159 @@ that they felt no concern about the problems of this world. The Western scholars
 stressed that Indians had experienced neither a sense of nationhood nor any form
 of self-government."""
 
-@app.post("/api/get_syllabus_chapter_with_userstatus")
-async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterRequest):
-    debug_log(f"Received get_syllabus_chapter_with_userstatus request: {request}")
-    try:
-        # 1. Fetch chapter content from Weaviate
-        chapter_id = request.chapter_id
-        user_id = request.user_id
+# @app.post("/api/get_syllabus_chapter_with_userstatus")
+# async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterRequest):
+#     debug_log(f"Received get_syllabus_chapter_with_userstatus request: {request}")
+#     try:
+#         # 1. Fetch chapter content from Weaviate
+#         chapter_id = request.chapter_id
+#         user_id = request.user_id
 
-        msg.info(f"Fetching content for Chapter ID: {chapter_id} for User ID: {user_id}")
+#         msg.info(f"Fetching content for Chapter ID: {chapter_id} for User ID: {user_id}")
 
-        # Assuming manager.weaviate_client is the Weaviate client
-        # chapter_query = {
-        #     "class_name": "VERBA_Syllabus_Chapters",
-        #     "where": {
-        #         "path": ["ch_id"],
-        #         "operator": "Equal",
-        #         "valueText": chapter_id
-        #     }
-        # }
-        chapter_query = (
-            manager.client.query
-            .get("VERBA_Syllabus_Chapters", ["chapter_content"])  # Class name and fields to retrieve
-            .with_where({
-                "path": ["ch_id"],
-                "operator": "Equal",
-                "valueString": chapter_id
-            })
-            .with_limit(1)
-            .do()
-        )
+#         # Assuming manager.weaviate_client is the Weaviate client
+#         # chapter_query = {
+#         #     "class_name": "VERBA_Syllabus_Chapters",
+#         #     "where": {
+#         #         "path": ["ch_id"],
+#         #         "operator": "Equal",
+#         #         "valueText": chapter_id
+#         #     }
+#         # }
+#         chapter_query = (
+#             manager.client.query
+#             .get("VERBA_Syllabus_Chapters", ["chapter_content"])  # Class name and fields to retrieve
+#             .with_where({
+#                 "path": ["ch_id"],
+#                 "operator": "Equal",
+#                 "valueString": chapter_id
+#             })
+#             .with_limit(1)
+#             .do()
+#         )
 
-        #print("Gkiri:chapter_query Format:", chapter_query)
-        #msg.info(f"Gkiri: chapter_query: {chapter_query} ")
-        # Check for the result
-        if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
-            raise HTTPException(status_code=404, detail="Chapter not found")
+#         #print("Gkiri:chapter_query Format:", chapter_query)
+#         #msg.info(f"Gkiri: chapter_query: {chapter_query} ")
+#         # Check for the result
+#         if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
+#             raise HTTPException(status_code=404, detail="Chapter not found")
 
-        #chapter_result = manager.client.query.get(**chapter_query).with_limit(1).do()
+#         #chapter_result = manager.client.query.get(**chapter_query).with_limit(1).do()
 
-        chapter_content = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0].get("chapter_content", "")
+#         chapter_content = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0].get("chapter_content", "")
 
-        # 2. Fetch user progress from Supabase
-        user_progress = await get_user_chapter_progress(user_id, chapter_id)
+#         # 2. Fetch user progress from Supabase
+#         user_progress = await get_user_chapter_progress(user_id, chapter_id)
 
-        #msg.info(f"Gkiri: user_progress: {user_progress} ")
-        # 3. Get relevant prompt
-        #prompt_template = "Provide a personalized learning plan based on the user's progress and the chapter content."
+#         #msg.info(f"Gkiri: user_progress: {user_progress} ")
+#         # 3. Get relevant prompt
+#         #prompt_template = "Provide a personalized learning plan based on the user's progress and the chapter content."
 
-        # You can customize the prompt as needed, possibly using predefined prompts
-        #prompt = f"{prompt_template}\n\nChapter Content:\n{chapter_content}\n\nUser Progress:\n{json.dumps(user_progress)}"
+#         # You can customize the prompt as needed, possibly using predefined prompts
+#         #prompt = f"{prompt_template}\n\nChapter Content:\n{chapter_content}\n\nUser Progress:\n{json.dumps(user_progress)}"
         
-        conversation_history ="No previous conversation history."
-        # 4. Generate the prompt using the function
-        prompt = prompts.generate_prompt_chapter_user(
-            chapter_id=chapter_id,
-            user_id=user_id,
-            chapter_content=chapter_content,
-            user_progress_data=user_progress,
-            conversation_history=conversation_history
-        )
+#         conversation_history ="No previous conversation history."
+#         # 4. Generate the prompt using the function
+#         prompt = prompts.generate_prompt_chapter_user(
+#             chapter_id=chapter_id,
+#             user_id=user_id,
+#             chapter_content=chapter_content,
+#             user_progress_data=user_progress,
+#             conversation_history=conversation_history
+#         )
 
-        # 4. Call LLM API
-        llm_response = await generate_gemini_response(prompt, chapter_content)
+#         # 4. Call LLM API
+#         llm_response = await generate_gemini_response(prompt, chapter_content)
         
-        # Test chapter
-        #llm_response = await generate_gemini_response(prompt, test_chapter)
+#         # Test chapter
+#         #llm_response = await generate_gemini_response(prompt, test_chapter)
 
 
-        msg.info(f"Gkiri: Gemini llm_response: {llm_response} ")
+#         msg.info(f"Gkiri: Gemini llm_response: {llm_response} ")
 
-        return SyllabusChapterResponse(
-            user_progress=user_progress,
-            llm_response=llm_response
-        )
+#         return SyllabusChapterResponse(
+#             user_progress=user_progress,
+#             llm_response=llm_response
+#         )
 
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        msg.fail(f"Error in get_syllabus_chapter_with_userstatus: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
-    debug_log(f"Fetching user progress for Chapter ID: {chapter_id} for User ID: {user_id}")
-    try:
-        response = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: supabase.table("gs1_progress").select("*").eq("user_id", user_id).single().execute()
-        )
-        if response.data:
-            user_progress = response.data
-            chapter_progress = user_progress.get(chapter_id, {})
-            return chapter_progress
-        else:
-            msg.warn(f"No progress found for user_id: {user_id}, chapter_id: {chapter_id}")
-            return {}
-    except Exception as e:
-        msg.warn(f"Failed to retrieve user progress for Chapter ID {chapter_id}: {e}")
-        return {}
+#     except HTTPException as he:
+#         raise he
+#     except Exception as e:
+#         msg.fail(f"Error in get_syllabus_chapter_with_userstatus: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/get_syllabus_chapter_with_userstatus_query")
-async def get_syllabus_chapter_with_userstatus_query(request: GetSyllabusChapterQueryRequest):
-    debug_log(f"Received get_syllabus_chapter_with_userstatus_query request: {request}")
-    try:
-        chapter_id = request.chapter_id
-        user_id = request.user_id
-        query = request.query
+# async def get_user_chapter_progress(user_id: str, chapter_id: str) -> dict:
+#     debug_log(f"Fetching user progress for Chapter ID: {chapter_id} for User ID: {user_id}")
+#     try:
+#         response = await asyncio.get_event_loop().run_in_executor(
+#             None, lambda: supabase.table("gs1_progress").select("*").eq("user_id", user_id).single().execute()
+#         )
+#         if response.data:
+#             user_progress = response.data
+#             chapter_progress = user_progress.get(chapter_id, {})
+#             return chapter_progress
+#         else:
+#             msg.warn(f"No progress found for user_id: {user_id}, chapter_id: {chapter_id}")
+#             return {}
+#     except Exception as e:
+#         msg.warn(f"Failed to retrieve user progress for Chapter ID {chapter_id}: {e}")
+#         return {}
 
-        msg.info(f"Fetching content for Chapter ID: {chapter_id} for User ID: {user_id} with query: {query}")
 
-        # Fetch chapter content from Weaviate
-        chapter_query = (
-            manager.client.query
-            .get("VERBA_Syllabus_Chapters", ["chapter_content"])
-            .with_where({
-                "path": ["ch_id"],
-                "operator": "Equal",
-                "valueString": chapter_id
-            })
-            .with_limit(1)
-            .do()
-        )
+# @app.post("/api/get_syllabus_chapter_with_userstatus_query")
+# async def get_syllabus_chapter_with_userstatus_query(request: GetSyllabusChapterQueryRequest):
+#     debug_log(f"Received get_syllabus_chapter_with_userstatus_query request: {request}")
+#     try:
+#         chapter_id = request.chapter_id
+#         user_id = request.user_id
+#         query = request.query
 
-        if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
-            raise HTTPException(status_code=404, detail="Chapter not found")
+#         msg.info(f"Fetching content for Chapter ID: {chapter_id} for User ID: {user_id} with query: {query}")
 
-        chapter_content = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0].get("chapter_content", "")
+#         # Fetch chapter content from Weaviate
+#         chapter_query = (
+#             manager.client.query
+#             .get("VERBA_Syllabus_Chapters", ["chapter_content"])
+#             .with_where({
+#                 "path": ["ch_id"],
+#                 "operator": "Equal",
+#                 "valueString": chapter_id
+#             })
+#             .with_limit(1)
+#             .do()
+#         )
 
-        # Fetch user progress from Supabase
-        user_progress = await get_user_chapter_progress(user_id, chapter_id)
+#         if not chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"]:
+#             raise HTTPException(status_code=404, detail="Chapter not found")
 
-        conversation_history = "No previous conversation history."
+#         chapter_content = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0].get("chapter_content", "")
+
+#         # Fetch user progress from Supabase
+#         user_progress = await get_user_chapter_progress(user_id, chapter_id)
+
+#         conversation_history = "No previous conversation history."
         
-        # Generate the prompt using the function
-        prompt = prompts.generate_prompt_chapter_user_query(
-            chapter_id=chapter_id,
-            user_id=user_id,
-            chapter_content=chapter_content,
-            user_progress_data=user_progress,
-            conversation_history=conversation_history,
-            user_query=query
-        )
+#         # Generate the prompt using the function
+#         prompt = prompts.generate_prompt_chapter_user_query(
+#             chapter_id=chapter_id,
+#             user_id=user_id,
+#             chapter_content=chapter_content,
+#             user_progress_data=user_progress,
+#             conversation_history=conversation_history,
+#             user_query=query
+#         )
 
-        # Call LLM API
-        llm_response = await generate_gemini_response(prompt, chapter_content)
+#         # Call LLM API
+#         llm_response = await generate_gemini_response(prompt, chapter_content)
 
-        return SyllabusChapterResponse(
-            user_progress=user_progress,
-            llm_response=llm_response
-        )
-    except Exception as e:
-        msg.error(f"Error in get_syllabus_chapter_with_userstatus_query: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
+#         return SyllabusChapterResponse(
+#             user_progress=user_progress,
+#             llm_response=llm_response
+#         )
+#     except Exception as e:
+#         msg.error(f"Error in get_syllabus_chapter_with_userstatus_query: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 
@@ -1071,144 +1071,144 @@ Flow:
 
 
 ## Default retrieve subtopic based on subtopic_id
-@app.post("/api/get_syllabus_subtopic")
-async def get_syllabus_subtopic(request: GetSyllabusSubtopicRequest):
-    debug_log(f"Received get_syllabus_subtopic request: {request}")
-    try:
-        subtopic_id = request.subtopic_id
-        user_id = request.user_id
+# @app.post("/api/get_syllabus_subtopic")
+# async def get_syllabus_subtopic(request: GetSyllabusSubtopicRequest):
+#     debug_log(f"Received get_syllabus_subtopic request: {request}")
+#     try:
+#         subtopic_id = request.subtopic_id
+#         user_id = request.user_id
 
-        msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id}")
+#         msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id}")
 
-        # Extract chapter_id from subtopic_id
-        chapter_id = subtopic_id.split('_')[0]
-        msg.info(f"Extracted chapter_id: {chapter_id} from subtopic_id: {subtopic_id}")
+#         # Extract chapter_id from subtopic_id
+#         chapter_id = subtopic_id.split('_')[0]
+#         msg.info(f"Extracted chapter_id: {chapter_id} from subtopic_id: {subtopic_id}")
 
-        # Fetch chapter name from Weaviate
-        # Verify chapter exists and get chapter name
-        chapter_query = (
-            manager.client.query
-            .get("VERBA_Syllabus_Chapters", ["chapter_name"])
-            .with_where({
-                "path": ["ch_id"],
-                "operator": "Equal",
-                "valueString": chapter_id
-            })
-            .with_limit(1)
-            .do()
-        )
+#         # Fetch chapter name from Weaviate
+#         # Verify chapter exists and get chapter name
+#         chapter_query = (
+#             manager.client.query
+#             .get("VERBA_Syllabus_Chapters", ["chapter_name"])
+#             .with_where({
+#                 "path": ["ch_id"],
+#                 "operator": "Equal",
+#                 "valueString": chapter_id
+#             })
+#             .with_limit(1)
+#             .do()
+#         )
 
-        chapter_name = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]["chapter_name"]
+#         chapter_name = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]["chapter_name"]
         
-        # Fetch chapter content from Weaviate
-        subtopic_query = (
-            manager.client.query
-            .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
-            .with_where({
-                "path": ["subtopic_id"],
-                "operator": "Equal",
-                "valueString": subtopic_id
-            })
-            .with_limit(1)
-            .do()
-        )
+#         # Fetch chapter content from Weaviate
+#         subtopic_query = (
+#             manager.client.query
+#             .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
+#             .with_where({
+#                 "path": ["subtopic_id"],
+#                 "operator": "Equal",
+#                 "valueString": subtopic_id
+#             })
+#             .with_limit(1)
+#             .do()
+#         )
 
-        if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
-            raise HTTPException(status_code=404, detail="subtopic not found")
+#         if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
+#             raise HTTPException(status_code=404, detail="subtopic not found")
 
-        subtopic_content = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
+#         subtopic_content = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
 
-        conversation_history = "No previous conversation history."
+#         conversation_history = "No previous conversation history."
         
-        subtopic_name= ''
-        # Generate the prompt using the function
-        prompt = prompts.create_subtopic_mentor_prompt(
-            subtopic_content=subtopic_content,
-            chapter_name=chapter_name,
-            subtopic_name=subtopic_name,
-            #conversation_history=conversation_history,
-        )
+#         subtopic_name= ''
+#         # Generate the prompt using the function
+#         prompt = prompts.create_subtopic_mentor_prompt(
+#             subtopic_content=subtopic_content,
+#             chapter_name=chapter_name,
+#             subtopic_name=subtopic_name,
+#             #conversation_history=conversation_history,
+#         )
 
-        # Call LLM API
-        llm_response = await generate_gemini_response(prompt, "") #2nd arg is context which is alread injected in prompt
+#         # Call LLM API
+#         llm_response = await generate_gemini_response(prompt, "") #2nd arg is context which is alread injected in prompt
 
-        return SyllabusSubtopicResponse(
-            llm_response=llm_response
-        )
-    except Exception as e:
-        msg.error(f"Error in get_syllabus_subtopic: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+#         return SyllabusSubtopicResponse(
+#             llm_response=llm_response
+#         )
+#     except Exception as e:
+#         msg.error(f"Error in get_syllabus_subtopic: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/get_syllabus_subtopic_with_query")
-async def get_syllabus_subtopic_with_query(request: GetSyllabusSubtopicQueryRequest):
-    debug_log(f"Received get_syllabus_subtopic_with_query request: {request}")
-    try:
-        subtopic_id = request.subtopic_id
-        user_id = request.user_id
-        query = request.query
+# @app.post("/api/get_syllabus_subtopic_with_query")
+# async def get_syllabus_subtopic_with_query(request: GetSyllabusSubtopicQueryRequest):
+#     debug_log(f"Received get_syllabus_subtopic_with_query request: {request}")
+#     try:
+#         subtopic_id = request.subtopic_id
+#         user_id = request.user_id
+#         query = request.query
 
-        msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id} with query: {query}")
+#         msg.info(f"Fetching content for Subtopic ID: {subtopic_id} for User ID: {user_id} with query: {query}")
 
-        # Extract chapter_id from subtopic_id
-        chapter_id = subtopic_id.split('_')[0]
-        msg.info(f"Extracted chapter_id: {chapter_id} from subtopic_id: {subtopic_id}")
+#         # Extract chapter_id from subtopic_id
+#         chapter_id = subtopic_id.split('_')[0]
+#         msg.info(f"Extracted chapter_id: {chapter_id} from subtopic_id: {subtopic_id}")
 
-        # Fetch chapter name from Weaviate
-        # Verify chapter exists and get chapter name
-        chapter_query = (
-            manager.client.query
-            .get("VERBA_Syllabus_Chapters", ["chapter_name"])
-            .with_where({
-                "path": ["ch_id"],
-                "operator": "Equal",
-                "valueString": chapter_id
-            })
-            .with_limit(1)
-            .do()
-        )
+#         # Fetch chapter name from Weaviate
+#         # Verify chapter exists and get chapter name
+#         chapter_query = (
+#             manager.client.query
+#             .get("VERBA_Syllabus_Chapters", ["chapter_name"])
+#             .with_where({
+#                 "path": ["ch_id"],
+#                 "operator": "Equal",
+#                 "valueString": chapter_id
+#             })
+#             .with_limit(1)
+#             .do()
+#         )
 
-        chapter_name = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]["chapter_name"]
+#         chapter_name = chapter_query["data"]["Get"]["VERBA_Syllabus_Chapters"][0]["chapter_name"]
         
-        # Fetch chapter content from Weaviate
-        subtopic_query = (
-            manager.client.query
-            .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
-            .with_where({
-                "path": ["subtopic_id"],
-                "operator": "Equal",
-                "valueString": subtopic_id
-            })
-            .with_limit(1)
-            .do()
-        )
+#         # Fetch chapter content from Weaviate
+#         subtopic_query = (
+#             manager.client.query
+#             .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
+#             .with_where({
+#                 "path": ["subtopic_id"],
+#                 "operator": "Equal",
+#                 "valueString": subtopic_id
+#             })
+#             .with_limit(1)
+#             .do()
+#         )
 
-        if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
-            raise HTTPException(status_code=404, detail="subtopic not found")
+#         if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
+#             raise HTTPException(status_code=404, detail="subtopic not found")
 
-        subtopic_content = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
+#         subtopic_content = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
 
-        conversation_history = "No previous conversation history."
+#         conversation_history = "No previous conversation history."
         
-        subtopic_name=''
-        # Generate the prompt using the function
-        prompt = prompts.create_subtopic_mentor_prompt_followup(
-            subtopic_content=subtopic_content,
-            chapter_name=chapter_name,
-            subtopic_name=subtopic_name,
-            #conversation_history=conversation_history,
-            user_query=query
-        )
+#         subtopic_name=''
+#         # Generate the prompt using the function
+#         prompt = prompts.create_subtopic_mentor_prompt_followup(
+#             subtopic_content=subtopic_content,
+#             chapter_name=chapter_name,
+#             subtopic_name=subtopic_name,
+#             #conversation_history=conversation_history,
+#             user_query=query
+#         )
 
-        # Call LLM API
-        llm_response = await generate_gemini_response(prompt, "") #2nd arg is context which is alread injected in prompt
+#         # Call LLM API
+#         llm_response = await generate_gemini_response(prompt, "") #2nd arg is context which is alread injected in prompt
 
-        return SyllabusSubtopicResponse(
-            llm_response=llm_response
-        )
-    except Exception as e:
-        msg.error(f"Error in get_syllabus_subtopic_with_query: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+#         return SyllabusSubtopicResponse(
+#             llm_response=llm_response
+#         )
+#     except Exception as e:
+#         msg.error(f"Error in get_syllabus_subtopic_with_query: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/get_chapter/{ch_id}")
 async def get_chapter(ch_id: str):
