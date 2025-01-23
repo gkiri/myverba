@@ -1494,3 +1494,50 @@ async def get_syllabus_subtopic_with_query_stream(request: GetSyllabusSubtopicQu
         msg.error(f"Error in get_syllabus_subtopic_with_query_stream: {str(e)}")
         # If we haven't started streaming yet, we can raise directly.
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+##############visualize subtopic
+
+@app.post("/api/visualize_subtopic")
+async def visualize(request: GetSyllabusSubtopicRequest):
+    debug_log(f"Received visualize_subtopic request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+
+        # Fetch subtopic content from Weaviate
+        subtopic_query = (
+            manager.client.query
+            .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
+            .with_where({
+                "path": ["subtopic_id"],
+                "operator": "Equal",
+                "valueString": subtopic_id
+            })
+            .with_limit(1)
+            .do()
+        )
+
+        if not subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"]:
+            raise HTTPException(status_code=404, detail="Subtopic not found")
+
+        subtopic_content = subtopic_query["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
+
+        # Get visualization prompt from prompts module
+        visualize_prompt = prompts.get_prompt("VISUALIZE", topic=subtopic_content)
+
+        # Call deepseek LLM
+        mermaid_response = await generate_deepseek_response(visualize_prompt, subtopic_content)
+        debug_log("Generated mermaid diagram:", mermaid_response)
+
+        return JSONResponse(content={"mermaid_code": mermaid_response})
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.error(f"Visualization failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Visualization failed: {str(e)}"}
+        )
