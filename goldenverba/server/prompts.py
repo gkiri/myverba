@@ -85,7 +85,7 @@ class UPSCPrompts:
 
     output format:
     1. I am using the output reponse directly rendering on mermaid editor, so please only give the mermaid code as response.
-
+    2. Please strictly provide only mermaid code.
 
     Here is the Content : {topic}
 
