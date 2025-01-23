@@ -862,6 +862,12 @@ class GetVisualizeContentRequest(BaseModel):
     user_id: str
     subtopic_id: str
     content: str
+
+class GetSummarizeContentRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    content: str
+
     
 test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
 Views And Their Contribution\n\nAlthough educated Indians retained their
@@ -1556,9 +1562,6 @@ async def visualize(request: GetVisualizeContentRequest):
         user_id = request.user_id
         content = request.content
 
-        # Fetch subtopic content from Weaviate
-
-
         # Get visualization prompt from prompts module
         visualize_prompt = prompts.get_prompt("VISUALIZE", topic=content)
 
@@ -1575,5 +1578,31 @@ async def visualize(request: GetVisualizeContentRequest):
         return JSONResponse(
             status_code=500,
             content={"error": f"Visualization failed: {str(e)}"}
+        )
+
+@app.post("/api/summarize_content")
+async def visualize(request: GetSummarizeContentRequest):
+    debug_log(f"Received summarize_content request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        content = request.content
+        
+        # Get visualization prompt from prompts module
+        summarize_prompt = prompts.get_prompt("SUMMARIZE", topic=content)
+
+        # Call deepseek LLM
+        summarize_response = await generate_deepseek_response(summarize_prompt, content)
+        debug_log("Summarize:", summarize_response)
+
+        return JSONResponse(content={"Summarize": summarize_response})
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.error(f"Summarize failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Summarize failed: {str(e)}"}
         )
 
