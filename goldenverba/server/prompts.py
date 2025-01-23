@@ -82,10 +82,9 @@ class UPSCPrompts:
     5. Wherever possible represent and organize content in hierarchial , strutured way .
     6. Connect all the given information and stitch it in meaningful represenation
 
-
-    output format:
-    1. I am using the output reponse directly rendering on mermaid editor, so please only give the mermaid code as response.
-    2. Please strictly provide only mermaid code.
+    Output format:
+    1. Provide only the Mermaid code as the output.
+    2. Do not include any additional text, explanations, or code block markers (```).
 
     Here is the Content : {topic}
 
