@@ -15,12 +15,15 @@ class DeepseekGenerator(GPT4Generator):
         self.description = "Generator using Deepseek suppported model"
         self.model_name = os.getenv("DEEPSEEK_MODEL")
         self.requires_library = ["openai"]
-        self.requires_env = ["DEEPSEEK_API_KEY"]
+        self.requires_env = ["DEEPSEEK_API_KEY","DEEPSEEK_MODEL"]
         self.streamable = True
         self.context_window = 64000
         self.deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
-        self.deepseek_base_url = "https://api.deepseek.com" #https://api-docs.deepseek.com/
-        info_log("MODEL :: ",self.model_name)
+        self.deepseek_base_url = "https://api.deepseek.com/v1" #https://api-docs.deepseek.com/
+        if not self.model_name:
+            error_log("DEEPSEEK_MODEL environment variable is not set!")
+            raise ValueError("DEEPSEEK_MODEL environment variable is required.")
+        info_log(f"Initialized DeepseekGenerator with model: {self.model_name}")
 
     async def generate_stream(
         self,
