@@ -15,6 +15,7 @@ import random
 from goldenverba.components.generation.GPT3Generator import GPT3Generator
 from goldenverba.components.generation.GroqGenerator import GroqGenerator
 from goldenverba.components.generation.GeminiGenerator import GeminiGenerator
+from goldenverba.components.generation.DeepseekGenerator import DeepseekGenerator
 #from goldenverba.components.generation.OpenrouterGenerator import OpenrouterGenerator
 
 #from goldenverba.components.generation.GeminiAIStudioGenerator import GeminiGenerator
@@ -41,6 +42,7 @@ load_dotenv()
 gpt3_generator = GPT3Generator()
 groq_generator = GroqGenerator()
 gemini_generator = GeminiGenerator()
+deepseek_generator = DeepseekGenerator()
 #openrouter_generator = OpenrouterGenerator()
 
 async def generate_gpt3_response(prompt: str,context: str) -> str:
@@ -80,6 +82,20 @@ async def generate_gemini_response(prompt: str, context: str) -> str:
         return full_response
     except Exception as e:
         msg.fail(f"Gemini API call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
+
+async def generate_deepseek_response(prompt: str,context: str) -> str:
+    """Helper function to generate LLM response."""
+    try:
+        full_response = ""
+        async for chunk in deepseek_generator.generate_stream([prompt], [context], []):
+            if chunk["finish_reason"] == "stop":
+                break
+            full_response += chunk["message"]
+        return full_response
+    except Exception as e:
+        msg.fail(f"deepseek API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
 
@@ -796,8 +812,9 @@ async def visualize(payload: QueryPayload):
         
         summary_prompt = prompts.get_prompt("VISUALIZE", topic=payload.query)
 
-        mermaid_response = await generate_gpt3_response(summary_prompt,payload.query)
+        #mermaid_response = await generate_gpt3_response(summary_prompt,payload.query)
         #mermaid_response = await generate_groq_response(summary_prompt,payload.query)
+        mermaid_response = await generate_deepseek_response(summary_prompt,payload.query)
         debug_log("Gkiri:LLM output:", mermaid_response)
         return JSONResponse(content={"mermaid_code": mermaid_response})
     except HTTPException as e:
