@@ -858,6 +858,11 @@ class GetSyllabusSubtopicQueryRequest(BaseModel):
 class SyllabusSubtopicResponse(BaseModel):
     llm_response: str
 
+class GetVisualizeContentRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    content: str
+    
 test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
 Views And Their Contribution\n\nAlthough educated Indians retained their
 traditional history in the form of handwritten epics, Puranas, and
@@ -1541,3 +1546,34 @@ async def visualize(request: GetSyllabusSubtopicRequest):
             status_code=500,
             content={"error": f"Visualization failed: {str(e)}"}
         )
+
+
+@app.post("/api/visualize_content")
+async def visualize(request: GetVisualizeContentRequest):
+    debug_log(f"Received visualize_content request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        content = request.content
+
+        # Fetch subtopic content from Weaviate
+
+
+        # Get visualization prompt from prompts module
+        visualize_prompt = prompts.get_prompt("VISUALIZE", topic=content)
+
+        # Call deepseek LLM
+        mermaid_response = await generate_deepseek_response(visualize_prompt, content)
+        debug_log("Generated mermaid diagram:", mermaid_response)
+
+        return JSONResponse(content={"mermaid_code": mermaid_response})
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.error(f"Visualization failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Visualization failed: {str(e)}"}
+        )
+
