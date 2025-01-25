@@ -14,7 +14,7 @@ VECTORIZERS = {
 
 # Optional vectorizers that may be enabled
 OPTIONAL_VECTORIZERS = {
-    "text2vec-voyage",
+    "text2vec-voyageai",
     "text2vec-palm"
 }
 
