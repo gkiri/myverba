@@ -9,6 +9,7 @@ load_dotenv()
 VECTORIZERS = {
     "text2vec-openai",
     "text2vec-cohere",
+    "text2vec-voyage",
 }  # Needs to match with Weaviate modules
 EMBEDDINGS = {"MiniLM", "OLLAMA"}  # Custom Vectors
 
