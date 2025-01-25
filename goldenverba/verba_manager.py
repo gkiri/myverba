@@ -196,12 +196,12 @@ class VerbaManager:
 
             if google_project != "":
                 additional_env_vars = {
-                    "ENABLE_MODULES": "text2vec-openai,generative-openai,qna-openai,text2vec-cohere,text2vec-palm",
+                    "ENABLE_MODULES": "text2vec-openai,generative-openai,qna-openai,text2vec-cohere,text2vec-palm,text2vec-voyage",
                     "GOOGLE_CLOUD_PROJECT": google_project,
                 }
             else:
                 additional_env_vars = {
-                    "ENABLE_MODULES": "text2vec-openai,generative-openai,qna-openai,text2vec-cohere",
+                    "ENABLE_MODULES": "text2vec-openai,generative-openai,qna-openai,text2vec-cohere,text2vec-voyage",
                 }
 
             msg.info("Using Weaviate Embedded")
