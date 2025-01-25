@@ -6,15 +6,22 @@ from weaviate import Client
 
 load_dotenv()
 
+# Base vectorizers that are commonly available
 VECTORIZERS = {
     "text2vec-openai",
     "text2vec-cohere",
-    "text2vec-voyage",
 }  # Needs to match with Weaviate modules
+
+# Optional vectorizers that may be enabled
+OPTIONAL_VECTORIZERS = {
+    "text2vec-voyage",
+    "text2vec-palm"
+}
+
 EMBEDDINGS = {"MiniLM", "OLLAMA"}  # Custom Vectors
 
 google_project = os.getenv("GOOGLE_CLOUD_PROJECT")
-if google_project != None:
+if google_project is not None:
     VECTORIZERS.add("text2vec-palm")
 
 
@@ -35,47 +42,53 @@ def verify_vectorizer(
         skip_properties = []
     modified_schema = schema.copy()
 
-    # adding specific config for Azure OpenAI
-    vectorizer_config = None
-    if os.getenv("OPENAI_API_TYPE") == "azure" and vectorizer == "text2vec-openai":
-        resourceName = os.getenv("AZURE_OPENAI_RESOURCE_NAME")
-        model = os.getenv("AZURE_OPENAI_EMBEDDING_MODEL")
-        if resourceName is None or model is None:
-            raise Exception(
-                "AZURE_OPENAI_RESOURCE_NAME and AZURE_OPENAI_EMBEDDING_MODEL should be set when OPENAI_API_TYPE is azure. Resource name is XXX in http://XXX.openai.azure.com"
-            )
-        vectorizer_config = {
-            "text2vec-openai": {"deploymentId": model, "resourceName": resourceName}
-        }
-
-    # adding specific config for Google
-    if vectorizer == "text2vec-palm":
-        if google_project is not None:
-            vectorizer_config = {
-                "text2vec-palm": {
-                    "projectId": google_project,
+    try:
+        if vectorizer in VECTORIZERS or vectorizer in OPTIONAL_VECTORIZERS:
+            modified_schema["classes"][0]["vectorizer"] = vectorizer
+            # adding specific config for Azure OpenAI
+            vectorizer_config = None
+            if os.getenv("OPENAI_API_TYPE") == "azure" and vectorizer == "text2vec-openai":
+                resourceName = os.getenv("AZURE_OPENAI_RESOURCE_NAME")
+                model = os.getenv("AZURE_OPENAI_EMBEDDING_MODEL")
+                if resourceName is None or model is None:
+                    raise Exception(
+                        "AZURE_OPENAI_RESOURCE_NAME and AZURE_OPENAI_EMBEDDING_MODEL should be set when OPENAI_API_TYPE is azure. Resource name is XXX in http://XXX.openai.azure.com"
+                    )
+                vectorizer_config = {
+                    "text2vec-openai": {"deploymentId": model, "resourceName": resourceName}
                 }
-            }
 
-    # Verify Vectorizer
-    if vectorizer in VECTORIZERS:
-        modified_schema["classes"][0]["vectorizer"] = vectorizer
-        if vectorizer_config is not None:
-            modified_schema["classes"][0]["moduleConfig"] = vectorizer_config
-        for property in modified_schema["classes"][0]["properties"]:
-            if property["name"] in skip_properties:
-                moduleConfig = {
-                    vectorizer: {
-                        "skip": True,
-                        "vectorizePropertyName": False,
+            # adding specific config for Google
+            if vectorizer == "text2vec-palm":
+                if google_project is not None:
+                    vectorizer_config = {
+                        "text2vec-palm": {
+                            "projectId": google_project,
+                        }
                     }
-                }
-                property["moduleConfig"] = moduleConfig
-    elif vectorizer in EMBEDDINGS:
-        pass
-    elif vectorizer is not None:
-        msg.warn(f"Could not find matching vectorizer: {vectorizer}")
 
+            if vectorizer_config is not None:
+                modified_schema["classes"][0]["moduleConfig"] = vectorizer_config
+            for property in modified_schema["classes"][0]["properties"]:
+                if property["name"] in skip_properties:
+                    moduleConfig = {
+                        vectorizer: {
+                            "skip": True,
+                            "vectorizePropertyName": False,
+                        }
+                    }
+                    property["moduleConfig"] = moduleConfig
+        elif vectorizer in EMBEDDINGS:
+            pass
+        elif vectorizer is not None:
+            msg.warn(f"Could not find matching vectorizer: {vectorizer}")
+    except Exception as e:
+        msg.warn(f"Error configuring vectorizer {vectorizer}: {str(e)}")
+        # Fallback to a default vectorizer if needed
+        if "text2vec-openai" in VECTORIZERS:
+            modified_schema["classes"][0]["vectorizer"] = "text2vec-openai"
+            msg.info("Falling back to text2vec-openai vectorizer")
+    
     return modified_schema
 
 
