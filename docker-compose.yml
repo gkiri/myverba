@@ -60,7 +60,7 @@ services:
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      ENABLE_MODULES: 'text2vec-openai, generative-openai, qna-openai, text2vec-cohere'
+      ENABLE_MODULES: 'text2vec-openai,generative-openai,qna-openai,text2vec-cohere,text2vec-voyage'
       CLUSTER_HOSTNAME: 'node1'
       VOYAGE_API_KEY: $VOYAGE_API_KEY  # Add your Voyage API key
       VOYAGE_MODEL: $VOYAGE_MODEL  # Specify model
