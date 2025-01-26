@@ -46,7 +46,7 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
         )
         
         # Log the raw response for debugging
-        msg.info(f"Raw Weaviate response: {pyqs_data}")
+        #msg.info(f"Raw Weaviate response: {pyqs_data}")
         
         # Validate response structure
         if not isinstance(pyqs_data, dict):
@@ -75,7 +75,7 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
             for item in pyqs_results
         ]
         
-        msg.good(f"Successfully retrieved {len(processed_results)} PYQS results")
+        #msg.good(f"Successfully retrieved {len(processed_results)} PYQS results")
         return processed_results
 
     except Exception as e:
@@ -121,7 +121,7 @@ def build_filter_prompt(subtopic_content: str, sorted_pyqs: list) -> str:
         for i, q in enumerate(sorted_pyqs)
     ]
 
-    msg.info(f"build_filter_prompt sorted hybrid_results:: {hybrid_results}")  # Add logging
+    #msg.info(f"build_filter_prompt sorted hybrid_results:: {hybrid_results}")  # Add logging
     
     return prompts.get_prompt(
         "PYQS",
@@ -139,7 +139,7 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
 
     prompt = build_filter_prompt(subtopic_content, sorted_pyqs)
     #msg.info(f"filter_top_pyqs_with_llm sorted prompt:: {prompt}")
-    msg.info(f"filter_top_pyqs_with_llm sorted_pyqs:: {sorted_pyqs}")
+    #msg.info(f"filter_top_pyqs_with_llm sorted_pyqs:: {sorted_pyqs}")
 
     try:
         # Generate LLM response - subtopic and questions already in prompt
