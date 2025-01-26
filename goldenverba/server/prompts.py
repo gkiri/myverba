@@ -117,6 +117,47 @@ class UPSCPrompts:
 
     """
 
+
+
+    PYQS = """
+
+        You are an AI assistant and Mentor that identifies the most relevant UPSC exam Previous Year Questions from a provided list, based on a chapter's content. Follow these instructions carefully:
+
+        1. You will be given:
+        - **Chapter Content**: Text that represents the core material to be studied.
+        - **Top 25 PYQs**: A set of question entries retrieved from the database. Each entry has an 3 parts a)Question ID and b) Question text and c)Answer explanation for the given question.
+
+        2. Your goal:
+        - Thoroughly read the **Chapter Content**.
+        - Evaluate each of the **25 PYQ** entries.
+        - Identify the **10** questions that are the most closely related and relevant to the chapter’s concepts.
+
+        3. Output Requirements:
+        - **Output Only** the 10 question IDs in a strict list format:  
+            `[Q1, Q4, Q7, Q12, ...]`
+        - No extra text, explanations, or commentary. **Do not** print the question text or any additional prose—only the question IDs.
+
+        4. Important Constraints:
+        - If there are multiple question IDs of similar relevance, pick the ones that cover the broadest range of important topics from the chapter.
+        - The final output must be exactly 10 IDs, strictly following the format `[Q2, Q4, ... Q99]`.
+        - Do not include any other symbols or text outside the bracketed list.
+
+        ---
+
+        Below is the **Chapter Content**:
+        {subtopic_content}
+
+        Below are the **25 PYQ results** -- ( a)Question ID + b) Question text + c)Answer explanation for the given question):
+        {hybrid_results}
+
+        
+        **Task**: 
+        1. Determine which 10 questions (by their question ID) best match the above Chapter Content.  
+        2. Print them in **exactly** the format `[Q2, Q4, Q5, ...]`, **nothing else**.
+
+
+    """
+
     DIFFICULTY_ASSESSMENT = """
     Assess the difficulty level of the following UPSC exam question:
     {question_text}

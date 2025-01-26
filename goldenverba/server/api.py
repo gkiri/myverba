@@ -37,6 +37,13 @@ from pydantic import ValidationError
 import goldenverba.server.prompts as prompts
 from goldenverba.server.supabase.supabase_client import supabase
 import asyncio
+import re
+from goldenverba.server.api_helpers import (
+    fetch_subtopic_content,
+    perform_pyqs_search,
+    sort_pyqs_by_score,
+    filter_top_pyqs_with_llm
+)
 load_dotenv()
 
 gpt3_generator = GPT3Generator()
@@ -869,7 +876,17 @@ class GetSummarizeContentRequest(BaseModel):
     subtopic_id: str
     content: str
 
-    
+class GetPYQSContentRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    content: str
+
+class GetPYQSsubtopicContentRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    count: int
+
+
 test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
 Views And Their Contribution\n\nAlthough educated Indians retained their
 traditional history in the form of handwritten epics, Puranas, and
@@ -1606,4 +1623,63 @@ async def visualize(request: GetSummarizeContentRequest):
             status_code=500,
             content={"error": f"Summarize failed: {str(e)}"}
         )
+
+
+# retrieve pyqs relvant for given topic content
+@app.post("/api/pyqs_content")
+async def post_pyqs_content(request: GetPYQSContentRequest):
+    debug_log(f"Received pyqs_content request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        content = request.content
+        
+        # Get visualization prompt from prompts module
+        pyqs_prompt = prompts.get_prompt("PYQS", topic=content)
+
+        # Call deepseek LLM
+        pyqs_response = await generate_deepseek_response(pyqs_prompt, content)
+        debug_log("PYQS:", pyqs_response)
+
+        return JSONResponse(content={"PYQS": pyqs_response})
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.error(f"PYQS failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"PYQS failed: {str(e)}"}
+        )
+
+# Retrieve pyqs from subtopic content
+@app.post("/api/pyqs_subtopic")
+async def post_pyqs_subtopic(request: GetPYQSsubtopicContentRequest):
+    debug_log(f"Received pyqs_content request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        count = request.count
+
+        # Fetch subtopic content using helper
+        subtopic_content = fetch_subtopic_content(subtopic_id)
+
+        # Perform search and processing using helpers
+        pyqs_data = perform_pyqs_search(subtopic_content, count + 15) # 15 extra cushion
+        sorted_results = sort_pyqs_by_score(pyqs_data, count + 15)
+        final_results = await filter_top_pyqs_with_llm(sorted_results, subtopic_content)
+        print(final_results)
+        debug_log(f"final_results: {final_results}")
+        return JSONResponse(content={"PYQS": final_results})
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.error(f"PYQS search failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"PYQS search failed: {str(e)}"}
+        )
+
+
+
 
