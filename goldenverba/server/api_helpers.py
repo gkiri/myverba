@@ -36,7 +36,7 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
         .do()
     )
     
-    if not pyqs_data['data']['Get']['PYQS']:
+    if not pyqs_data.get('data', {}).get('Get', {}).get('PYQS', []):
         return []
 
     #msg.info(f"perform_pyqs_search:: {pyqs_data}")  # Add logging
