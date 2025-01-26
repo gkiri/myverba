@@ -36,9 +36,24 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
         .do()
     )
     
-    #msg.info(f"perform_pyqs_search:: {pyqs_data}")  # Add logging
+    if not pyqs_data['data']['Get']['PYQS']:
+        return []
 
-    return pyqs_data.get("data", {}).get("Get", {}).get("PYQS", []) or []
+    #msg.info(f"perform_pyqs_search:: {pyqs_data}")  # Add logging
+    
+    return [
+        {
+            "question": item["question"],
+            "answer": item["answer_key"],
+            "hybrid_score": float(item["_additional"].get("score", 0.0)),
+            "explanation": item["description"],
+            "year": item["year"]
+        }
+        for item in pyqs_data['data']['Get']['PYQS']
+    ]
+
+    #old
+    #return pyqs_data.get("data", {}).get("Get", {}).get("PYQS", []) or []
 
 
 def sort_pyqs_by_score(pyqs_data: list, top_n: int = 50) -> list:
