@@ -36,6 +36,8 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
         .do()
     )
     
+    msg.info(f"perform_pyqs_search:: {pyqs_data}")  # Add logging
+
     return pyqs_data.get("data", {}).get("Get", {}).get("PYQS", []) or []
 
 
@@ -63,6 +65,7 @@ def sort_pyqs_by_score(pyqs_data: list, top_n: int = 50) -> list:
         key=lambda x: x["score"],
         reverse=True
     )
+    msg.info(f"sorted_pyqs:: {sorted_pyqs}")
     return sorted_pyqs[:top_n]
 
 
@@ -92,7 +95,7 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
     try:
         llm_response = await generate_gemini_response(prompt, "") #2nd arg is null because subtopic and questiosn already in prompt
         selected_ids = re.findall(r"Q\d+", llm_response)
-        
+        msg.info(f"selected_ids:: {selected_ids}")
         return [
             q for i, q in enumerate(sorted_pyqs)
             if f"Q{i+1}" in selected_ids
