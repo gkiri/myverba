@@ -36,13 +36,18 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
         .do()
     )
     
-    return pyqs_data.get("data", {}).get("Get", {}).get("PYQS", [])
+    return pyqs_data.get("data", {}).get("Get", {}).get("PYQS", []) or []
 
 
 def sort_pyqs_by_score(pyqs_data: list, top_n: int = 50) -> list:
     """
     Sort the returned PYQS data by descending score, then truncate to top_n items.
     """
+    
+    if not isinstance(pyqs_data, list):
+        msg.warn(f"Error:sort_pyqs_by_score failed: pyqs_data not list")
+        return []
+
     sorted_pyqs = sorted(
         [
             {

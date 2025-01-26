@@ -1424,7 +1424,7 @@ async def get_syllabus_subtopic_stream(request: GetSyllabusSubtopicRequest):
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     except Exception as e:
-        msg.error(f"Error in get_syllabus_subtopic_stream: {str(e)}")
+        msg.fail(f"Error in get_syllabus_subtopic_stream: {str(e)}")
         # If we fail before streaming starts, raise an HTTPException
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1513,14 +1513,14 @@ async def get_syllabus_subtopic_with_query_stream(request: GetSyllabusSubtopicQu
                     # await asyncio.sleep(0.01)
 
             except Exception as e:
-                msg.error(f"Error streaming from Gemini: {str(e)}")
+                msg.fail(f"Error streaming from Gemini: {str(e)}")
                 yield f"data: [ERROR]: {str(e)}\n\n"
 
         # 3) Return a StreamingResponse
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     except Exception as e:
-        msg.error(f"Error in get_syllabus_subtopic_with_query_stream: {str(e)}")
+        msg.fail(f"Error in get_syllabus_subtopic_with_query_stream: {str(e)}")
         # If we haven't started streaming yet, we can raise directly.
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1565,7 +1565,7 @@ async def visualize(request: GetSyllabusSubtopicRequest):
     except HTTPException as e:
         raise e
     except Exception as e:
-        msg.error(f"Visualization failed: {str(e)}")
+        msg.fail(f"Visualization failed: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"Visualization failed: {str(e)}"}
@@ -1592,7 +1592,7 @@ async def visualize(request: GetVisualizeContentRequest):
     except HTTPException as e:
         raise e
     except Exception as e:
-        msg.error(f"Visualization failed: {str(e)}")
+        msg.fail(f"Visualization failed: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"Visualization failed: {str(e)}"}
@@ -1618,7 +1618,7 @@ async def visualize(request: GetSummarizeContentRequest):
     except HTTPException as e:
         raise e
     except Exception as e:
-        msg.error(f"Summarize failed: {str(e)}")
+        msg.fail(f"Summarize failed: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"Summarize failed: {str(e)}"}
@@ -1646,7 +1646,7 @@ async def post_pyqs_content(request: GetPYQSContentRequest):
     except HTTPException as e:
         raise e
     except Exception as e:
-        msg.error(f"PYQS failed: {str(e)}")
+        msg.fail(f"PYQS failed: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"PYQS failed: {str(e)}"}
@@ -1671,10 +1671,9 @@ async def post_pyqs_subtopic(request: GetPYQSsubtopicContentRequest):
         debug_log(f"final_results: {final_results}")
         return JSONResponse(content={"PYQS": final_results})
 
-    except HTTPException as e:
-        raise e
+
     except Exception as e:
-        msg.error(f"PYQS search failed: {str(e)}")
+        msg.fail(f"PYQS search failed: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"PYQS search failed: {str(e)}"}
