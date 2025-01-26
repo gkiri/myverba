@@ -1665,8 +1665,8 @@ async def post_pyqs_subtopic(request: GetPYQSsubtopicContentRequest):
 
         # Perform search and processing using helpers
         pyqs_data = perform_pyqs_search(manager, subtopic_content, count + 15) # 15 extra cushion
-        sorted_results = sort_pyqs_by_score(pyqs_data, count + 15)
-        final_results = await filter_top_pyqs_with_llm(sorted_results, subtopic_content)
+        #sorted_results = sort_pyqs_by_score(pyqs_data, count + 15)
+        final_results = await filter_top_pyqs_with_llm(pyqs_data, subtopic_content)
         print(final_results)
         debug_log(f"final_results: {final_results}")
         return JSONResponse(content={"PYQS": final_results})
