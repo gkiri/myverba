@@ -154,6 +154,10 @@ class VerbaManager:
         if cohere_key != "":
             additional_header["X-Cohere-Api-Key"] = cohere_key
 
+        voyageai_key = os.environ.get("VOYAGEAI_API_KEY", "")
+        if voyageai_key != "":
+            additional_header["X-VoyageAI-Api-Key"] = voyageai_key
+
         # Check Google Key
         google_key = os.environ.get("GOOGLE_API_KEY", "")
         self.environment_variables["GOOGLE_API_KEY"] = False

@@ -62,8 +62,8 @@ services:
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       ENABLE_MODULES: 'text2vec-openai,generative-openai,qna-openai,text2vec-cohere,text2vec-voyageai'
       CLUSTER_HOSTNAME: 'node1'
-      VOYAGE_API_KEY: $VOYAGE_API_KEY  # Add your Voyage API key
-      VOYAGE_MODEL: $VOYAGE_MODEL  # Specify model
+      VOYAGEAI_API_KEY: $VOYAGEAI_API_KEY  # Add your Voyage API key
+      VOYAGEAI_MODEL: $VOYAGEAI_MODEL  # Specify model
       #######IF YOU WANT AUTHENTICATION UNCOMMENT BELOW########
       # AUTHENTICATION_APIKEY_ENABLED: 'true'
       # AUTHENTICATION_APIKEY_ALLOWED_KEYS: 'readonlykey,adminkey'
