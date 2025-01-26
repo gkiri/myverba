@@ -68,6 +68,7 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
             {
                 "question": item["question"],
                 "answer": item["answer_key"],
+                "options": item["options"],
                 "hybrid_score": float(item["_additional"].get("score", 0.0)),
                 "explanation": item["description"],
                 "year": item["year"]
