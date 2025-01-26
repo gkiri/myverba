@@ -1,7 +1,6 @@
 from fastapi import HTTPException
 from goldenverba import verba_manager
 from wasabi import msg
-from goldenverba.server.api import generate_gemini_response  # Local import to avoid circular dependency
 import goldenverba.server.prompts as prompts  # Add this import
 import re
 
@@ -80,10 +79,12 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
     Use Gemini LLM to select the 10 most relevant questions from sorted_pyqs.
     If the LLM fails or returns fewer than 10, fallback to the top-10 by score.
     """
+    from goldenverba.server.api import generate_gemini_response  # Local import to avoid circular dependency
+
     prompt = build_filter_prompt(subtopic_content, sorted_pyqs)
 
     try:
-        llm_response = await generate_gemini_response(prompt, subtopic_content)
+        llm_response = await generate_gemini_response(prompt, "") #2nd arg is null because subtopic and questiosn already in prompt
         selected_ids = re.findall(r"Q\d+", llm_response)
         
         return [
