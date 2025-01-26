@@ -27,33 +27,63 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
     Perform a hybrid search in Weaviate's PYQS class using the subtopic content.
     Returns a list of top 'limit' results, each item containing question data.
     """
-    pyqs_data = (
-        manager.client.query
-        .get("PYQS", ["question", "options", "answer_key", "description", "year"])
-        .with_hybrid(query=subtopic_content, alpha=0.7, properties=["question", "description"])
-        .with_limit(limit)
-        .with_additional(["score"])
-        .do()
-    )
-    
-    if not pyqs_data.get('data', {}).get('Get', {}).get('PYQS', []):
+    try:
+        # First, let's log the input parameters
+        msg.info(f"Performing PYQS search for content length: {len(subtopic_content)} chars, limit: {limit}")
+        
+        # Perform the hybrid search
+        pyqs_data = (
+            manager.client.query
+            .get("PYQS", ["question", "options", "answer_key", "description", "year"])
+            .with_hybrid(
+                query=subtopic_content[:1000],  # Limit query length to avoid potential issues
+                alpha=0.7,
+                properties=["question", "description"]
+            )
+            .with_limit(limit)
+            .with_additional(["score"])
+            .do()
+        )
+        
+        # Log the raw response for debugging
+        msg.info(f"Raw Weaviate response: {pyqs_data}")
+        
+        # Validate response structure
+        if not isinstance(pyqs_data, dict):
+            msg.warn(f"Unexpected response type: {type(pyqs_data)}")
+            return []
+            
+        if 'data' not in pyqs_data:
+            msg.warn("No 'data' field in response")
+            return []
+            
+        pyqs_results = pyqs_data.get('data', {}).get('Get', {}).get('PYQS', [])
+        
+        if not pyqs_results:
+            msg.warn("No PYQS results found")
+            return []
+            
+        # Transform and return results
+        processed_results = [
+            {
+                "question": item["question"],
+                "answer": item["answer_key"],
+                "hybrid_score": float(item["_additional"].get("score", 0.0)),
+                "explanation": item["description"],
+                "year": item["year"]
+            }
+            for item in pyqs_results
+        ]
+        
+        msg.good(f"Successfully retrieved {len(processed_results)} PYQS results")
+        return processed_results
+
+    except Exception as e:
+        msg.fail(f"Error in perform_pyqs_search: {str(e)}")
+        # Log the full exception for debugging
+        import traceback
+        msg.warn(f"Full traceback: {traceback.format_exc()}")
         return []
-
-    #msg.info(f"perform_pyqs_search:: {pyqs_data}")  # Add logging
-    
-    return [
-        {
-            "question": item["question"],
-            "answer": item["answer_key"],
-            "hybrid_score": float(item["_additional"].get("score", 0.0)),
-            "explanation": item["description"],
-            "year": item["year"]
-        }
-        for item in pyqs_data['data']['Get']['PYQS']
-    ]
-
-    #old
-    #return pyqs_data.get("data", {}).get("Get", {}).get("PYQS", []) or []
 
 
 def sort_pyqs_by_score(pyqs_data: list, top_n: int = 50) -> list:

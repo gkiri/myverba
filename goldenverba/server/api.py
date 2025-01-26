@@ -1661,17 +1661,32 @@ async def post_pyqs_subtopic(request: GetPYQSsubtopicContentRequest):
         count = request.count
 
         # Fetch subtopic content using helper
-        subtopic_content = fetch_subtopic_content(manager,subtopic_id)
+        subtopic_content = fetch_subtopic_content(manager, subtopic_id)
+        
+        if not subtopic_content:
+            msg.warn(f"Empty content received for subtopic_id: {subtopic_id}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"No content found for subtopic {subtopic_id}"}
+            )
 
         # Perform search and processing using helpers
-        pyqs_data = perform_pyqs_search(manager, subtopic_content, count + 15) # 15 extra cushion
-        #sorted_results = sort_pyqs_by_score(pyqs_data, count + 15)
+        pyqs_data = perform_pyqs_search(manager, subtopic_content, count + 15)
+        
+        if not pyqs_data:
+            msg.warn(f"No PYQS results for subtopic_id: {subtopic_id}")
+            return JSONResponse(
+                content={"PYQS": [], "warning": "No relevant questions found"}
+            )
+
         sorted_results = sorted(pyqs_data, key=lambda x: x["hybrid_score"], reverse=True)
         final_results = await filter_top_pyqs_with_llm(sorted_results, subtopic_content)
-        print(final_results)
-        debug_log(f"final_results: {final_results}")
-        return JSONResponse(content={"PYQS": final_results})
-
+        
+        return JSONResponse(content={
+            "PYQS": final_results,
+            "total_found": len(pyqs_data),
+            "filtered_count": len(final_results)
+        })
 
     except Exception as e:
         msg.fail(f"PYQS search failed: {str(e)}")
