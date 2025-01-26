@@ -1,15 +1,16 @@
 from fastapi import HTTPException
-from goldenverba import verba_manager
+#from goldenverba import verba_manager
 from wasabi import msg
 import goldenverba.server.prompts as prompts  # Add this import
 import re
+from goldenverba.verba_manager import VerbaManager
 
-def fetch_subtopic_content(subtopic_id: str) -> str:
+def fetch_subtopic_content(manager: VerbaManager, subtopic_id: str) -> str:
     """
     Retrieve subtopic content from Weaviate
     """
     subtopic_data = (
-        verba_manager.manager.client.query
+        manager.client.query
         .get("VERBA_Syllabus_Subtopics", ["subtopic_content"])
         .with_where({"path": ["subtopic_id"], "operator": "Equal", "valueString": subtopic_id})
         .with_limit(1)
@@ -21,13 +22,13 @@ def fetch_subtopic_content(subtopic_id: str) -> str:
         
     return subtopic_data["data"]["Get"]["VERBA_Syllabus_Subtopics"][0].get("subtopic_content", "")
 
-def perform_pyqs_search(subtopic_content: str, limit: int = 50) -> list:
+def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int = 50) -> list:
     """
     Perform a hybrid search in Weaviate's PYQS class using the subtopic content.
     Returns a list of top 'limit' results, each item containing question data.
     """
     pyqs_data = (
-        verba_manager.manager.client.query
+        manager.client.query
         .get("PYQS", ["question", "options", "answer_key", "description", "year"])
         .with_hybrid(query=subtopic_content, alpha=0.7, properties=["question", "description"])
         .with_limit(limit)

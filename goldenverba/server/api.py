@@ -1661,10 +1661,10 @@ async def post_pyqs_subtopic(request: GetPYQSsubtopicContentRequest):
         count = request.count
 
         # Fetch subtopic content using helper
-        subtopic_content = fetch_subtopic_content(subtopic_id)
+        subtopic_content = fetch_subtopic_content(manager,subtopic_id)
 
         # Perform search and processing using helpers
-        pyqs_data = perform_pyqs_search(subtopic_content, count + 15) # 15 extra cushion
+        pyqs_data = perform_pyqs_search(manager, subtopic_content, count + 15) # 15 extra cushion
         sorted_results = sort_pyqs_by_score(pyqs_data, count + 15)
         final_results = await filter_top_pyqs_with_llm(sorted_results, subtopic_content)
         print(final_results)
