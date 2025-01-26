@@ -93,7 +93,8 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
     from goldenverba.server.api import generate_gemini_response  # Local import to avoid circular dependency
 
     prompt = build_filter_prompt(subtopic_content, sorted_pyqs)
-    msg.info(f"filter_top_pyqs_with_llm sorted prompt:: {prompt}")
+    #msg.info(f"filter_top_pyqs_with_llm sorted prompt:: {prompt}")
+    msg.info(f"filter_top_pyqs_with_llm sorted_pyqs:: {sorted_pyqs}")
 
     try:
         # Generate LLM response - subtopic and questions already in prompt
