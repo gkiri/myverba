@@ -100,7 +100,7 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
         llm_response = await generate_gemini_response(prompt, "")
         
         # Extract question IDs (e.g., Q1, Q2) from LLM response
-        selected_question_ids = re.findall(r"Q\d+", llm_response)
+        selected_question_ids = re.findall(r"\bQ\d+\b", llm_response)
         msg.info(f"selected_ids:: {selected_question_ids}")
 
         # Filter questions based on selected IDs
@@ -110,6 +110,7 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
             if f"Q{index+1}" in selected_question_ids
         ]
 
+        msg.info(f"filtered_questions:: {filtered_questions}")
         # Return top 10 filtered questions or fallback to score-based top 10
         return filtered_questions[:10] or sorted_pyqs[:10]
 
