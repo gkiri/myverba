@@ -29,7 +29,7 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
     """
     try:
         # First, let's log the input parameters
-        msg.info(f"Performing PYQS search for content length: {len(subtopic_content)} chars, limit: {limit}")
+        #msg.info(f"Performing PYQS search for content length: {len(subtopic_content)} chars, limit: {limit}")
         
         # Perform the hybrid search
         pyqs_data = (
@@ -147,7 +147,8 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
         
         # Extract question IDs (e.g., Q1, Q2) from LLM response
         selected_question_ids = re.findall(r"\bQ\d+\b", llm_response)
-        msg.info(f"selected_ids:: {selected_question_ids}")
+
+        #msg.info(f"selected_ids:: {selected_question_ids}")
 
         # Filter questions based on selected IDs
         filtered_questions = [
@@ -156,7 +157,8 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
             if f"Q{index+1}" in selected_question_ids
         ]
 
-        msg.info(f"filtered_questions:: {filtered_questions}")
+        #msg.info(f"filtered_questions:: {filtered_questions}")
+
         # Return top 10 filtered questions or fallback to score-based top 10
         return filtered_questions[:10] or sorted_pyqs[:10]
 
