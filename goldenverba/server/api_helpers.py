@@ -36,7 +36,7 @@ def perform_pyqs_search(manager: VerbaManager, subtopic_content: str, limit: int
         .do()
     )
     
-    msg.info(f"perform_pyqs_search:: {pyqs_data}")  # Add logging
+    #msg.info(f"perform_pyqs_search:: {pyqs_data}")  # Add logging
 
     return pyqs_data.get("data", {}).get("Get", {}).get("PYQS", []) or []
 
@@ -65,7 +65,7 @@ def sort_pyqs_by_score(pyqs_data: list, top_n: int = 50) -> list:
         key=lambda x: x["score"],
         reverse=True
     )
-    msg.info(f"sorted_pyqs:: {sorted_pyqs}")
+    #msg.info(f"sorted_pyqs:: {sorted_pyqs}")
     return sorted_pyqs[:top_n]
 
 
@@ -75,6 +75,8 @@ def build_filter_prompt(subtopic_content: str, sorted_pyqs: list) -> str:
         f"Q{i+1}: {q['question']}\nExplanation: {q['explanation']}"
         for i, q in enumerate(sorted_pyqs)
     ]
+
+    msg.info(f"build_filter_prompt sorted hybrid_results:: {hybrid_results}")  # Add logging
     
     return prompts.get_prompt(
         "PYQS",
@@ -91,6 +93,8 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
     from goldenverba.server.api import generate_gemini_response  # Local import to avoid circular dependency
 
     prompt = build_filter_prompt(subtopic_content, sorted_pyqs)
+    
+    msg.info(f"filter_top_pyqs_with_llm sorted prompt:: {prompt}")
 
     try:
         llm_response = await generate_gemini_response(prompt, "") #2nd arg is null because subtopic and questiosn already in prompt
