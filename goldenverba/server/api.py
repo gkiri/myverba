@@ -155,6 +155,7 @@ origins = [
     "http://3.84.172.214:8080",
     "https://*.lovable.app",
     "https://preview--conversational-insight-panel.lovable.app",
+    "https://preview--lovable-connectify.lovable.app",
 ]
 
 # Add middleware for handling Cross Origin Resource Sharing (CORS)
