@@ -93,19 +93,28 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
     from goldenverba.server.api import generate_gemini_response  # Local import to avoid circular dependency
 
     prompt = build_filter_prompt(subtopic_content, sorted_pyqs)
-    
     msg.info(f"filter_top_pyqs_with_llm sorted prompt:: {prompt}")
 
     try:
-        llm_response = await generate_gemini_response(prompt, "") #2nd arg is null because subtopic and questiosn already in prompt
-        selected_ids = re.findall(r"Q\d+", llm_response)
-        msg.info(f"selected_ids:: {selected_ids}")
-        return [
-            q for i, q in enumerate(sorted_pyqs)
-            if f"Q{i+1}" in selected_ids
-        ][:10] or sorted_pyqs[:10]
+        # Generate LLM response - subtopic and questions already in prompt
+        llm_response = await generate_gemini_response(prompt, "")
+        
+        # Extract question IDs (e.g., Q1, Q2) from LLM response
+        selected_question_ids = re.findall(r"Q\d+", llm_response)
+        msg.info(f"selected_ids:: {selected_question_ids}")
+
+        # Filter questions based on selected IDs
+        filtered_questions = [
+            question 
+            for index, question in enumerate(sorted_pyqs)
+            if f"Q{index+1}" in selected_question_ids
+        ]
+
+        # Return top 10 filtered questions or fallback to score-based top 10
+        return filtered_questions[:10] or sorted_pyqs[:10]
 
     except Exception as e:
         msg.warn(f"Gemini filtering failed: {str(e)}")
+        # Fallback to top 10 questions by score
         return sorted_pyqs[:10]
 
