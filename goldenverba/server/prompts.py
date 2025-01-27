@@ -144,7 +144,8 @@ class UPSCPrompts:
     1. Provide only the Mermaid code as the output.
     2. Do not include any additional text, explanations, or code block markers (```).
 
-    Here is the Content given below : {topic}
+    Here is the Content given below : 
+    {topic}
 
 
     """

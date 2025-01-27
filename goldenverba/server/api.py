@@ -891,6 +891,11 @@ class GetVisualizeContentComboRequest(BaseModel):
     content: str
     model_id: int 
 
+class GetVisualizeSubtopicComboRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    model_id: int 
+
 class GetSummarizeContentRequest(BaseModel):
     user_id: str
     subtopic_id: str
@@ -905,6 +910,8 @@ class GetPYQSsubtopicContentRequest(BaseModel):
     user_id: str
     subtopic_id: str
     count: int
+
+
 
 
 test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
@@ -1622,7 +1629,7 @@ async def visualize(request: GetVisualizeContentRequest):
 @app.post("/api/visualize_content_combo")
 async def visualize_content_combo(request: GetVisualizeContentComboRequest):
     debug_log(f"Received visualize_content_combo request: {request}")
-    msg.info(f"visualize_prompt1::: {request}")
+    #msg.info(f"visualize_prompt1::: {request}")
     try:
         subtopic_id = request.subtopic_id
         user_id = request.user_id
@@ -1632,28 +1639,90 @@ async def visualize_content_combo(request: GetVisualizeContentComboRequest):
         # Get visualization prompts from prompts module
         visualize_prompt1 = prompts.get_prompt("VISUALIZE_MERMAID", topic=content)
         visualize_prompt2 = prompts.get_prompt("VISUALIZE_MARKMAP", topic=content)
-        msg.info(f"visualize_prompt1::: {visualize_prompt1}")
-        msg.info(f"visualize_prompt2::: {visualize_prompt2}")
+
+        #msg.info(f"visualize_prompt1::: {visualize_prompt1}")
+        #msg.info(f"visualize_prompt2::: {visualize_prompt2}")
         
         # Generate both responses based on model_id
         if model_id == 0:
-            mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-1.5-flash-002")
-            markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-1.5-flash-002")
+            mermaid_response = await generate_gemini_response(visualize_prompt1, "", "gemini-1.5-flash-002")
+            markmap_response = await generate_gemini_response(visualize_prompt2, "", "gemini-1.5-flash-002")
         elif model_id == 1:
-            mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-2.0-flash-exp")
-            markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-2.0-flash-exp")
+            mermaid_response = await generate_gemini_response(visualize_prompt1, "", "gemini-2.0-flash-exp")
+            markmap_response = await generate_gemini_response(visualize_prompt2, "", "gemini-2.0-flash-exp")
         elif model_id == 2:
-            mermaid_response = await generate_deepseek_response(visualize_prompt1, content, "deepseek-r1")
-            markmap_response = await generate_deepseek_response(visualize_prompt2, content, "deepseek-r1")
+            mermaid_response = await generate_deepseek_response(visualize_prompt1, "", "deepseek-r1")
+            markmap_response = await generate_deepseek_response(visualize_prompt2, "", "deepseek-r1")
         elif model_id == 3:
-            mermaid_response = await generate_deepseek_response(visualize_prompt1, content, "deepseek-chat")
-            markmap_response = await generate_deepseek_response(visualize_prompt2, content, "deepseek-chat")
+            mermaid_response = await generate_deepseek_response(visualize_prompt1, "", "deepseek-chat")
+            markmap_response = await generate_deepseek_response(visualize_prompt2, "", "deepseek-chat")
         else:
-            mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-1.5-flash-002")
-            markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-1.5-flash-002")
+            mermaid_response = await generate_gemini_response(visualize_prompt1, "", "gemini-1.5-flash-002")
+            markmap_response = await generate_gemini_response(visualize_prompt2, "", "gemini-1.5-flash-002")
         
-        msg.info(f"Generated mermaid diagram::: {mermaid_response}")
-        msg.info(f"Generated markmap diagram::: {markmap_response}")
+        #msg.info(f"Generated mermaid diagram::: {mermaid_response}")
+        #msg.info(f"Generated markmap diagram::: {markmap_response}")
+
+        # Return both responses in the JSON
+        return JSONResponse(content={
+            "mermaid_code": mermaid_response,
+            "markmap_code": markmap_response
+        })
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.fail(f"Visualization failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Visualization failed: {str(e)}"}
+        )
+
+
+@app.post("/api/visualize_subtopic_combo")
+async def visualize_subtopic_combo(request: GetVisualizeSubtopicComboRequest):
+    debug_log(f"Received visualize_content_combo request: {request}")
+    #msg.info(f"visualize_prompt1::: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        model_id = request.model_id 
+
+        # Fetch subtopic content using helper
+        subtopic_content = fetch_subtopic_content(manager, subtopic_id)
+        
+        if not subtopic_content:
+            msg.warn(f"Empty content received for subtopic_id: {subtopic_id}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"No content found for subtopic {subtopic_id}"}
+            )
+
+        # Get visualization prompts from prompts module
+        visualize_prompt1 = prompts.get_prompt("VISUALIZE_MERMAID", topic=content)
+        visualize_prompt2 = prompts.get_prompt("VISUALIZE_MARKMAP", topic=content)
+        #msg.info(f"visualize_prompt1::: {visualize_prompt1}")
+        #msg.info(f"visualize_prompt2::: {visualize_prompt2}")
+        
+        # Generate both responses based on model_id
+        if model_id == 0:
+            mermaid_response = await generate_gemini_response(visualize_prompt1, "", "gemini-1.5-flash-002")
+            markmap_response = await generate_gemini_response(visualize_prompt2, "", "gemini-1.5-flash-002")
+        elif model_id == 1:
+            mermaid_response = await generate_gemini_response(visualize_prompt1, "", "gemini-2.0-flash-exp")
+            markmap_response = await generate_gemini_response(visualize_prompt2, "", "gemini-2.0-flash-exp")
+        elif model_id == 2:
+            mermaid_response = await generate_deepseek_response(visualize_prompt1, "", "deepseek-r1")
+            markmap_response = await generate_deepseek_response(visualize_prompt2, "", "deepseek-r1")
+        elif model_id == 3:
+            mermaid_response = await generate_deepseek_response(visualize_prompt1, "", "deepseek-chat")
+            markmap_response = await generate_deepseek_response(visualize_prompt2, "", "deepseek-chat")
+        else:
+            mermaid_response = await generate_gemini_response(visualize_prompt1, "", "gemini-1.5-flash-002")
+            markmap_response = await generate_gemini_response(visualize_prompt2, "", "gemini-1.5-flash-002")
+        
+        #msg.info(f"Generated mermaid diagram::: {mermaid_response}")
+        #msg.info(f"Generated markmap diagram::: {markmap_response}")
 
         # Return both responses in the JSON
         return JSONResponse(content={
