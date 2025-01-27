@@ -92,7 +92,7 @@ class UPSCPrompts:
     """
 
 
-    VISUALIZE_MERMAID = """
+    VISUALIZE_MERMAID_OLD = """
     Goal : you are UPSC exam expert and mentor with super human level of understanding of UPSC exam syllabus and content.
     Now you have to use that knowledge and wisdom to teach and help the upsc exam aspirants by going through given content and
     represent that given content in easy ,simple, very creative, detailed , intuitive , pictorial, engaging and accurate to the given content by generating most suited and very appropriate mermaid diagrams
@@ -146,8 +146,80 @@ class UPSCPrompts:
 
     Here is the Content given below : 
     {topic}
+    
+    """
 
 
+    VISUALIZE_MERMAID = """
+    You are an UPSC exam content expert and assistant to help user build diagram with Mermaid.
+    You only need to return the output Mermaid code block.
+    Do not include any description, do not include the \`\`\`.
+    Code (no \`\`\`):
+    
+    Attention: 
+    1.I noticed that when there are years in code (eg:B --> B1[climate period (1869-1901)] ,here Parentheses or round bracket for year or numbers breaks rendering. so avoid it)
+    2.Please make sure mermaid code is generated very carefully , and must be rendered in mermaid format precisely without any special or weird characters that fails in generating diagrams.
+    It must be renderable  so please be wise to design mermaid without any special characters ,strictly use only numbers and alphabets.
+
+        Syntax Rules for mermaid code: 
+        1. strictly Avoid using special characters .eg: ' ,( ,) $ ,# .
+        2. dont use ( and ) insid [ ]
+        3. dont use ' , " and any other special character.
+        4. never try to use Parentheses or round bracket and year together inside []
+        5. never try to use Parentheses or round bracket inside []
+        6. Wherever possible represent and organize content in hierarchial , strutured way .
+        
+    Example mermaid code diagram which I like very much,  you can follow similar representation as that.
+
+    graph LR
+        A[Ecology and Environment] --> B(Ecology);
+        A --> C(Environment and Human Advance);
+        A --> D(Surroundings and Settlements);
+        A --> E(The Rain and Human Effort);
+        A --> F(Ancient Attitudes Towards the Environment);
+        
+        B --> B1[Interaction between living organisms];
+        B --> B2[Humans, Plants, Animals];
+        
+        C --> C1[Natural and Man-made surroundings];
+        C --> C2[Environmental determinism vs. Human Impact];
+        C --> C3[Deforestation, agriculture and settlements];
+        C --> C4[Climate change and migrations];
+
+        D --> D1[Deforestation for agriculture in Gangetic plains];
+        D --> D2[Importance of iron tools];
+        D --> D3[Environmental factors affecting settlement location];
+        D --> D4[River and water resource importance];
+        D --> D5[River course changes affect settlements];
+        D --> D6[Junctions as sites for early settlements];
+        D --> D7[Lakes and tanks as water reservoirs];
+        
+        E --> E1[Rainfall relevance];
+        E --> E2[Impact of adequate rainfall on Harappan Culture];
+        E --> E3[Arid phases leading to migrations];
+        E --> E4[Heavy rainfall and suspension of work];
+        E --> E5[Natural hazards such as floods, hurricanes, earthquakes];
+        
+        F --> F1[Rivers as divine];
+        F --> F2[Earth and water as mothers];
+        F --> F3[Sacred trees and plants];
+        F --> F4[Condemnation of animal slaughter];
+        F --> F5[Emphasis on cow protection];
+        
+        style A fill:#f9f,stroke:#333,stroke-width:2px
+
+        %% Assigning unique colors to subheadings
+        style B fill:#ff9999,stroke:#333,stroke-width:2px
+        style C fill:#99ff99,stroke:#333,stroke-width:2px
+        style D fill:#9999ff,stroke:#333,stroke-width:2px
+        style E fill:#ffff99,stroke:#333,stroke-width:2px
+        style F fill:#ffcc99,stroke:#333,stroke-width:2px
+    
+        
+    Here is the UPSC content :
+
+    {topic}
+ 
     """
 
     VISUALIZE_MARKMAP = """
