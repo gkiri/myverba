@@ -1649,9 +1649,8 @@ async def visualize_content_combo(request: GetVisualizeContentComboRequest):
             mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-1.5-flash-002")
             markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-1.5-flash-002")
 
-        
-        msg.info(f"Generated mermaid diagram::: {mermaid_response}")  # Add logging
-         msg.info(f"Generated markmap diagram::: {markmap_response}") 
+        msg.info(f"Generated mermaid diagram::: {mermaid_response}")
+        msg.info(f"Generated markmap diagram::: {markmap_response}")
 
         # Return both responses in the JSON
         return JSONResponse(content={
