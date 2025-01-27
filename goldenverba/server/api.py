@@ -1631,7 +1631,9 @@ async def visualize_content_combo(request: GetVisualizeContentComboRequest):
         # Get visualization prompts from prompts module
         visualize_prompt1 = prompts.get_prompt("VISUALIZE_MERMAID", topic=content)
         visualize_prompt2 = prompts.get_prompt("VISUALIZE_MARKMAP", topic=content)
-
+        msg.info(f"visualize_prompt1::: {visualize_prompt1}")
+        msg.info(f"visualize_prompt2::: {visualize_prompt2}")
+        
         # Generate both responses based on model_id
         if model_id == 0:
             mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-1.5-flash-002")
@@ -1648,7 +1650,7 @@ async def visualize_content_combo(request: GetVisualizeContentComboRequest):
         else:
             mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-1.5-flash-002")
             markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-1.5-flash-002")
-
+        
         msg.info(f"Generated mermaid diagram::: {mermaid_response}")
         msg.info(f"Generated markmap diagram::: {markmap_response}")
 
