@@ -34,6 +34,64 @@ class UPSCPrompts:
     Provide only the Mermaid code.
     """
 
+    VISUALIZE = """
+    Goal : you are UPSC exam expert and mentor with super human level of understanding of UPSC exam syllabus and content.
+    Now you have to use that knowledge and wisdom to teach and help the upsc exam aspirants by going through given content and
+    represent that given content in easy ,simple, very creative, detailed , intuitive , pictorial, engaging and accurate to the given content by generating most suited and very appropriate mermaid diagrams
+
+    Give mermaid diagram for below content:
+
+    Warning: Please make sure mermaid code is generated very carefully , and must be rendered in mermaid format precisely without any special or weird characters that fails in generating diagrams.It must be renderable  so please be wise to design mermaid without any special characters ,strictly use only numbers and alphabets.
+
+    Syntax Rules for mermaid code: 
+    1. strictly Avoid using special characters .eg: ' ,( ,) $ ,# .
+    2. dont use ( and ) insid [ ]
+    3. dont use ' , " and any other special character.
+    4. never try to use Parentheses or round bracket and year together inside []
+    5. never try to use Parentheses or round bracket inside []
+    6. Wherever possible represent and organize content in hierarchial , strutured way .
+
+    example errors:
+    Errors: Expecting 'SQE', 'DOUBLECIRCLEEND', 'PE', '-)', 'STADIUMEND', 'SUBROUTINEEND', 'PIPE', 'CYLINDEREND', 'DIAMOND_STOP', 'TAGEND', 'TRAPEND', 'INVTRAPEND', 'UNICODE_TEXT', 'TEXT', 'TAGSTART', got 'PS'
+
+    ["Orientalist" vs. "Anglicist" Debate]
+    Expecting 'SQE', 'DOUBLECIRCLEEND', 'PE', '-)', 'STADIUMEND', 'SUBROUTINEEND', 'PIPE', 'CYLINDEREND', 'DIAMOND_STOP', 'TAGEND', 'TRAPEND', 'INVTRAPEND', 'UNICODE_TEXT', 'TEXT', 'TAGSTART', got 'STR'
+
+    ...Administration
+    (18th Century)] -->
+    -----------------------^
+    Expecting 'SQE', 'DOUBLECIRCLEEND', 'PE', '-)', 'STADIUMEND', 'SUBROUTINEEND', 'PIPE', 'CYLINDEREND', 'DIAMOND_STOP', 'TAGEND', 'TRAPEND', 'INVTRAPEND', 'UNICODE_TEXT', 'TEXT', 'TAGSTART', got 'PS'
+    Sample Diagrams
+
+    rror: Error: Parse error on line 6:
+    ... administration fill:#lightblue 17
+    -----------------------^
+    Expecting 'EOF', 'SPACE', 'NEWLINE', 'title', 'acc_title', 'acc_descr', 'acc_descr_multiline_value', 'section', 'period', 'event', got 'INVALID'
+
+
+    Error: Error: Parse error on line 2:
+    ...alistViews fill:#f9f,stroke:#333,stroke-
+    -----------------------^
+    Expecting 'SEMI', 'NEWLINE', 'SPACE', 'EOF', 'GRAPH', 'DIR', 'subgraph', 'SQS', 'end', 'AMP', 'COLON', 'START_LINK', 'STYLE', 'LINKSTYLE', 'CLASSDEF', 'CLASS', 'CLICK', 'DOWN', 'UP', 'NUM', 'NODE_STRING', 'BRKT', 'MINUS', 'MULT', 'UNICODE_TEXT', got 'COMMA'
+
+    Representation and aethetics Rules for mermaid code:
+    1. Try to use multiple colors to enhance the beauty of diagrams 
+    2. capture alll the meaningful information present in content and represent in detailed in diagram with what is necessary
+    3. be creative with respect to diagram representation
+    4. Make it easy to grasp and intuitive and easuily understandable for UPSC exam beginners to advanced level students
+    5. Wherever possible represent and organize content in hierarchial , strutured way .
+    6. Connect all the given information and stitch it in meaningful represenation
+
+    Output format:
+    1. Provide only the Mermaid code as the output.
+    2. Do not include any additional text, explanations, or code block markers (```).
+
+    Here is the Content given below : 
+
+
+    """
+
+
     VISUALIZE_MERMAID = """
     Goal : you are UPSC exam expert and mentor with super human level of understanding of UPSC exam syllabus and content.
     Now you have to use that knowledge and wisdom to teach and help the upsc exam aspirants by going through given content and
