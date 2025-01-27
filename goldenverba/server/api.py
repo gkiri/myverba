@@ -1699,8 +1699,8 @@ async def visualize_subtopic_combo(request: GetVisualizeSubtopicComboRequest):
             )
 
         # Get visualization prompts from prompts module
-        visualize_prompt1 = prompts.get_prompt("VISUALIZE_MERMAID", topic=content)
-        visualize_prompt2 = prompts.get_prompt("VISUALIZE_MARKMAP", topic=content)
+        visualize_prompt1 = prompts.get_prompt("VISUALIZE_MERMAID", topic=subtopic_content)
+        visualize_prompt2 = prompts.get_prompt("VISUALIZE_MARKMAP", topic=subtopic_content)
         #msg.info(f"visualize_prompt1::: {visualize_prompt1}")
         #msg.info(f"visualize_prompt2::: {visualize_prompt2}")
         
