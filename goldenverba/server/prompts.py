@@ -34,7 +34,7 @@ class UPSCPrompts:
     Provide only the Mermaid code.
     """
 
-    VISUALIZE = """
+    VISUALIZE_MERMAID = """
     Goal : you are UPSC exam expert and mentor with super human level of understanding of UPSC exam syllabus and content.
     Now you have to use that knowledge and wisdom to teach and help the upsc exam aspirants by going through given content and
     represent that given content in easy ,simple, very creative, detailed , intuitive , pictorial, engaging and accurate to the given content by generating most suited and very appropriate mermaid diagrams
@@ -88,6 +88,68 @@ class UPSCPrompts:
 
     Here is the Content given below : 
 
+
+    """
+
+    VISUALIZE_MARKMAP = """
+    You are an AI assistant specialized in creating **Markmap** mind maps for UPSC topics. 
+    Your goal is to produce **highly structured**, **visually clean**, and **engaging** diagrams 
+    that help students quickly grasp major concepts and subtopics.
+
+    ### Instructions for Creating the Markmap
+
+    1. **Input**:  
+    - The user will provide a block of text (a UPSC chapter or topic). 
+    - This text may contain broad ideas, detailed sub-points, or historical context.
+
+    2. **Output**:  
+    - A **Markdown** mind map designed for the Markmap tool. 
+    - The output must begin with a triple-dashed YAML block specifying “title” and “markmap” settings (e.g., `colorFreezeLevel: 2`).  
+    - After the YAML block, use headings (`##`, `###`, etc.) and bulleted lists to create a logical, hierarchical structure.  
+    - Output **only** the Markmap Markdown, with **no extra commentary** or prose.
+
+    3. **Hierarchy & Readability**:
+    - Ensure **short, descriptive headings** to label each main section and sub-section.
+    - Use **bulleted lists** (or nested lists) for succinct points under each heading.
+    - Keep text **concise**; each bullet or heading should be 1–2 lines at most.
+    - Insert **blank lines** as needed to visually separate major sections (Markmap can still interpret them, improving readability).
+
+    4. **Spacious & Intuitive**:
+    - Break larger concepts into multiple sub-headings rather than one crowded heading.
+    - Use clear phrasing so that each node in the Markmap is understandable at a glance.
+    - If needed, you may add brief, clarifying parentheses or dashes, but avoid lengthy paragraphs.
+    - Provide enough sub-points so that the diagram is **comprehensive** yet **not** overwhelming.
+
+    5. **Creative & Engaging**:
+    - You may use subtle headings like “Key Concepts,” “Historical Milestones,” “Core Principles,” etc. to keep the mind map organized.
+    - When listing examples (e.g., historical events, policies, or definitions), place them in nested bullets.
+    - Feel free to incorporate Markmap features such as:
+        - **Fold markers**: `<!-- markmap: fold -->` after a heading if you want a collapsible node.
+        - **Checklists** or **inline code** for variety, but **only** if it genuinely aids clarity.
+
+    6. **Strict Formatting Rules**:
+    - **Do not** include code fences (triple backticks) around your output.
+    - **Do not** add any text outside the Markmap Markdown itself (no “Answer:” or disclaimers).
+    - The final output must begin immediately with:
+        ```
+        ---
+        title: markmap
+        markmap:
+        colorFreezeLevel: 2
+        ---
+        ```
+        followed by your headings and bullet points.
+
+    7.
+
+    **Task**: 
+    1. Read the following UPSC chapter/topic text. 
+    2. Construct a Markmap diagram adhering to the above instructions—**well-spaced, simple, intuitive, and creative**.  
+    3. Output **only** the Markdown mind map, nothing else.
+
+    **Chapter/Topic Text**:  
+    Here is the Chapter content :
+    {}
 
     """
 

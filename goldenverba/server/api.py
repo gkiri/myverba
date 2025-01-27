@@ -78,11 +78,17 @@ async def generate_groq_response(prompt: str,context: str) -> str:
         msg.fail(f"groq API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
-async def generate_gemini_response(prompt: str, context: str) -> str:
-    """Helper function to generate LLM response."""
+async def generate_gemini_response(prompt: str, context: str, model_name: str = None) -> str:
+    """Helper function to generate LLM response.
+    
+    Args:
+        prompt (str): The prompt to send to the model
+        context (str): The context to provide
+        model_name (str, optional): Optional model name to override default. Defaults to None.
+    """
     try:
         full_response = ""
-        async for chunk in gemini_generator.generate_stream([prompt], [context], []):
+        async for chunk in gemini_generator.generate_stream([prompt], [context], [], model_name):
             if chunk["finish_reason"] == "stop":
                 break
             full_response += chunk["message"]
@@ -92,11 +98,17 @@ async def generate_gemini_response(prompt: str, context: str) -> str:
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
 
 
-async def generate_deepseek_response(prompt: str,context: str) -> str:
-    """Helper function to generate LLM response."""
+async def generate_deepseek_response(prompt: str, context: str, model_name: str = None) -> str:
+    """Helper function to generate LLM response.
+    
+    Args:
+        prompt (str): The prompt to send to the model
+        context (str): The context to provide
+        model_name (str, optional): Optional model name to override default. Defaults to None.
+    """
     try:
         full_response = ""
-        async for chunk in deepseek_generator.generate_stream([prompt], [context], []):
+        async for chunk in deepseek_generator.generate_stream([prompt], [context], [], model_name):
             if chunk["finish_reason"] == "stop":
                 break
             full_response += chunk["message"]
@@ -872,6 +884,13 @@ class GetVisualizeContentRequest(BaseModel):
     subtopic_id: str
     content: str
 
+# use this for multi diagram one shot
+class GetVisualizeContentComboRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    content: str
+    model_id: int 
+
 class GetSummarizeContentRequest(BaseModel):
     user_id: str
     subtopic_id: str
@@ -1598,6 +1617,57 @@ async def visualize(request: GetVisualizeContentRequest):
             status_code=500,
             content={"error": f"Visualization failed: {str(e)}"}
         )
+
+
+@app.post("/api/visualize_content_combo")
+async def visualize_content_combo(request: GetVisualizeContentComboRequest):
+    debug_log(f"Received visualize_content_combo request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        content = request.content
+        model_id = request.model_id 
+
+        # Get visualization prompts from prompts module
+        visualize_prompt1 = prompts.get_prompt("VISUALIZE_MERMAID", topic=content)
+        visualize_prompt2 = prompts.get_prompt("VISUALIZE_MARKMAP", topic=content)
+
+        # Generate both responses based on model_id
+        if model_id == 0:
+            mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-1.5-flash-002")
+            markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-1.5-flash-002")
+        elif model_id == 1:
+            mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-2.0-flash-exp")
+            markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-2.0-flash-exp")
+        elif model_id == 2:
+            mermaid_response = await generate_deepseek_response(visualize_prompt1, content, "deepseek-r1")
+            markmap_response = await generate_deepseek_response(visualize_prompt2, content, "deepseek-r1")
+        elif model_id == 3:
+            mermaid_response = await generate_deepseek_response(visualize_prompt1, content, "deepseek-chat")
+            markmap_response = await generate_deepseek_response(visualize_prompt2, content, "deepseek-chat")
+        else:
+            mermaid_response = await generate_gemini_response(visualize_prompt1, content, "gemini-1.5-flash-002")
+            markmap_response = await generate_gemini_response(visualize_prompt2, content, "gemini-1.5-flash-002")
+
+        
+        msg.info(f"Generated mermaid diagram::: {mermaid_response}")  # Add logging
+         msg.info(f"Generated markmap diagram::: {markmap_response}") 
+
+        # Return both responses in the JSON
+        return JSONResponse(content={
+            "mermaid_code": mermaid_response,
+            "markmap_code": markmap_response
+        })
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.fail(f"Visualization failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Visualization failed: {str(e)}"}
+        )
+
 
 @app.post("/api/summarize_content")
 async def visualize(request: GetSummarizeContentRequest):
