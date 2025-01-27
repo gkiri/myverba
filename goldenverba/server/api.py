@@ -1622,6 +1622,7 @@ async def visualize(request: GetVisualizeContentRequest):
 @app.post("/api/visualize_content_combo")
 async def visualize_content_combo(request: GetVisualizeContentComboRequest):
     debug_log(f"Received visualize_content_combo request: {request}")
+    msg.info(f"visualize_prompt1::: {request}")
     try:
         subtopic_id = request.subtopic_id
         user_id = request.user_id
@@ -1668,6 +1669,7 @@ async def visualize_content_combo(request: GetVisualizeContentComboRequest):
             status_code=500,
             content={"error": f"Visualization failed: {str(e)}"}
         )
+
 
 
 @app.post("/api/summarize_content")

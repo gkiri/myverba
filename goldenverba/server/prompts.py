@@ -86,7 +86,7 @@ class UPSCPrompts:
     1. Provide only the Mermaid code as the output.
     2. Do not include any additional text, explanations, or code block markers (```).
 
-    Here is the Content given below : 
+    Here is the Content given below : {topic}
 
 
     """
@@ -144,7 +144,7 @@ class UPSCPrompts:
     1. Provide only the Mermaid code as the output.
     2. Do not include any additional text, explanations, or code block markers (```).
 
-    Here is the Content given below : 
+    Here is the Content given below : {topic}
 
 
     """
@@ -162,7 +162,7 @@ class UPSCPrompts:
 
     2. **Output**:  
     - A **Markdown** mind map designed for the Markmap tool. 
-    - The output must begin with a triple-dashed YAML block specifying “title” and “markmap” settings (e.g., `colorFreezeLevel: 2`).  
+    - The output must begin with a triple-dashed YAML block specifying "title" and "markmap" settings (e.g., `colorFreezeLevel: 2`).  
     - After the YAML block, use headings (`##`, `###`, etc.) and bulleted lists to create a logical, hierarchical structure.  
     - Output **only** the Markmap Markdown, with **no extra commentary** or prose.
 
@@ -179,7 +179,7 @@ class UPSCPrompts:
     - Provide enough sub-points so that the diagram is **comprehensive** yet **not** overwhelming.
 
     5. **Creative & Engaging**:
-    - You may use subtle headings like “Key Concepts,” “Historical Milestones,” “Core Principles,” etc. to keep the mind map organized.
+    - You may use subtle headings like "Key Concepts," "Historical Milestones," "Core Principles," etc. to keep the mind map organized.
     - When listing examples (e.g., historical events, policies, or definitions), place them in nested bullets.
     - Feel free to incorporate Markmap features such as:
         - **Fold markers**: `<!-- markmap: fold -->` after a heading if you want a collapsible node.
@@ -187,7 +187,7 @@ class UPSCPrompts:
 
     6. **Strict Formatting Rules**:
     - **Do not** include code fences (triple backticks) around your output.
-    - **Do not** add any text outside the Markmap Markdown itself (no “Answer:” or disclaimers).
+    - **Do not** add any text outside the Markmap Markdown itself (no "Answer:" or disclaimers).
     - The final output must begin immediately with:
         ```
         ---
@@ -207,7 +207,7 @@ class UPSCPrompts:
 
     **Chapter/Topic Text**:  
     Here is the Chapter content :
-    {}
+    {topic}
 
     """
 
@@ -250,7 +250,7 @@ class UPSCPrompts:
         2. Your goal:
         - Thoroughly read the **Chapter Content**.
         - Evaluate each of the **25 PYQ** entries.
-        - Identify the **10** questions that are the most closely related and relevant to the chapter’s concepts.
+        - Identify the **10** questions that are the most closely related and relevant to the chapter's concepts.
 
         3. Output Requirements:
         - **Output Only** the 10 question IDs in a strict list format:  
