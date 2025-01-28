@@ -223,7 +223,7 @@ class UPSCPrompts:
     """
 
     VISUALIZE_MARKMAP = """
-    You are an AI assistant specialized in creating **Markmap** mind maps for UPSC topics. 
+    You are an AI assistant specialized in creating **Markmap** mind maps for UPSC Exam topics. 
     Your goal is to produce **highly structured**, **visually clean**, and **engaging** diagrams 
     that help students quickly grasp major concepts and subtopics.
 
@@ -271,7 +271,71 @@ class UPSCPrompts:
         ```
         followed by your headings and bullet points.
 
-    7.
+    7.Example markmap code diagram which I like very much,  you can follow similar representation as that.
+    ---
+    title: 5 Ecology And Environment
+    markmap:
+    colorFreezeLevel: 2
+    ---
+
+    ## Ecology
+    - **Definition**: Study of interaction between living organisms and their environment.
+    - **Historical Context**:
+    - Coined in 1869.
+    - Initially a branch of biology, now an independent subject.
+    - **Key Interactions**:
+    - Plants, animals, and humans.
+    - Impact of industrialization on ecosystems.
+
+    ## Environment And Human Advance
+    - **Natural Environment**:
+    - Soil, air, water.
+    - Supports plants, animals, and humans.
+    - **Man-made Environment**:
+    - Food, shelter, transport.
+    - Includes socio-economic, cultural, and political conditions.
+    - **Human Impact**:
+    - Deforestation, agriculture, settlements.
+    - Climate change and migration.
+
+    ## Surroundings And Settlements
+    - **Factors Influencing Settlements**:
+    - Soil, climate, water resources.
+    - Deforestation and iron tools in Gangetic plains.
+    - **River Systems**:
+    - Role in transport and agriculture.
+    - Impact of river course changes on settlements.
+    - **Examples**:
+    - Pataliputra at Ganges-Son junction.
+    - Harappan culture and river shifts.
+
+    ## The Rain And Human Effort
+    - **Rainfall Impact**:
+    - Agriculture and settlement patterns.
+    - Harappan culture and rainfall variability.
+    - **Natural Hazards**:
+    - Floods, hurricanes, earthquakes.
+    - Historical famines and migrations.
+
+    ## Ancient Attitudes Towards The Environment
+    - **Sacred Elements**:
+    - Rivers (Ganga, Sarasvati).
+    - Trees (neem, pipal) and herbs.
+    - **Animal Protection**:
+    - Buddhist teachings on cow protection.
+    - Brahmanical texts on animal slaughter.
+    - **Ecological Awareness**:
+    - Ancient texts advocating tree and plant protection.
+    - Rituals for peace and prosperity of nature.
+
+    ## Chronology
+    - **Key Events**:
+    - 3rd-2nd Millennium BC: Extreme aridity in Central Asia.
+    - 500 BC: Iron tools in Gangetic plains.
+    - 300 BC: Famine and Jain migration.
+    - 16th-17th Century: Forests in doab.
+    - 1869: Term 'ecology' coined.
+
 
     **Task**: 
     1. Read the following UPSC chapter/topic text. 
@@ -280,6 +344,7 @@ class UPSCPrompts:
 
     **Chapter/Topic Text**:  
     Here is the Chapter content :
+    
     {topic}
 
     """
