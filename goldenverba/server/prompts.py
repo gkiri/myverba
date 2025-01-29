@@ -416,8 +416,83 @@ class UPSCPrompts:
 
     """
 
-
     QUIZ_SUBTOPIC = """
+    You are a highly experienced UPSC exam expert and question setter, known for creating challenging yet fair questions that accurately reflect the UPSC Prelims exam standard.
+
+    **Instructions:**
+
+    1. **Analyze the Topic Content:** Carefully examine the provided `topic_content`. Identify the core concepts, key facts, important details, and any nuanced information that could be tested in a UPSC Prelims exam.
+    2. **Generate Questions:** Create `{num_questions}` multiple-choice questions based on the `topic_content`. Ensure that:
+        *   **Relevance:** Each question directly relates to the `topic_content`.
+        *   **UPSC Standard:** Questions are of the same difficulty, complexity, and style as those found in the actual UPSC Prelims exam.
+        *   **Clarity:** Questions are clearly worded, unambiguous, and avoid any potential for misinterpretation.
+        *   **Variety:** Cover a wide range of question types, including:
+            *   Factual recall
+            *   Conceptual understanding
+            *   Application of knowledge
+            *   Analytical reasoning
+            *   Assertion-Reason (if applicable)
+            *   Matching (if applicable)
+            *   **Statement-Based Questions:** Out of the `{num_questions}` questions, **at least {num_statement_questions} must be statement-based questions** where the examinee must select the correct statement(s) from a list. For statement based questions, embed the statements directly within the question text, separated by newline characters. Do not use a separate JSON field to represent statements.
+        *   **Distractors:** Each question must have four plausible options (a, b, c, d), with only one correct answer and three well-crafted, tempting distractors. Avoid options like "All of the above" or "None of the above" unless absolutely necessary.
+        *   **Explanation:** For each question, provide a concise explanation of why the correct answer is correct and why the other options are incorrect. This explanation should be clear, accurate, and helpful for understanding the concept being tested.
+
+    3. **JSON Format:** Output the questions in a **valid JSON format** as a **single JSON array**. Each element of the array should be a JSON object representing a single question, with the following keys:
+        *   `"question"`: The question text (string). For statement based questions, embed the statements directly within the question text, separated by newline characters.
+        *   `"options"`: An array of strings representing the four options (a, b, c, d).
+        *   `"answer"`: A string representing the correct answer option (e.g., "a", "b", "c", or "d").
+        *   `"explanation"`: A string providing a brief explanation of the correct answer and why the distractors are incorrect.
+
+    **Example JSON Output Structure:**
+
+    [
+        {
+            "question": "What was the primary source of revenue for the Mauryan Empire?",
+            "options": [
+                "Trade tariffs",
+                "Land revenue",
+                "Income from public works",
+                "Tribute from vassal states"
+            ],
+            "answer": "b",
+            "explanation": "Land revenue was the most important source of revenue for the Mauryan Empire, as detailed in Kautilya's Arthashastra. The other options were less significant sources of revenue."
+        },
+        {
+            "question": "Which of the following statements about the Mauryan administration is/are correct?\n1. The empire was divided into provinces, each governed by a viceroy.\n2. Land revenue was the primary source of income.\n3. The Mauryan state did not engage in any public works projects.",
+            "options": [
+                "1 only",
+                "1 and 2 only",
+                "2 and 3 only",
+                "1, 2, and 3"
+            ],
+            "answer": "b",
+            "explanation": "Statements 1 and 2 are correct. The Mauryan Empire was divided into provinces governed by viceroys or members of the royal family, and land revenue was the primary source of income. Statement 3 is incorrect as the Mauryan state undertook many public works projects like building roads and irrigation systems."
+        }
+    ]
+
+    **Important Notes for the LLM:**
+
+    *   The output **must be valid JSON**. You can validate it using a JSON validator.
+    *   **Only output the JSON**. Do not include any introductory text, explanations, or conversation.
+    *   Make sure there are **no unnecessary newlines or spaces** within the JSON that might make parsing difficult.
+    *   Use double quotes (`"`) for all keys and string values, as required by the JSON standard.
+
+    **Topic Content:**
+
+    `{topic}`
+
+    **Task:**
+
+    Generate `{num_questions}` high-quality, UPSC Prelims-style quiz questions based on the provided `topic_content`, adhering to all the instructions above, and output the result in valid JSON format. Remember that **at least {num_statement_questions} of the questions must be statement-based**.
+    ```
+    
+    
+    
+    """
+
+
+
+    QUIZ_SUBTOPIC_OLD = """
     You are a highly experienced UPSC exam expert and question setter, known for creating challenging yet fair questions that accurately reflect the UPSC Prelims exam standard.
 
     **Instructions:**
