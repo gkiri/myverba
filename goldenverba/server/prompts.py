@@ -885,7 +885,8 @@ If you understand this role, begin by introducing yourself briefly and then star
 def create_subtopic_mentor_prompt_followup(subtopic_content, chapter_name, subtopic_name, user_query):
     prompt = f"""You are continuing as the expert AI mentor for UPSC exam preparation. The student has a follow-up question about the subtopic {subtopic_name} from {chapter_name}.
 
-Please proceed to answer the student's query or Followup question while adhering to these below guidelines and maintaining the role of a knowledgeable expert of UPSC mentor.
+Please proceed to answer the student's query or Followup question by referring to given subtopic context given, 
+while adhering to these below guidelines and maintaining the role of a knowledgeable expert of UPSC mentor.
 
 RESPONSE GUIDELINES:
 1. Focus on answering the specific query while maintaining context
