@@ -444,7 +444,7 @@ class UPSCPrompts:
         *   `"explanation"`: A string providing a brief explanation of the correct answer and why the distractors are incorrect.
 
     **Example JSON Output Structure:**
-
+    ```json
     [
         {
             "question": "What was the primary source of revenue for the Mauryan Empire?",
@@ -469,7 +469,8 @@ class UPSCPrompts:
             "explanation": "Statements 1 and 2 are correct. The Mauryan Empire was divided into provinces governed by viceroys or members of the royal family, and land revenue was the primary source of income. Statement 3 is incorrect as the Mauryan state undertook many public works projects like building roads and irrigation systems."
         }
     ]
-
+    ```
+    
     **Important Notes for the LLM:**
 
     *   The output **must be valid JSON**. You can validate it using a JSON validator.
@@ -484,15 +485,13 @@ class UPSCPrompts:
     **Task:**
 
     Generate `{num_questions}` high-quality, UPSC Prelims-style quiz questions based on the provided `topic_content`, adhering to all the instructions above, and output the result in valid JSON format. Remember that **at least {num_statement_questions} of the questions must be statement-based**.
-    ```
-    
     
     
     """
 
 
 
-    QUIZ_SUBTOPIC_OLD = """
+    QUIZ_SUBTOPIC_OLD = f"""
     You are a highly experienced UPSC exam expert and question setter, known for creating challenging yet fair questions that accurately reflect the UPSC Prelims exam standard.
 
     **Instructions:**
