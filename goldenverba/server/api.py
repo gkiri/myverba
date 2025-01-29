@@ -1496,19 +1496,39 @@ async def get_syllabus_subtopic_with_query_stream(request: GetSyllabusSubtopicQu
                     finish_reason = chunk.get("finish_reason")
                     message = chunk.get("message", "")
 
-                    # If the LLM signals stop, break
+                    # If the model signals "stop", break out
                     if finish_reason == "stop":
                         break
 
-                    # SSE format: "data: <chunk>\n\n"
-                    yield f"data: {message}\n\n"
-                    
-                    # Optional tiny delay to reduce CPU usage or control chunk rate
-                    # await asyncio.sleep(0.01)
+                    # Stream partial text as JSON with type='text-delta'
+                    # SSE format: data: <json>\n\n
+                    yield (
+                        "data: " + json.dumps({
+                            "type": "text-delta",
+                            "content": message
+                        }) + "\n\n"
+                    )
+
+                    # optional small sleep to reduce CPU usage or control chunk rate
+                    await asyncio.sleep(0.02)
+
+                # After we're done, tell the client "finish"
+                yield (
+                    "data: " + json.dumps({
+                        "type": "finish",
+                        "content": ""
+                    }) + "\n\n"
+                )
 
             except Exception as e:
-                msg.fail(f"Error streaming from Gemini: {str(e)}")
-                yield f"data: [ERROR]: {str(e)}\n\n"
+                msg.fail(f"Gemini API call failed: {str(e)}")
+                # Return an SSE "error" message
+                yield (
+                    "data: " + json.dumps({
+                        "type": "error",
+                        "content": str(e)
+                    }) + "\n\n"
+                )
 
         # 3) Return a StreamingResponse
         return StreamingResponse(event_stream(), media_type="text/event-stream")
