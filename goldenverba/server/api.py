@@ -1869,7 +1869,7 @@ async def quiz_subtopic(request: GetQuizSubtopicRequest):
 @app.post("/api/suggest_content")
 async def suggest_content(request: GetSuggestContentRequest):
     debug_log(f"Received suggest_content request: {request}")
-    msg.info(f"Generated suggest_content .content diagram::: {request.content}")
+    #msg.info(f"Generated suggest_content .content diagram::: {request.content}")
     try:
         subtopic_id = request.subtopic_id
         user_id = request.user_id
