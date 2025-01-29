@@ -577,6 +577,10 @@ class UPSCPrompts:
         "Impact on Independence",
         "British Response Details"
     ]
+
+    Here is the UPSC exam content:
+    
+    {topic}
         
     """
 
