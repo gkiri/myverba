@@ -416,7 +416,7 @@ class UPSCPrompts:
 
     """
 
-    QUIZ_SUBTOPIC = """
+    QUIZ_SUBTOPIC =f"""
     You are a highly experienced UPSC exam expert and question setter, known for creating challenging yet fair questions that accurately reflect the UPSC Prelims exam standard.
 
     **Instructions:**
@@ -488,7 +488,6 @@ class UPSCPrompts:
     
     
     """
-
 
 
     QUIZ_SUBTOPIC_OLD = f"""
