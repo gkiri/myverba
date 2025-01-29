@@ -911,52 +911,13 @@ class GetPYQSsubtopicContentRequest(BaseModel):
     subtopic_id: str
     count: int
 
+class GetQuizSubtopicRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    count: int
+    model_id: int 
 
 
-
-test_chapter = """ # 2 Modern Historians Of Ancient India\n\n## Colonialist
-Views And Their Contribution\n\nAlthough educated Indians retained their
-traditional history in the form of handwritten epics, Puranas, and
-semi-biographical works, modern research in the history of ancient India began
-only in the second half of the eighteenth century to serve the needs of the
-British colonial administration. When Bengal and Bihar fell under the rule of
-the East India Company in 1765, they found it difficult to administer the Hindu
-law of inheritance. Therefore, in 776, the Manu Smriti, (the law-book of Manu),
-which was considered authoritative, was translated into English as A Code of
-Gentoo Laws. Pandits were associated with British judges to administer Hindu
-civil law and maulvis to administer that of Muslims. The initial efforts to
-understand ancient laws and customs, which continued largely until the
-eighteenth century, culminated in the establishment in Calcutta in 1784 of the
-Asiatic Society of Bengal. It was set up by a civil servant of the East India
-Company, Sir William Jones (1746-94). He was the first to suggest that Sanskrit,
-Latin, and Greek belonged to the same family of languages. He also translated
-the play known as the Abhijnanashakuntalam into English in 1789; the
-Bhagvadgita, the most popular Hindu religious text was translated into English
-by Wilkins in 1785. The Bombay Asiatic Society was set up in 1804, and the
-Asiatic Society of Great Britain was set up in London in 1823. William Jones
-emphasized that originally the European languages were very similar to Sanskrit
-and the Iranian language. This enthused European countries such as Germany,
-France, and Russia, to foster Indological studies. During the first half of the
-nineteenth century, chairs in Sanskrit were established in the UK and several
-other European countries.\n\nThe greatest impetus to Indological studies was
-given by the Germanborn scholar F. Max Mueller (1823-1902), who was largely
-based in England. The Revolt of 1857 caused Britain to realize that it badly
-needed a deeper knowledge of the manners and social systems of an alien people
-over whom it ruled. Similarly, the Christian missionaries sought to uncover the
-vulnerabilities in the Hindu religion to win converts and strengthen the British
-empire. To meet these needs, ancient scriptures were translated on a massive
-scale under the editorship of Max Mueller. Altogether fifty volumes, some in
-several parts, were published under the Sacred Books of the East series.
-Although a few Chinese and Iranjan texts were included, ancient Indian texts
-were predominant.\n\nIn the introductions to these volumes and the books based
-on them, Max Mueller and other Western scholars made certain generalizations
-about the nature of ancient Indian history and society. They stated that the
-ancient Indians lacked a sense of history, especially of the element of time and
-chronology. They added that Indians were accustomed to despotic rule, and also
-natives were so engrossed in the problems of spiritualism or of the next world
-that they felt no concern about the problems of this world. The Western scholars
-stressed that Indians had experienced neither a sense of nationhood nor any form
-of self-government."""
 
 # @app.post("/api/get_syllabus_chapter_with_userstatus")
 # async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterRequest):
@@ -1840,4 +1801,59 @@ async def post_pyqs_subtopic(request: GetPYQSsubtopicContentRequest):
 
 
 
+# Retrieve pyqs from subtopic content
+@app.post("/api/quiz_subtopic")
+async def quiz_subtopic(request: GetQuizSubtopicRequest):
+    debug_log(f"Received quiz_subtopic request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        count = request.count  # Total number of questions requested
+        model_id = request.model_id 
+
+        # Fetch subtopic content using helper
+        subtopic_content = fetch_subtopic_content(manager, subtopic_id)
+        
+        if not subtopic_content:
+            msg.warn(f"Empty content received for subtopic_id: {subtopic_id}")
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"No content found for subtopic {subtopic_id}"}
+            )
+
+        # Calculate number of each type of question
+        num_statement_questions = count // 3  # 1/3 of total questions should be statement-based
+        num_regular_questions = count - num_statement_questions
+
+        # Get quiz prompt with specified question counts
+        quiz_prompt = prompts.get_prompt(
+            "QUIZ_SUBTOPIC", 
+            topic=subtopic_content,
+            num_questions=num_regular_questions,
+            num_statement_questions=num_statement_questions
+        )
+
+        # Generate response based on model_id
+        if model_id == 0:
+            quiz_response = await generate_gemini_response(quiz_prompt, "", "gemini-1.5-flash-002")
+        elif model_id == 1:
+            quiz_response = await generate_gemini_response(quiz_prompt, "", "gemini-2.0-flash-exp")
+        elif model_id == 2:
+            quiz_response = await generate_deepseek_response(quiz_prompt, "", "deepseek-r1")
+        elif model_id == 3:
+            quiz_response = await generate_deepseek_response(quiz_prompt, "", "deepseek-chat")
+        else:
+            quiz_response = await generate_gemini_response(quiz_prompt, "", "gemini-1.5-flash-002")
+        
+        debug_log("Quiz response generated")
+
+        return JSONResponse(content={"Quiz": quiz_response})
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.fail(f"Quiz failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Quiz failed: {str(e)}"}
+        )
 
