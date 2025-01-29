@@ -488,7 +488,7 @@ class UPSCPrompts:
 
     **Topic Content:**
 
-    `{topic_content}`
+    `{topic}`
 
     **Task:**
 
