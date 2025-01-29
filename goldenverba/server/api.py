@@ -732,12 +732,6 @@ async def get_mock_exam_data():
 
 #         return JSONResponse(content={"bullet_points": bullet_points_response})
 
-#     except Exception as e:
-#         msg.warn(f"Bullet points generation failed: {str(e)}")
-#         return JSONResponse(
-#             content={"error": f"Bullet points generation failed: {str(e)}"}
-#         )
-
 
 # @app.post("/api/summarize")
 # async def summarize(payload: QueryPayload):
@@ -1243,6 +1237,8 @@ Flow:
 #     except Exception as e:
 #         msg.error(f"Error in get_syllabus_subtopic_with_query: {str(e)}")
 #         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @app.get("/api/get_chapter/{ch_id}")
 async def get_chapter(ch_id: str):
@@ -1844,9 +1840,17 @@ async def quiz_subtopic(request: GetQuizSubtopicRequest):
         else:
             quiz_response = await generate_gemini_response(quiz_prompt, "", "gemini-1.5-flash-002")
         
-        debug_log("Quiz response generated")
-
-        return JSONResponse(content={"Quiz": quiz_response})
+        # Validate and parse the response
+        try:
+            quiz_data = json.loads(quiz_response)
+            debug_log("Quiz response generated and validated")
+            return JSONResponse(content={"Quiz": quiz_data})
+        except json.JSONDecodeError as e:
+            msg.fail(f"Invalid JSON response from model: {str(e)}")
+            return JSONResponse(
+                status_code=500,
+                content={"error": f"Invalid quiz response format: {str(e)}"}
+            )
 
     except HTTPException as e:
         raise e
