@@ -500,6 +500,7 @@ class UPSCPrompts:
 
     """
 
+
     QUIZ_SUBTOPIC_NEW = """
     You are an expert in creating UPSC Prelims-level multiple-choice questions (MCQs). Generate {num_questions} high-quality MCQs based on the provided topic content, with exactly {num_statement_questions} statement-based questions.
 
@@ -545,6 +546,50 @@ class UPSCPrompts:
     Topic Content:
     {topic}
 """
+
+    SUGGEST_CONTENT="""
+    Instruction:
+
+    You are an AI assistant designed to help users studying for the UPSC exam by providing relevant and 
+    concise question suggestions based on the content they are studying. Given a summary or overview of a chapter, generate 3 to 4 short questions that a user might want to ask next to deepen their understanding or explore related topics. Each question should be 3 to 4 words long.
+
+    Guidelines:
+
+    Relevance: Ensure that each suggested question is directly related to the provided content and can logically follow from it.
+    Conciseness: Each question must be concise, containing only 3 to 4 words.
+    Clarity: The questions should be clear and unambiguous, making it easy for users to understand their intent.
+    Variety: Aim for a diverse range of questions that cover different aspects or angles of the topic.
+    Format: Output the questions as a JSON array of strings to facilitate easy parsing and integration.
+    Format Example:
+
+    json
+    
+    [
+        "Causes of Quit India",
+        "Key Leaders Involved",
+        "Impact on Independence",
+        "British Response Details"
+    ]
+    
+    Example:
+
+    Given the following content about the Quit India Movement:
+
+    "The Quit India Movement, launched in August 1942, was a significant mass protest demanding an end to British Rule in India. Spearheaded by the Indian National Congress under the leadership of Mahatma Gandhi, the movement saw widespread participation across the country. Despite facing severe repression from British authorities, including arrests and violence, the movement intensified the push for Indian independence, which was eventually achieved in 1947."
+
+    Expected Output:
+
+    json
+    
+    [
+        "Causes of Quit India",
+        "Key Leaders Involved",
+        "Impact on Independence",
+        "British Response Details"
+    ]
+        
+    """
+
 
     DIFFICULTY_ASSESSMENT = """
     Assess the difficulty level of the following UPSC exam question:

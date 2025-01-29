@@ -917,6 +917,12 @@ class GetQuizSubtopicRequest(BaseModel):
     count: int
     model_id: int 
 
+class GetSuggestContentRequest(BaseModel):
+    user_id: str
+    subtopic_id: str
+    content: str
+    count: int
+    model_id: int 
 
 
 # @app.post("/api/get_syllabus_chapter_with_userstatus")
@@ -1857,3 +1863,41 @@ async def quiz_subtopic(request: GetQuizSubtopicRequest):
             content={"error": f"Quiz failed: {str(e)}"}
         )
 
+
+
+# retrieve pyqs relvant for given topic content
+@app.post("/api/suggest_content")
+async def suggest_content(request: GetSuggestContentRequest):
+    debug_log(f"Received suggest_content request: {request}")
+    try:
+        subtopic_id = request.subtopic_id
+        user_id = request.user_id
+        content = request.content
+        count = request.count  # Total number of questions requested
+        model_id = request.model_id
+        
+        # Get visualization prompt from prompts module
+        suggest_prompt = prompts.get_prompt("SUGGEST_CONTENT", topic=content)
+
+        # Generate response based on model_id
+        if model_id == 0:
+            suggest_response = await generate_gemini_response(suggest_prompt, "", "gemini-1.5-flash-002")
+        elif model_id == 1:
+            suggest_response = await generate_gemini_response(suggest_prompt, "", "gemini-2.0-flash-exp")
+        elif model_id == 2:
+            suggest_response = await generate_deepseek_response(suggest_prompt, "", "deepseek-r1")
+        elif model_id == 3:
+            suggest_response = await generate_deepseek_response(suggest_prompt, "", "deepseek-chat")
+        else:
+            suggest_response = await generate_gemini_response(suggest_prompt, "", "gemini-1.5-flash-002")
+
+        return JSONResponse(content={"suggest": suggest_response})
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        msg.fail(f"suggest failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"suggest failed: {str(e)}"}
+        )
