@@ -497,87 +497,50 @@ class UPSCPrompts:
     """
 
     QUIZ_SUBTOPIC_NEW = """
+    You are an expert in creating UPSC Prelims-level multiple-choice questions (MCQs). Generate {num_questions} high-quality MCQs based on the provided topic content, with exactly {num_statement_questions} statement-based questions.
 
-You are an expert in creating UPSC Prelims-level multiple-choice questions (MCQs). Your task is to generate high-quality, reliable, and relevant MCQs based on the provided topic content. The questions should be output in a simplified JSON format for easy parsing and storage.
+    IMPORTANT: Your response must be a valid JSON array containing question objects. Follow this exact format:
 
-**Instructions:**
+    [
+        {{
+            "id": "Q1",
+            "question": "What is the main concept being discussed?",
+            "options": [
+                "Option A text",
+                "Option B text",
+                "Option C text",
+                "Option D text"
+            ],
+            "answer": "Option A text",
+            "explanation": "Brief explanation of why this is correct"
+        }},
+        {{
+            "id": "Q2",
+            "question": "Consider the following statements:\\n1. First statement\\n2. Second statement\\n3. Third statement\\n\\nWhich of the statements given above is/are correct?",
+            "options": [
+                "1 only",
+                "1 and 2 only",
+                "2 and 3 only",
+                "1, 2 and 3"
+            ],
+            "answer": "1 and 2 only",
+            "explanation": "Brief explanation of correct and incorrect statements"
+        }}
+    ]
 
-1. **Inputs:**
-   - **Topic Content:** {topic}
-   - **Number of Questions:** {num_questions}
+    Rules:
+    1. Output must be a single JSON array containing exactly {num_questions} question objects
+    2. Each question object must have exactly these fields: id, question, options, answer, explanation
+    3. The answer field must contain the exact text of the correct option
+    4. For statement-based questions:
+    - Use the exact format shown above with numbered statements
+    - Options must be in the format: "1 only", "1 and 2 only", etc.
+    5. Do not include any text outside the JSON array
+    6. Ensure all JSON syntax is valid (quotes, commas, brackets)
 
-2. **Question Types:**
-   - **Standard MCQs:** Regular single-statement questions with four options.
-   - **Statement-Based Questions:** Questions that present multiple statements, where one or more statements are correct. These should follow the format:
-     ```
-     Q1. Which of the following statements about [Concept from Topic Content] is/are correct?
-         1. [Statement 1]
-         2. [Statement 2]
-         3. [Statement 3]
-     
-         (a) 1 only
-         (b) 1 and 2 only
-         (c) 2 and 3 only
-         (d) 1, 2, and 3
-     ```
-
-3. **Question Structure:**
-   - Each question should include the following fields:
-     - **id:** Unique identifier for the question (e.g., "Q1", "Q2", ...)
-     - **question:** The question text.
-     - **options:** An array of four options.
-     - **answer:** The correct option text.
-     - **explanation:** A brief explanation for the correct answer.
-
-4. **Format:**
-   - Output the questions as a JSON array.
-   - Ensure proper JSON syntax with commas, brackets, and quotes.
-   - Do **not** include any additional text, descriptions, or markdown formatting.
-
-5. **Quality Standards:**
-   - **Relevance:** Directly related to the provided topic content.
-   - **Difficulty:** Align with UPSC Prelims difficulty level.
-   - **Clarity:** Clearly and unambiguously phrased questions and options.
-   - **Plausible Distractors:** Only one correct answer with other options being plausible.
-   - **Rendering Issues:** Ensure that no special characters (e.g., parentheses in options) cause rendering issues. Avoid using characters like '(', ')', '$', '#', etc., within the JSON fields.
-
-6. **Example Output:**
-
-```json
-[
-  {
-    "id": "Q1",
-    "question": "Which gas is primarily responsible for the Greenhouse Effect?",
-    "options": [
-      "Nitrogen",
-      "Oxygen",
-      "Carbon Dioxide",
-      "Hydrogen"
-    ],
-    "answer": "Carbon Dioxide",
-    "explanation": "Carbon Dioxide is the primary greenhouse gas responsible for trapping heat in the Earth's atmosphere, leading to the Greenhouse Effect."
-  },
-  {
-    "id": "Q2",
-    "question": "Which of the following statements about Climate Change is/are correct?\n1. It leads to rising sea levels.\n2. It decreases the frequency of extreme weather events.\n3. It contributes to the loss of biodiversity.\n\n(a) 1 only\n(b) 1 and 2 only\n(c) 2 and 3 only\n(d) 1, 2, and 3",
-    "options": [
-      "1 only",
-      "1 and 2 only",
-      "2 and 3 only",
-      "1, 2, and 3"
-    ],
-    "answer": "1 and 3 only",
-    "explanation": "Climate Change leads to rising sea levels and contributes to the loss of biodiversity. It actually increases the frequency of extreme weather events."
-  }
-]
-
-Note: In the example above, Q2 is a statement-based question where multiple statements are presented, and the options evaluate combinations of these statements.
-
-Your Task:
-
-Based on the above instructions, generate {num_questions} UPSC Prelims-level MCQs for the following topic. Ensure that at least four (4) of these questions are statement-based questions as illustrated in the example.
-
-    """
+    Topic Content:
+    {topic}
+"""
 
     DIFFICULTY_ASSESSMENT = """
     Assess the difficulty level of the following UPSC exam question:
