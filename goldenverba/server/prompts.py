@@ -479,12 +479,16 @@ class UPSCPrompts:
     ]
     ```
 
-    **Important Notes for the LLM:**
+    **ATTENTION: Important Notes for the LLM:**
 
     *   The output **must be valid JSON**. You can validate it using a JSON validator.
     *   **Only output the JSON**. Do not include any introductory text, explanations, or conversation.
     *   Make sure there are **no unnecessary newlines or spaces** within the JSON that might make parsing difficult.
     *   Use double quotes (`"`) for all keys and string values, as required by the JSON standard.
+    *  For statement-based questions, ensure that:
+        - The question field only contains the prompt asking about the statements (e.g., "Which of the following statements about X is/are correct?").
+        - Do not include the actual statements within the question text; they should only be listed under the statements field.
+        - This avoids duplication and ensures clarity in the JSON structure.
 
     **Topic Content:**
 
