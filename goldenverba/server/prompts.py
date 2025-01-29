@@ -560,18 +560,8 @@ class UPSCPrompts:
     Clarity: The questions should be clear and unambiguous, making it easy for users to understand their intent.
     Variety: Aim for a diverse range of questions that cover different aspects or angles of the topic.
     Format: Output the questions as a JSON array of strings to facilitate easy parsing and integration.
-    Format Example:
 
-    json
-    
-    [
-        "Causes of Quit India",
-        "Key Leaders Involved",
-        "Impact on Independence",
-        "British Response Details"
-    ]
-    
-    Example:
+    Example:Lets say we have below topic
 
     Given the following content about the Quit India Movement:
 
