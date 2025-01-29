@@ -1878,7 +1878,7 @@ async def suggest_content(request: GetSuggestContentRequest):
         model_id = request.model_id
         
         # Get visualization prompt from prompts module
-        suggest_prompt = prompts.get_prompt("SUGGEST_CONTENT", topic=content)
+        suggest_prompt = prompts.get_prompt("SUGGEST_CONTENT", topic=content,num_questions=count)
 
         # Generate response based on model_id
         if model_id == 0:

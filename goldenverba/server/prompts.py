@@ -557,7 +557,7 @@ class UPSCPrompts:
 
     Based on the given content , you will identify what potential next subtopic or section user might be interested or you feel studying that next.
     Example questions like "Discuss Cripps Mission in detailed" , "explain abc in detailed" ,"explain tyu topic" etc feel free to bring your upsc expertise and identify better questions or followups.
-    Given a summary or overview of a chapter, generate 3 to 4 short questions that a user might want to ask next to deepen their understanding or explore related topics. Each question should be 3 to 4 words long.
+    Given a summary or overview of a chapter, generate {num_questions} short questions that a user might want to ask next to deepen their understanding or explore related topics. Each question should be 3 to 4 words long.
 
     Guidelines:
 
@@ -579,7 +579,6 @@ class UPSCPrompts:
     
     [
         "Causes of Quit India",
-        "Key Leaders Involved",
         "Impact on Independence",
         "British Response Details"
     ]
