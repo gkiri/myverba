@@ -1826,7 +1826,7 @@ async def quiz_subtopic(request: GetQuizSubtopicRequest):
 
         # Get quiz prompt with specified question counts
         quiz_prompt = prompts.get_prompt(
-            "QUIZ_SUBTOPIC", 
+            "QUIZ_SUBTOPIC_NEW", 
             topic=subtopic_content,
             num_questions=num_regular_questions,
             num_statement_questions=num_statement_questions
