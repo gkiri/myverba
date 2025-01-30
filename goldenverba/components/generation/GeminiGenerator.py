@@ -203,7 +203,7 @@ class GeminiGenerator(Generator):
         # Prepare the content for the model, including the encoded PDF data
         content = [
             {'mime_type': 'application/pdf', 'data': pdf_data_base64},
-            " ".join(queries)  # Assuming queries should be part of the prompt
+            {"parts": [{"text": " ".join(queries)}]}  # Enclose prompt in a compatible dictionary
         ]
 
         try:
