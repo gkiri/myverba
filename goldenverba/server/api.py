@@ -120,9 +120,9 @@ async def generate_pdf_nostream_response(prompt: str, pdf_data: bytes, model_nam
     try:
         full_response = ""
         async for chunk in gemini_generator.generate_pdf_nostream([prompt], [""], pdf_bytes, "gemini-1.5-flash-002"):
-            if chunk["finish_reason"] == "stop":
-                break
-            full_response += chunk["message"]
+            if chunk.get["finish_reason"] == "error":
+                raise HTTPException(status_code=500, detail=chunk.get("message", "Unknown error"))
+            full_response += chunk.get("message", "")
         return full_response
     except Exception as e:
         msg.fail(f"Gemini PDF API call failed: {str(e)}")
