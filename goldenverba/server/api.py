@@ -2062,8 +2062,8 @@ async def upload_pdf(file: UploadFile = File(...)):
             
             # Get analysis from Gemini
             prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
-            analysis = await generate_pdf_nostream_response(prompt, doc_data , "gemini-1.5-flash-002")
-            
+            #analysis = await generate_pdf_nostream_response(prompt, doc_data , "gemini-1.5-flash-002")
+            analysis = await GeminiGenerator.generate_pdf_nostream_response(prompt, doc_data , "gemini-1.5-flash-002")
             msg.info(f"Gemini analysis completed successfully. Response: {analysis}")
 
             return JSONResponse(

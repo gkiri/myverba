@@ -214,36 +214,20 @@ class GeminiGenerator(Generator):
             generative_multimodal_model = GenerativeModel(model_name_to_use)
 
             # Create proper Content objects for the API call
-            pdf_content = Content(
-                parts=[Part.from_data(data=pdf_data, mime_type="application/pdf")]
-            )
-            prompt_content = Content(
-                role="user",
-                parts=[Part.from_text(prompt)]
-            )
+            # pdf_content = Content(
+            #     parts=[Part.from_data(data=pdf_data, mime_type="application/pdf")]
+            # )
+            # prompt_content = Content(
+            #     role="user",
+            #     parts=[Part.from_text(prompt)]
+            # )
 
             # Combine contents properly
-            completion = await generative_multimodal_model.generate_content_async(
-                contents=[pdf_content, prompt_content]
+            response  = await generative_multimodal_model.generate_content(
+                ([{'mime_type': 'application/pdf', 'data': pdf_data}, prompt])
             )
 
-            if completion.candidates:
-                candidate = completion.candidates[0]
-                if candidate.content and candidate.content.parts:
-                    yield {
-                        "message": candidate.content.parts[0].text,
-                        "finish_reason": str(candidate.finish_reason),
-                    }
-                else:
-                    yield {
-                        "message": "<Canceled due to SAFETY REASONS>",
-                        "finish_reason": "",
-                    }
-            else:
-                yield {
-                    "message": "No response received.",
-                    "finish_reason": "stop",
-                }
+
 
         except Exception as e:
             yield {
