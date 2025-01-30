@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, UploadFile, status,HTTPException
+from fastapi import FastAPI, WebSocket, UploadFile, status,HTTPException, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse ,StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -1934,3 +1934,135 @@ async def suggest_content(request: GetSuggestContentRequest):
             status_code=500,
             content={"error": f"suggest failed: {str(e)}"}
         )
+
+
+
+###################################################### PDF UPLOAD
+
+# Add these constants near the top of the file
+MAX_FILE_SIZE = 15 * 1024 * 1024  # 15MB limit
+ALLOWED_MIME_TYPES = {'application/pdf'}
+UPLOAD_DIR = Path("temp_uploads")
+
+# Create upload directory if it doesn't exist
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+async def validate_pdf_file(file: UploadFile) -> None:
+    """Validate PDF file before processing."""
+    if not file.content_type in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Only PDF files are allowed. Got: {file.content_type}"
+        )
+    
+    # Check file size (first chunk)
+    chunk = await file.read(MAX_FILE_SIZE + 1)
+    await file.seek(0)  # Reset file pointer
+    
+    if len(chunk) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large. Maximum size is {MAX_FILE_SIZE/1024/1024}MB"
+        )
+
+# async def process_pdf_content(file_path: Path) -> str:
+#     """Extract and process PDF content."""
+#     try:
+#         with open(file_path, 'rb') as file:
+#             reader = PyPDF2.PdfReader(file)
+#             text = ""
+#             for page in reader.pages:
+#                 text += page.extract_text() + "\n"
+#         return text.strip()
+#     except Exception as e:
+#         msg.fail(f"Error processing PDF: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
+
+# async def get_gemini_analysis(text: str) -> str:
+#     """Get Gemini API analysis of the text."""
+#     try:
+#         prompt = prompts.get_prompt("ANALYZE_PDF", content=text)
+#         response = await generate_gemini_response(prompt, text)
+#         return response
+#     except Exception as e:
+#         msg.fail(f"Error in Gemini analysis: {str(e)}")
+#         raise HTTPException(status_code=500, detail=f"Error in Gemini analysis: {str(e)}")
+
+@app.post("/api/upload_pdf")
+async def upload_pdf(file: UploadFile = File(...)):
+    """
+    Upload and process a PDF file.
+    
+    Args:
+        file: The uploaded PDF file
+    
+    Returns:
+        JSON response with analysis results
+    
+    Raises:
+        HTTPException: For various error conditions
+    """
+    try:
+        # Validate the file
+        await validate_pdf_file(file)
+        
+        # Generate unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_hash = hashlib.md5(f"{file.filename}{timestamp}".encode()).hexdigest()[:10]
+        safe_filename = f"upload_{timestamp}_{file_hash}.pdf"
+        file_path = UPLOAD_DIR / safe_filename
+        
+        # Save file
+        try:
+            with file_path.open("wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        finally:
+            await file.close()
+        
+        # Process PDF
+        try:
+            # Extract text
+            msg.info(f"Processing PDF: {safe_filename}")
+            # pdf_text = await process_pdf_content(file_path)
+            
+            # # Get Gemini analysis
+            # msg.info("Getting Gemini analysis")
+            # analysis = await get_gemini_analysis(pdf_text)
+            
+            # return JSONResponse(
+            #     content={
+            #         "status": "success",
+            #         "filename": file.filename,
+            #         "analysis": analysis,
+            #         "error": None
+            #     }
+            # )
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+            
+        finally:
+            # Cleanup: Remove temporary file
+            try:
+                file_path.unlink()
+            except Exception as e:
+                msg.warn(f"Error removing temporary file {file_path}: {e}")
+                
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        msg.fail(f"Error processing upload: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Add cleanup task to remove old temporary files
+@app.on_event("startup")
+async def startup_event():
+    """Clean up any old temporary files on startup."""
+    try:
+        for file in UPLOAD_DIR.glob("upload_*.pdf"):
+            try:
+                file.unlink()
+            except Exception as e:
+                msg.warn(f"Error removing old temporary file {file}: {e}")
+    except Exception as e:
+        msg.warn(f"Error in startup cleanup: {e}")
