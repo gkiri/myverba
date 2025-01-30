@@ -801,12 +801,6 @@ async def get_mock_exam_data():
 
 #         return JSONResponse(content={"mermaid_code": mermaid_response})
 
-#     except Exception as e:
-#         msg.warn(f"Visualization failed: {str(e)}")
-#         return JSONResponse(content={"error": f"Visualization failed: {str(e)}"})
-    
-    
-    
 @app.post("/api/bullet_points")
 async def bullet_points(payload: QueryPayload):
     
@@ -2062,15 +2056,21 @@ async def upload_pdf(file: UploadFile = File(...)):
             
             # Get analysis from Gemini
             prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
-            #analysis = await generate_pdf_nostream_response(prompt, doc_data , "gemini-1.5-flash-002")
-            analysis = await gemini_generator.generate_pdf_nostream(prompt, doc_data , "gemini-1.5-flash-002")
-            msg.info(f"Gemini analysis completed successfully. Response: {analysis}")
+            
+            # Process the async generator to get the full response
+            full_response = ""
+            async for chunk in gemini_generator.generate_pdf_nostream(prompt, doc_data, "gemini-1.5-flash-002"):
+                if chunk.get("finish_reason") == "error":
+                    raise HTTPException(status_code=500, detail=chunk.get("message", "Unknown error"))
+                full_response += chunk.get("message", "")
+
+            msg.info(f"Gemini analysis completed successfully. Response: {full_response}")
 
             return JSONResponse(
                 content={
                     "status": "success",
                     "filename": file.filename,
-                    "analysis": analysis,
+                    "analysis": full_response,
                     "error": None
                 }
             )

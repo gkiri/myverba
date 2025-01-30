@@ -194,8 +194,9 @@ class GeminiGenerator(Generator):
         if url == "":
             yield {
                 "message": "Missing GOOGLE_CLOUD_PROJECT",
-                "finish_reason": "stop",
+                "finish_reason": "error",
             }
+            return
 
         try:
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
@@ -213,21 +214,25 @@ class GeminiGenerator(Generator):
             
             generative_multimodal_model = GenerativeModel(model_name_to_use)
 
-            # Create proper Content objects for the API call
-            # pdf_content = Content(
-            #     parts=[Part.from_data(data=pdf_data, mime_type="application/pdf")]
-            # )
-            # prompt_content = Content(
-            #     role="user",
-            #     parts=[Part.from_text(prompt)]
-            # )
-
-            # Combine contents properly
-            response  = await generative_multimodal_model.generate_content(
-                ([{'mime_type': 'application/pdf', 'data': pdf_data}, prompt])
+            # Create Content object with PDF and prompt
+            response = await generative_multimodal_model.generate_content_async(
+                [
+                    {'mime_type': 'application/pdf', 'data': pdf_data},
+                    prompt
+                ]
             )
 
-
+            # Extract and yield the response text
+            if response.candidates:
+                yield {
+                    "message": response.text,
+                    "finish_reason": response.candidates[0].finish_reason
+                }
+            else:
+                yield {
+                    "message": "",
+                    "finish_reason": "error"
+                }
 
         except Exception as e:
             yield {
