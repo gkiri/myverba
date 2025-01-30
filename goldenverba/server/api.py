@@ -7,7 +7,7 @@ import uuid
 import os
 from pathlib import Path
 from datetime import datetime
-
+import hashlib
 
 from dotenv import load_dotenv
 from starlette.websockets import WebSocketDisconnect
