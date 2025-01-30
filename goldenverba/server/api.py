@@ -900,6 +900,7 @@ class GetSummarizeContentRequest(BaseModel):
     user_id: str
     subtopic_id: str
     content: str
+    model_id: int 
 
 class GetPYQSContentRequest(BaseModel):
     user_id: str
@@ -1735,12 +1736,23 @@ async def visualize(request: GetSummarizeContentRequest):
         subtopic_id = request.subtopic_id
         user_id = request.user_id
         content = request.content
+        model_id = request.model_id
         
         # Get visualization prompt from prompts module
         summarize_prompt = prompts.get_prompt("SUMMARIZE", topic=content)
 
         # Call deepseek LLM
-        summarize_response = await generate_deepseek_response(summarize_prompt, content)
+        # Generate response based on model_id
+        if model_id == 0:
+            summarize_response = await generate_gemini_response(summarize_prompt, "", "gemini-1.5-flash-002")
+        elif model_id == 1:
+            summarize_response = await generate_gemini_response(summarize_prompt, "", "gemini-2.0-flash-exp")
+        elif model_id == 2:
+            summarize_response = await generate_deepseek_response(summarize_prompt, "", "deepseek-r1")
+        elif model_id == 3:
+            summarize_response = await generate_deepseek_response(summarize_prompt, "", "deepseek-chat")
+        else:
+            summarize_response = await generate_gemini_response(summarize_prompt, "", "gemini-1.5-flash-002")
         debug_log("Summarize:", summarize_response)
 
         return JSONResponse(content={"Summarize": summarize_response})
