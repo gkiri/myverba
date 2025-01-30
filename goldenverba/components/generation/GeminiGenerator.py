@@ -214,41 +214,37 @@ class GeminiGenerator(Generator):
                 model_name_to_use,
             )
 
-            # Create proper content parts
-            pdf_part = Part.from_data(data=pdf_data, mime_type="application/pdf")
-            prompt_part = Part.from_text(prompt)
-            
+            # Prepare the content for the API call, including the PDF data and the prompt
             contents = [
-                Content(role="user", parts=[pdf_part, prompt_part])
+                {"mime_type": "application/pdf", "data": pdf_data},
+                prompt
             ]
 
             completion = await generative_multimodal_model.generate_content_async(
                 contents=contents
             )
 
-            iter = completion.__aiter__()
-
-            try:
-                while True:
-                    chunk = await iter.__anext__()
-                    if len(chunk.candidates) > 0:
-                        if len(chunk.candidates[0].content.parts) > 0:
-                            yield {
-                                "message": chunk.candidates[0].content.parts[0].text,
-                                "finish_reason": chunk.candidates[0].finish_reason,
-                            }
-                        else:
-                            yield {
-                                "message": " < Canceled due SAFETY REASONS >",
-                                "finish_reason": "",
-                            }
-
-            except StopAsyncIteration:
+            # Process the response
+            if completion.candidates:
+                candidate = completion.candidates[0]
+                if candidate.content and candidate.content.parts:
+                    yield {
+                        "message": candidate.content.parts[0].text,
+                        "finish_reason": str(candidate.finish_reason),
+                    }
+                else:
+                    yield {
+                        "message": "<Canceled due to SAFETY REASONS>",
+                        "finish_reason": "",
+                    }
+            else:
                 yield {
-                    "message": "",
+                    "message": "No response received.",
                     "finish_reason": "stop",
                 }
-                pass
 
-        except Exception:
-            raise
+        except Exception as e:
+            yield {
+                "message": f"An error occurred: {str(e)}",
+                "finish_reason": "error",
+            }
