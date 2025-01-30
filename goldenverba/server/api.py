@@ -9,6 +9,8 @@ from pathlib import Path
 from datetime import datetime
 import hashlib
 import shutil 
+import base64
+import tempfile
 
 from dotenv import load_dotenv
 from starlette.websockets import WebSocketDisconnect
@@ -99,6 +101,32 @@ async def generate_gemini_response(prompt: str, context: str, model_name: str = 
     except Exception as e:
         msg.fail(f"Gemini API call failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate response: {str(e)}")
+
+
+async def generate_pdf_nostream_response(prompt: str, pdf_data: bytes, model_name: str = None) -> str:
+    """Helper function to generate LLM response for PDF content.
+    
+    Args:
+        prompt (str): The prompt to send to the model
+        pdf_data (bytes): The PDF file data in bytes
+        model_name (str, optional): Override default model name. Defaults to None.
+    
+    Returns:
+        str: The complete response from the model
+        
+    Raises:
+        HTTPException: If the API call fails
+    """
+    try:
+        full_response = ""
+        async for chunk in gemini_generator.generate_pdf_nostream(prompt, pdf_data, model_name=model_name):
+            if chunk["finish_reason"] == "stop":
+                break
+            full_response += chunk["message"]
+        return full_response
+    except Exception as e:
+        msg.fail(f"Gemini PDF API call failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF response: {str(e)}")
 
 
 async def generate_deepseek_response(prompt: str, context: str, model_name: str = None) -> str:
@@ -1967,6 +1995,15 @@ async def validate_pdf_file(file: UploadFile) -> None:
             status_code=400,
             detail=f"File too large. Maximum size is {MAX_FILE_SIZE/1024/1024}MB"
         )
+    
+    # Verify PDF header
+    header = (await file.read(4)).decode(errors='ignore')
+    await file.seek(0)
+    if header != "%PDF":
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid PDF file format"
+        )
 
 # async def process_pdf_content(file_path: Path) -> str:
 #     """Extract and process PDF content."""
@@ -1993,18 +2030,6 @@ async def validate_pdf_file(file: UploadFile) -> None:
 
 @app.post("/api/upload_pdf")
 async def upload_pdf(file: UploadFile = File(...)):
-    """
-    Upload and process a PDF file.
-    
-    Args:
-        file: The uploaded PDF file
-    
-    Returns:
-        JSON response with analysis results
-    
-    Raises:
-        HTTPException: For various error conditions
-    """
     try:
         # Validate the file
         await validate_pdf_file(file)
@@ -2017,29 +2042,38 @@ async def upload_pdf(file: UploadFile = File(...)):
         
         # Save file
         try:
-            with file_path.open("wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
+            with tempfile.NamedTemporaryFile(delete=False, dir=UPLOAD_DIR) as temp_file:
+                shutil.copyfileobj(file.file, temp_file)
+                file_path = Path(temp_file.name)
+            # File automatically cleaned up by context manager
         finally:
             await file.close()
         
         # Process PDF
         try:
-            # Extract text
             msg.info(f"Processing PDF: {safe_filename}")
-            # pdf_text = await process_pdf_content(file_path)
             
-            # # Get Gemini analysis
-            # msg.info("Getting Gemini analysis")
-            # analysis = await get_gemini_analysis(pdf_text)
+            # Read PDF content as bytes
+            with file_path.open("rb") as f:
+                pdf_bytes = f.read()
             
-            # return JSONResponse(
-            #     content={
-            #         "status": "success",
-            #         "filename": file.filename,
-            #         "analysis": analysis,
-            #         "error": None
-            #     }
-            # )
+            # Create base64 encoded string
+            doc_data = base64.standard_b64encode(pdf_bytes).decode("utf-8")
+            
+            # Get analysis from Gemini
+            prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
+            analysis = await generate_pdf_nostream_response(prompt, doc_data)
+            
+            msg.info(f"Gemini analysis completed successfully. Response: {analysis}")
+
+            return JSONResponse(
+                content={
+                    "status": "success",
+                    "filename": file.filename,
+                    "analysis": analysis,
+                    "error": None
+                }
+            )
             
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -2069,3 +2103,4 @@ async def startup_event():
                 msg.warn(f"Error removing old temporary file {file}: {e}")
     except Exception as e:
         msg.warn(f"Error in startup cleanup: {e}")
+
