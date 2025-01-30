@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 import hashlib
+import shutil 
 
 from dotenv import load_dotenv
 from starlette.websockets import WebSocketDisconnect
