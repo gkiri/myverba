@@ -214,9 +214,16 @@ class GeminiGenerator(Generator):
                 model_name_to_use,
             )
 
+            # Create proper content parts
+            pdf_part = Part.from_data(data=pdf_data, mime_type="application/pdf")
+            prompt_part = Part.from_text(prompt)
+            
+            contents = [
+                Content(role="user", parts=[pdf_part, prompt_part])
+            ]
+
             completion = await generative_multimodal_model.generate_content_async(
-                #stream=True, contents=messages
-                [{'mime_type': 'application/pdf', 'data': pdf_data}, prompt]
+                contents=contents
             )
 
             iter = completion.__aiter__()
