@@ -119,7 +119,7 @@ async def generate_pdf_nostream_response(prompt: str, pdf_data: bytes, model_nam
     """
     try:
         full_response = ""
-        async for chunk in gemini_generator.generate_pdf_nostream(prompt, pdf_data, model_name=model_name):
+        async for chunk in gemini_generator.generate_pdf_nostream([prompt], [""], pdf_bytes, "gemini-1.5-flash-002"):
             if chunk["finish_reason"] == "stop":
                 break
             full_response += chunk["message"]
@@ -2057,9 +2057,9 @@ async def upload_pdf(file: UploadFile = File(...)):
             # Get analysis from Gemini
             prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
             
-            # Process the async generator to get the full response
+            # Updated call to generate_pdf_nostream
             full_response = ""
-            async for chunk in gemini_generator.generate_pdf_nostream(prompt, doc_data, "gemini-1.5-flash-002"):
+            async for chunk in gemini_generator.generate_pdf_nostream([prompt], [""], pdf_bytes, "gemini-1.5-flash-002"):
                 if chunk.get("finish_reason") == "error":
                     raise HTTPException(status_code=500, detail=chunk.get("message", "Unknown error"))
                 full_response += chunk.get("message", "")
