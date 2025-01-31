@@ -2077,7 +2077,16 @@ async def upload_pdf(
                 pdf_bytes = await f.read()
 
             # Process with Gemini
-            prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format:"
+            prompt = """Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format:
+            Pay high attention and Please extract complete answer without fail.
+
+            Rules to follow:
+            1.Extract the Question and answer as it is present in document with very high quality and precision
+            2.Maintain the structure of answer as it is present in the document.
+            2.Questions with unattempted or no answer ,exract question and add answer as 'Not Answered'
+            3.Please dont hallucinate
+            
+            """
             full_response = await gemini_multimodal_generator.generate_pdf(
                 prompt=prompt,
                 context='',
