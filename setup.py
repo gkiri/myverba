@@ -41,7 +41,8 @@ setup(
         "python-multipart==0.0.9",
         "supabase==2.7.4",
         "google-generativeai==0.8.2",
-        "vertexai==1.68.0"
+        "vertexai==1.68.0",
+        "aiofiles==23.2.1",
     ],
     extras_require={
         "dev": ["pytest", "wheel", "twine", "black>=23.7.0", "setuptools"],
