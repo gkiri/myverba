@@ -2077,16 +2077,31 @@ async def upload_pdf(
                 pdf_bytes = await f.read()
 
             # Process with Gemini
-            prompt = """Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format:
-            Pay high attention and Please extract complete answer without fail.
+            # prompt = """Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format:
+            # Pay high attention and Please extract complete answer without fail.
 
-            Rules to follow:
-            1.Extract the Question and answer as it is present in document with very high quality and precision
-            2.Maintain the structure of answer as it is present in the document.
-            2.Questions with unattempted or no answer ,exract question and add answer as 'Not Answered'
-            3.Please dont hallucinate
+            # Rules to follow:
+            # 1.Extract the Question and answer as it is present in document with very high quality and precision
+            # 2.Maintain the structure of answer as it is present in the document.
+            # 3.Questions with unattempted or no answer ,exract question and add answer as 'Not Answered'
+            # 4.Please think carefully before every word generation
+            # 5.Please dont hallucinate
             
+            # """
+            
+            prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as present in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
+
+            Rules:
+            1. Extract each question and answer exactly as they appear in the document.
+            2. Preserve the original structure of the answer.
+            3. For questions with no answer, output "Not Answered" as the answer.
+            4. Do not add any extra explanations, commentary, or markdown formatting.
+            5. Return only a valid, minified JSON array of objects with exactly two keys: "question" and "answer". For example: [{"question":"Question text","answer":"Answer text"}, ...].
+            6. Think carefully before every word generation and do not hallucinate.
+
+            Output must be exactly the JSON array with no additional text.
             """
+
             full_response = await gemini_multimodal_generator.generate_pdf(
                 prompt=prompt,
                 context='',
