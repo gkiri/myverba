@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, UploadFile, status,HTTPException, File
+from fastapi import FastAPI, WebSocket, UploadFile, status,HTTPException, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse ,StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -51,6 +51,11 @@ from goldenverba.server.api_helpers import (
     sort_pyqs_by_score,
     filter_top_pyqs_with_llm
 )
+from fastapi.concurrency import run_in_threadpool
+from starlette.requests import Request
+from typing import AsyncGenerator
+import aiofiles
+
 load_dotenv()
 
 gpt3_generator = GPT3Generator()
@@ -1967,83 +1972,135 @@ async def suggest_content(request: GetSuggestContentRequest):
 
 ###################################################### PDF UPLOAD
 
-# Add these constants near the top of the file
-MAX_FILE_SIZE = 15 * 1024 * 1024  # 15MB limit
+from contextlib import asynccontextmanager
+
+# Constants
+MAX_FILE_SIZE = 15 * 1024 * 1024  # 15MB
 ALLOWED_MIME_TYPES = {'application/pdf'}
 UPLOAD_DIR = Path("temp_uploads")
-
-# Create upload directory if it doesn't exist
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-async def validate_pdf_file(file: UploadFile) -> None:
-    """Validate PDF file before processing."""
-    if not file.content_type in ALLOWED_MIME_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file type. Only PDF files are allowed. Got: {file.content_type}"
-        )
-    
-    # Check file size (first chunk)
-    chunk = await file.read(MAX_FILE_SIZE + 1)
-    await file.seek(0)  # Reset file pointer
-    
-    if len(chunk) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail=f"File too large. Maximum size is {MAX_FILE_SIZE/1024/1024}MB"
-        )
-    
-    # Verify PDF header
-    header = (await file.read(4)).decode(errors='ignore')
-    await file.seek(0)
-    if header != "%PDF":
-        raise HTTPException(
-            status_code=400, 
-            detail="Invalid PDF file format"
-        )
+# Custom exceptions
+class PDFValidationError(HTTPException):
+    def __init__(self, detail: str):
+        super().__init__(status_code=400, detail=detail)
 
+class PDFProcessingError(HTTPException):
+    def __init__(self, detail: str):
+        super().__init__(status_code=500, detail=detail)
+
+# File handling context manager
+@asynccontextmanager
+async def handle_upload_file(file: UploadFile) -> AsyncGenerator[Path, None]:
+    """Safely handle file upload with automatic cleanup."""
+    temp_file_path = None
+    try:
+        # Generate unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_hash = hashlib.md5(f"{file.filename}{timestamp}".encode()).hexdigest()[:10]
+        safe_filename = f"upload_{timestamp}_{file_hash}.pdf"
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(delete=False, dir=UPLOAD_DIR, suffix='.pdf')
+        temp_file_path = Path(temp_file.name)
+        
+        # Stream file content
+        async with aiofiles.open(temp_file_path, 'wb') as out_file:
+            while content := await file.read(1024 * 1024):  # Read in 1MB chunks
+                if temp_file_path.stat().st_size > MAX_FILE_SIZE:
+                    raise PDFValidationError("File too large")
+                await out_file.write(content)
+        
+        yield temp_file_path
+        
+    finally:
+        if temp_file_path and temp_file_path.exists():
+            temp_file_path.unlink(missing_ok=True)
+            msg.info(f"Cleaned up temporary file: {temp_file_path}")
+
+# Validation functions
+async def validate_pdf_file(file: UploadFile) -> None:
+    """Validate PDF file metadata."""
+    if file.content_type not in ALLOWED_MIME_TYPES:
+        raise PDFValidationError(f"Invalid file type: {file.content_type}")
+    
+    # Check PDF header
+    header = await file.read(4)
+    await file.seek(0)
+    if header.decode(errors='ignore') != "%PDF":
+        raise PDFValidationError("Invalid PDF format")
+
+# Rate limiting dependency
+async def check_rate_limit(request: Request):
+    """Implement rate limiting logic here."""
+    # Add your rate limiting logic
+    pass
 
 @app.post("/api/upload_pdf")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(
+    request: Request,
+    file: UploadFile = File(...),
+    rate_limit: None = Depends(check_rate_limit)
+) -> JSONResponse:
+    """
+    Handle PDF upload and processing.
+    
+    Args:
+        request: FastAPI request object
+        file: Uploaded PDF file
+        rate_limit: Rate limiting dependency
+        
+    Returns:
+        JSONResponse with processing results
+        
+    Raises:
+        PDFValidationError: For invalid files
+        PDFProcessingError: For processing errors
+    """
+    # Generate request ID for tracking
+    request_id = str(uuid.uuid4())
+    msg.info(f"Processing upload request {request_id} for file: {file.filename}")
+    
     try:
-        # Validate the file first
+        # Validate file
         await validate_pdf_file(file)
         
-        # Process PDF content directly without saving to disk
-        pdf_bytes = await file.read()
-        
-        # Verify PDF header after reading content
-        if not pdf_bytes.startswith(b'%PDF'):
-            raise HTTPException(status_code=400, detail="Invalid PDF file format")
-
-        # Get analysis from Gemini
-        prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
-        full_response = await gemini_multimodal_generator.generate_pdf(
-            prompt=prompt,
-            context='',
-            pdf_data=pdf_bytes,
-            model_name="gemini-1.5-flash-002"
-        )
-
-        return JSONResponse(
-            content={
+        # Handle file upload and processing
+        async with handle_upload_file(file) as temp_path:
+            # Read PDF content
+            pdf_bytes = await run_in_threadpool(lambda: temp_path.read_bytes())
+            
+            # Process with Gemini
+            prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format:"
+            full_response = await gemini_multimodal_generator.generate_pdf(
+                prompt=prompt,
+                context='',
+                pdf_data=pdf_bytes,
+                model_name="gemini-1.5-flash-002"
+            )
+            
+            msg.good(f"Successfully processed upload {request_id}")
+            
+            return JSONResponse(content={
                 "status": "success",
+                "request_id": request_id,
                 "filename": file.filename,
                 "analysis": full_response,
                 "error": None
-            }
-        )
+            })
             
-    except HTTPException as he:
-        raise he
+    except PDFValidationError as ve:
+        msg.fail(f"Validation error for request {request_id}: {str(ve)}")
+        raise
+        
     except Exception as e:
-        msg.fail(f"Error processing upload: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        msg.fail(f"Processing error for request {request_id}: {str(e)}")
+        raise PDFProcessingError(f"Failed to process PDF: {str(e)}")
+    
     finally:
         await file.close()
 
-
-# Add cleanup task to remove old temporary files
+# Cleanup task
 @app.on_event("startup")
 async def startup_event():
     """Clean up any old temporary files on startup."""
@@ -2051,8 +2108,8 @@ async def startup_event():
         for file in UPLOAD_DIR.glob("upload_*.pdf"):
             try:
                 file.unlink()
+                msg.info(f"Cleaned up old file: {file}")
             except Exception as e:
-                msg.warn(f"Error removing old temporary file {file}: {e}")
+                msg.warn(f"Error removing old file {file}: {e}")
     except Exception as e:
         msg.warn(f"Error in startup cleanup: {e}")
-
