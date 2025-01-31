@@ -2002,28 +2002,6 @@ async def validate_pdf_file(file: UploadFile) -> None:
             detail="Invalid PDF file format"
         )
 
-# async def process_pdf_content(file_path: Path) -> str:
-#     """Extract and process PDF content."""
-#     try:
-#         with open(file_path, 'rb') as file:
-#             reader = PyPDF2.PdfReader(file)
-#             text = ""
-#             for page in reader.pages:
-#                 text += page.extract_text() + "\n"
-#         return text.strip()
-#     except Exception as e:
-#         msg.fail(f"Error processing PDF: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
-
-# async def get_gemini_analysis(text: str) -> str:
-#     """Get Gemini API analysis of the text."""
-#     try:
-#         prompt = prompts.get_prompt("ANALYZE_PDF", content=text)
-#         response = await generate_gemini_response(prompt, text)
-#         return response
-#     except Exception as e:
-#         msg.fail(f"Error in Gemini analysis: {str(e)}")
-#         raise HTTPException(status_code=500, detail=f"Error in Gemini analysis: {str(e)}")
 
 @app.post("/api/upload_pdf")
 async def upload_pdf(file: UploadFile = File(...)):
@@ -2091,6 +2069,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     except Exception as e:
         msg.fail(f"Error processing upload: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # Add cleanup task to remove old temporary files
 @app.on_event("startup")
