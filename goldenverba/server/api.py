@@ -2067,9 +2067,15 @@ async def upload_pdf(
         
         # Handle file upload and processing
         async with handle_upload_file(file) as temp_path:
-            # Read PDF content
-            pdf_bytes = await run_in_threadpool(lambda: temp_path.read_bytes())
-            
+            # approach-1 Read PDF content
+            #pdf_bytes = await run_in_threadpool(lambda: temp_path.read_bytes())
+
+            # approach-2
+            # Instead of using run_in_threadpool with temp_path.read_bytes(),
+            # we now read the PDF file asynchronously for better efficiency.
+            async with aiofiles.open(temp_path, 'rb') as f:
+                pdf_bytes = await f.read()
+
             # Process with Gemini
             prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format:"
             full_response = await gemini_multimodal_generator.generate_pdf(
