@@ -2038,43 +2038,78 @@ async def check_rate_limit(request: Request):
 
 def fix_json_on_backend(raw_text: str) -> str:
     """
-    Attempt to parse the raw JSON string from the model, optionally 'repair' it,
-    and then re-dump it to ensure it's valid JSON.
-    Returns the final corrected JSON as a string.
+    Attempt to convert the raw response from the LLM into a valid, predictable JSON string.
+    This function removes markdown code fences, strips extraneous text outside of the JSON block,
+    removes trailing commas, and returns a minified JSON string.
     
-    Raises ValueError if it cannot be parsed/fixed.
-    """
-    text = raw_text.strip()
-
-    # Optionally strip code fences if model includes them
-    if text.startswith("```") and text.endswith("```"):
-        # e.g. remove ```json ... ```
-        lines = text.split("\n")
-        # Remove leading/trailing lines with fences
-        if len(lines) >= 2:
-            lines = lines[1:-1]
-        text = "\n".join(lines).strip()
-
-    # Attempt direct parse
-    try:
-        parsed_data = json.loads(text)
-    except json.JSONDecodeError as err:
-        # If that fails, optionally try 'jsonrepair'
-        # NOTE: pip install jsonrepair if you want this approach
-        # from jsonrepair import jsonrepair
-        msg.warn(f"Initial parse failed: {err}. Attempting repair...")
-
-        # Attempt repair (uncomment if you installed jsonrepair)
-        # repaired = jsonrepair(text)
-        # parsed_data = json.loads(repaired)
+    It now logs key steps using msg.info to help with debugging.
+    
+    Args:
+        raw_text (str): Raw response from LLM.
         
-        # If you prefer a simpler approach or you don't want to install jsonrepair,
-        # you can do your own mild "fix" (like unescaped backslashes, etc.)
-        raise ValueError(f"Unable to fix JSON: {err}")
+    Returns:
+        str: A minified, valid JSON string.
+        
+    Raises:
+        ValueError: If JSON extraction or parsing fails.
+    """
+    import json
+    import re
+    from wasabi import msg
 
-    # Re-encode to produce valid JSON string
-    # ensure_ascii=False allows Unicode characters directly
-    return json.dumps(parsed_data, ensure_ascii=False)
+    msg.info("fix_json_on_backend: Starting JSON cleanup process.")
+    
+    # Step 1: Remove any leading/trailing whitespace.
+    text = raw_text.strip()
+    msg.info(f"After strip: text length = {len(text)}.")
+
+    # Step 2: Remove markdown code fences if they exist.
+    text = re.sub(r'^```(?:json)?\s*', '', text)
+    text = re.sub(r'\s*```$', '', text)
+    msg.info(f"After code fence removal: text length = {len(text)}.")
+
+    # Step 3: Extract JSON structure by locating the first occurrence of a JSON-initiating character.
+    possible_starts = [text.find(ch) for ch in ['[', '{'] if text.find(ch) != -1]
+    if not possible_starts:
+        msg.info("No valid JSON starting character found in the response.")
+        raise ValueError("No valid JSON structure found in the response.")
+    start_index = min(possible_starts)
+    if text[start_index] == '[':
+        end_index = text.rfind(']')
+    else:
+        end_index = text.rfind('}')
+    if start_index == -1 or end_index == -1:
+        msg.info("No matching JSON closing bracket found.")
+        raise ValueError("No matching JSON structure found in the response.")
+
+    text = text[start_index:end_index + 1]
+    msg.info(f"Extracted JSON block: text length = {len(text)}.")
+
+    # Step 4: Remove any non-printable/control characters that can disrupt JSON parsing.
+    text = ''.join(ch for ch in text if ch.isprintable())
+    msg.info("Removed non-printable characters from text.")
+
+    # Step 5: Remove trailing commas inside JSON objects and arrays.
+    text = re.sub(r',\s*([}\]])', r'\1', text)
+    msg.info("Removed trailing commas from JSON text.")
+
+    # Optionally, if single quotes are used instead of double quotes, convert them.
+    if text.count('"') < text.count("'"):
+        text = text.replace("'", '"')
+        msg.info("Replaced single quotes with double quotes.")
+
+    # Step 6: Attempt to parse the cleaned JSON text.
+    try:
+        parsed = json.loads(text)
+        msg.info("JSON parsed successfully.")
+    except json.JSONDecodeError as e:
+        msg.info(f"JSON parsing failed with error: {e}.")
+        raise ValueError("Unable to fix JSON: " + str(e))
+
+    # Return a minified, predictable JSON string (without extraneous whitespace)
+    final_json = json.dumps(parsed, ensure_ascii=False, separators=(',', ':'))
+    msg.info(f"Final JSON minified. Length = {len(final_json)}.")
+    return final_json
 
 
 @app.post("/api/upload_pdf")
