@@ -2054,21 +2054,16 @@ async def upload_pdf(file: UploadFile = File(...)):
             with file_path.open("rb") as f:
                 pdf_bytes = f.read()
             
-            # Create base64 encoded string
-            doc_data = base64.standard_b64encode(pdf_bytes).decode("utf-8")
-            
             # Get analysis from Gemini
             prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
             
-            # Updated call to generate_pdf_nostream
-            # full_response = ""
-            # async for chunk in gemini_generator.generate_pdf_nostream([prompt], [""], pdf_bytes, "gemini-1.5-flash-002"):
-            #     if chunk.get("finish_reason") == "error":
-            #         raise HTTPException(status_code=500, detail=chunk.get("message", "Unknown error"))
-            #     full_response += chunk.get("message", "")
-
-            full_response = gemini_multimodal_generator.generate_pdf(prompt,'',doc_data,"gemini-1.5-flash-002")
-
+            # Properly await the async method
+            full_response = await gemini_multimodal_generator.generate_pdf(  # Add await
+                prompt=prompt,
+                context='',
+                pdf_data=pdf_bytes,
+                model_name="gemini-1.5-flash-002"
+            )
 
             msg.info(f"Gemini analysis completed successfully. Response: {full_response}")
 
