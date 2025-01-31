@@ -66,7 +66,10 @@ class GeminiGenerator_Multimodal(Generator):
             msg.info(f"Before gemini call: ")
             # Generate content
             response = await model.generate_content_async(
-                [{'mime_type': 'application/pdf', 'data': pdf_data}, prompt],
+                [
+                    Content(parts=[Part.from_data(pdf_data, mime_type='application/pdf')]),
+                    Content(parts=[Part.from_text(prompt)])
+                ],
                 stream=False
             )
 
