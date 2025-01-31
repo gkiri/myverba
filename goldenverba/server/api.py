@@ -2036,6 +2036,47 @@ async def check_rate_limit(request: Request):
     # Add your rate limiting logic
     pass
 
+def fix_json_on_backend(raw_text: str) -> str:
+    """
+    Attempt to parse the raw JSON string from the model, optionally 'repair' it,
+    and then re-dump it to ensure it's valid JSON.
+    Returns the final corrected JSON as a string.
+    
+    Raises ValueError if it cannot be parsed/fixed.
+    """
+    text = raw_text.strip()
+
+    # Optionally strip code fences if model includes them
+    if text.startswith("```") and text.endswith("```"):
+        # e.g. remove ```json ... ```
+        lines = text.split("\n")
+        # Remove leading/trailing lines with fences
+        if len(lines) >= 2:
+            lines = lines[1:-1]
+        text = "\n".join(lines).strip()
+
+    # Attempt direct parse
+    try:
+        parsed_data = json.loads(text)
+    except json.JSONDecodeError as err:
+        # If that fails, optionally try 'jsonrepair'
+        # NOTE: pip install jsonrepair if you want this approach
+        # from jsonrepair import jsonrepair
+        msg.warn(f"Initial parse failed: {err}. Attempting repair...")
+
+        # Attempt repair (uncomment if you installed jsonrepair)
+        # repaired = jsonrepair(text)
+        # parsed_data = json.loads(repaired)
+        
+        # If you prefer a simpler approach or you don't want to install jsonrepair,
+        # you can do your own mild "fix" (like unescaped backslashes, etc.)
+        raise ValueError(f"Unable to fix JSON: {err}")
+
+    # Re-encode to produce valid JSON string
+    # ensure_ascii=False allows Unicode characters directly
+    return json.dumps(parsed_data, ensure_ascii=False)
+
+
 @app.post("/api/upload_pdf")
 async def upload_pdf(
     request: Request,
@@ -2088,7 +2129,7 @@ async def upload_pdf(
             # 5.Please dont hallucinate
             
             # """
-            
+
             prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as present in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
 
             Rules:
@@ -2110,12 +2151,15 @@ async def upload_pdf(
             )
             
             msg.good(f"Successfully processed upload {request_id}")
-            
+
+            # 4) Attempt to parse and fix the JSON from the model
+            cleaned_json = fix_json_on_backend(full_response)
+
             return JSONResponse(content={
                 "status": "success",
                 "request_id": request_id,
                 "filename": file.filename,
-                "analysis": full_response,
+                "analysis": cleaned_json,
                 "error": None
             })
             
