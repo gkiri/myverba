@@ -2006,69 +2006,41 @@ async def validate_pdf_file(file: UploadFile) -> None:
 @app.post("/api/upload_pdf")
 async def upload_pdf(file: UploadFile = File(...)):
     try:
-        # Validate the file
+        # Validate the file first
         await validate_pdf_file(file)
         
-        # Generate unique filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_hash = hashlib.md5(f"{file.filename}{timestamp}".encode()).hexdigest()[:10]
-        safe_filename = f"upload_{timestamp}_{file_hash}.pdf"
-        file_path = UPLOAD_DIR / safe_filename
+        # Process PDF content directly without saving to disk
+        pdf_bytes = await file.read()
         
-        # Save file
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, dir=UPLOAD_DIR) as temp_file:
-                shutil.copyfileobj(file.file, temp_file)
-                file_path = Path(temp_file.name)
-            # File automatically cleaned up by context manager
-        finally:
-            await file.close()
-        
-        # Process PDF
-        try:
-            msg.info(f"Processing PDF: {safe_filename}")
-            
-            # Read PDF content as bytes
-            with file_path.open("rb") as f:
-                pdf_bytes = f.read()
-            
-            # Get analysis from Gemini
-            prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
-            
-            # Properly await the async method
-            full_response = await gemini_multimodal_generator.generate_pdf(  # Add await
-                prompt=prompt,
-                context='',
-                pdf_data=pdf_bytes,
-                model_name="gemini-1.5-flash-002"
-            )
+        # Verify PDF header after reading content
+        if not pdf_bytes.startswith(b'%PDF'):
+            raise HTTPException(status_code=400, detail="Invalid PDF file format")
 
-            msg.info(f"Gemini analysis completed successfully. Response: {full_response}")
+        # Get analysis from Gemini
+        prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
+        full_response = await gemini_multimodal_generator.generate_pdf(
+            prompt=prompt,
+            context='',
+            pdf_data=pdf_bytes,
+            model_name="gemini-1.5-flash-002"
+        )
 
-            return JSONResponse(
-                content={
-                    "status": "success",
-                    "filename": file.filename,
-                    "analysis": full_response,
-                    "error": None
-                }
-            )
+        return JSONResponse(
+            content={
+                "status": "success",
+                "filename": file.filename,
+                "analysis": full_response,
+                "error": None
+            }
+        )
             
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-            
-        finally:
-            # Cleanup: Remove temporary file
-            try:
-                file_path.unlink()
-            except Exception as e:
-                msg.warn(f"Error removing temporary file {file_path}: {e}")
-                
     except HTTPException as he:
         raise he
     except Exception as e:
         msg.fail(f"Error processing upload: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await file.close()
 
 
 # Add cleanup task to remove old temporary files
