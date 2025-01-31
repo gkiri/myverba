@@ -62,16 +62,20 @@ class GeminiGenerator_Multimodal(Generator):
             # Create model instance
             model = GenerativeModel(model_name_to_use)
 
+            # Prepare the content with proper roles
+            contents = [
+                Content(
+                    role="user",
+                    parts=[
+                        Part.from_data(pdf_data, mime_type='application/pdf'),
+                        Part.from_text(prompt)
+                    ]
+                )
+            ]
 
             msg.info(f"Before gemini call: ")
             # Generate content
-            response = await model.generate_content_async(
-                [
-                    Content(parts=[Part.from_data(pdf_data, mime_type='application/pdf')]),
-                    Content(parts=[Part.from_text(prompt)])
-                ],
-                stream=False
-            )
+            response = await model.generate_content_async(contents)
 
             # Return text response directly
             msg.info(f"After gemini call:. Response: {response.text}")
