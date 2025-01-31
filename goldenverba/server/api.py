@@ -21,6 +21,8 @@ from goldenverba.components.generation.GPT3Generator import GPT3Generator
 from goldenverba.components.generation.GroqGenerator import GroqGenerator
 from goldenverba.components.generation.GeminiGenerator import GeminiGenerator
 from goldenverba.components.generation.DeepseekGenerator import DeepseekGenerator
+from goldenverba.components.generation.GeminiGenerator_Multimodal import GeminiGenerator_Multimodal
+
 #from goldenverba.components.generation.OpenrouterGenerator import OpenrouterGenerator
 
 #from goldenverba.components.generation.GeminiAIStudioGenerator import GeminiGenerator
@@ -55,6 +57,7 @@ gpt3_generator = GPT3Generator()
 groq_generator = GroqGenerator()
 gemini_generator = GeminiGenerator()
 deepseek_generator = DeepseekGenerator()
+gemini_multimodal_generator = GeminiGenerator_Multimodal()
 #openrouter_generator = OpenrouterGenerator()
 
 async def generate_gpt3_response(prompt: str,context: str) -> str:
@@ -2058,11 +2061,14 @@ async def upload_pdf(file: UploadFile = File(...)):
             prompt = "Here is the UPSC exam mains answer sheet, please give me Question and its answer in json format :"
             
             # Updated call to generate_pdf_nostream
-            full_response = ""
-            async for chunk in gemini_generator.generate_pdf_nostream([prompt], [""], pdf_bytes, "gemini-1.5-flash-002"):
-                if chunk.get("finish_reason") == "error":
-                    raise HTTPException(status_code=500, detail=chunk.get("message", "Unknown error"))
-                full_response += chunk.get("message", "")
+            # full_response = ""
+            # async for chunk in gemini_generator.generate_pdf_nostream([prompt], [""], pdf_bytes, "gemini-1.5-flash-002"):
+            #     if chunk.get("finish_reason") == "error":
+            #         raise HTTPException(status_code=500, detail=chunk.get("message", "Unknown error"))
+            #     full_response += chunk.get("message", "")
+
+            full_response = gemini_multimodal_generator.generate_pdf(prompt,'',doc_data,"gemini-1.5-flash-002")
+
 
             msg.info(f"Gemini analysis completed successfully. Response: {full_response}")
 
