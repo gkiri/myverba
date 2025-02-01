@@ -2227,7 +2227,7 @@ async def evaluate_pdf_answers(
             async with aiofiles.open(temp_path, 'rb') as f:
                 pdf_bytes = await f.read()
             
-            mains_evaluation_prompt = prompts.get_prompt("MAINS_EVALUATION", question_num=question_num)
+            mains_evaluation_prompt = prompts.get_prompt("MAINS_EVALUATION")
             # Create a coroutine to call the generate_pdf endpoint with the generated prompt
             full_response = await gemini_multimodal_generator.generate_pdf(
                 prompt=prompt,
