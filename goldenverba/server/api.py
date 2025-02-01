@@ -2111,6 +2111,54 @@ def fix_json_on_backend(raw_text: str) -> str:
     msg.info(f"Final JSON minified. Length = {len(final_json)}.")
     return final_json
 
+def parse_multiple_qna(raw_text: str) -> list:
+    """
+    Parse a delimiter-based output from an LLM that contains multiple
+    question–answer pairs with numbering.
+
+    The expected format is:
+        ###QUESTION 1### <question_text> ###ANSWER### <answer_text>
+        ###QUESTION 2### <question_text> ###ANSWER### <answer_text>
+        ###QUESTION 3### <question_text> ###ANSWER### <answer_text>
+
+    This function extracts the question number, question text, and answer text,
+    and returns a list of dictionaries, one for each QnA pair.
+
+    Args:
+        raw_text (str): The raw response text from the LLM.
+
+    Returns:
+        list: A list of dictionaries, each with keys 'number', 'question', and 'answer'.
+
+    Raises:
+        ValueError: If the expected delimiters or QnA pairs cannot be found.
+    """
+    import re
+    from wasabi import msg
+
+    msg.info("parse_multiple_qna: Starting to parse multiple QnA pairs.")
+
+    # The regular expression pattern explanation:
+    # - "###QUESTION\s*(\d+)###" captures the question number (one or more digits).
+    # - "\s*(.*?)\s*###ANSWER###\s*" captures the question text (non-greedy) up to the answer delimiter.
+    # - "(.*?)(?=###QUESTION\s*\d+###|$)" captures the answer text until the next question delimiter or the end of the string.
+    pattern = r"###QUESTION\s*(\d+)###\s*(.*?)\s*###ANSWER###\s*(.*?)(?=###QUESTION\s*\d+###|$)"
+    matches = re.findall(pattern, raw_text, re.DOTALL)
+    
+    if not matches:
+        msg.info("parse_multiple_qna: No valid QnA pairs were found with expected delimiters.")
+        raise ValueError("Invalid format: Expected at least one numbered QnA pair.")
+
+    result = []
+    for num, question, answer in matches:
+        result.append({
+            "number": int(num),
+            "question": question.strip(),
+            "answer": answer.strip()
+        })
+    
+    msg.info(f"parse_multiple_qna: Found {len(result)} QnA pairs.")
+    return result
 
 @app.post("/api/upload_pdf")
 async def upload_pdf(
@@ -2165,19 +2213,36 @@ async def upload_pdf(
             
             # """
 
-            prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as present in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
+            # prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as present in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
+
+            # Rules:
+            # 1. Extract each question and answer exactly as they appear in the document.
+            # 2. Preserve the original structure of the answer.
+            # 3. For questions with no answer, output "Not Answered" as the answer.
+            # 4. Do not add any extra explanations, commentary, or markdown formatting.
+            # 5. Return only a valid, minified JSON array of objects with exactly two keys: "question" and "answer". For example: [{"question":"Question text","answer":"Answer text"}, ...].
+            # 6. Think carefully before every word generation and do not hallucinate.
+
+            # Output must be exactly the JSON array with no additional text.
+            # """
+
+            prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as they appear in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
 
             Rules:
             1. Extract each question and answer exactly as they appear in the document.
             2. Preserve the original structure of the answer.
             3. For questions with no answer, output "Not Answered" as the answer.
             4. Do not add any extra explanations, commentary, or markdown formatting.
-            5. Return only a valid, minified JSON array of objects with exactly two keys: "question" and "answer". For example: [{"question":"Question text","answer":"Answer text"}, ...].
+            5. Return the results using the following exact text format for each question–answer pair:
+            "###QUESTION <number>### <Question text> ###ANSWER### <Answer text>"
+            Example for three pairs:
+            ###QUESTION 1### What is the capital of France? ###ANSWER### Paris is the capital of France.
+            ###QUESTION 2### What is the largest planet? ###ANSWER### Not Answered.
+            ###QUESTION 3### Explain the process of photosynthesis. ###ANSWER### [Answer text].
             6. Think carefully before every word generation and do not hallucinate.
 
-            Output must be exactly the JSON array with no additional text.
+            Attention: Output must contain exactly the above delimiters in the specified structure with no additional text.
             """
-
             full_response = await gemini_multimodal_generator.generate_pdf(
                 prompt=prompt,
                 context='',
@@ -2188,13 +2253,15 @@ async def upload_pdf(
             msg.good(f"Successfully processed upload {request_id}")
 
             # 4) Attempt to parse and fix the JSON from the model
-            cleaned_json = fix_json_on_backend(full_response)
-
+            #cleaned_json = fix_json_on_backend(full_response)
+            
+            qna_pairs = parse_multiple_qna(full_response)
+            msg.good(f"Successfully processed qna_pairs {qna_pairs}")
             return JSONResponse(content={
                 "status": "success",
                 "request_id": request_id,
                 "filename": file.filename,
-                "analysis": cleaned_json,
+                "qna_pairs": qna_pairs,
                 "error": None
             })
             
@@ -2221,4 +2288,5 @@ async def startup_event():
             except Exception as e:
                 msg.warn(f"Error removing old file {file}: {e}")
     except Exception as e:
+        msg.warn(f"Error in startup cleanup: {e}")
         msg.warn(f"Error in startup cleanup: {e}")
