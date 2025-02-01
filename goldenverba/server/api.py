@@ -2086,6 +2086,55 @@ def parse_multiple_qna(raw_text: str) -> list:
     msg.info(f"parse_multiple_qna: Found {len(result)} QnA pairs.")
     return result
 
+def parse_multiple_evals(raw_text: str) -> list:
+    """
+    Parse a delimiter-based output from an LLM that contains multiple
+    question–evaluation pairs with numbering.
+
+    The expected format is:
+        ###QUESTION <number>### <Question text> ###EVALUATION### <Evaluation text>
+        ###QUESTION <number>### <Question text> ###EVALUATION### <Evaluation text>
+        ...
+
+    This function extracts the question number, question text, and evaluation text,
+    and returns a list of dictionaries, one for each QnA pair.
+
+    Args:
+        raw_text (str): The raw response text from the LLM.
+
+    Returns:
+        list: A list of dictionaries, each with keys 'number', 'question', and 'evaluation'.
+
+    Raises:
+        ValueError: If the expected delimiters or pairs cannot be found.
+    """
+    import re
+    from wasabi import msg
+
+    msg.info("parse_multiple_evals: Starting to parse multiple question-evaluation pairs.")
+
+    # Regular expression pattern:
+    # - "###QUESTION\s*(\d+)###": captures the question number.
+    # - "\s*(.*?)\s*###EVALUATION###\s*": captures the question text (non-greedy) until the evaluation delimiter.
+    # - "(.*?)(?=###QUESTION\s*\d+###|$)": captures the evaluation text until the next question or end-of-string.
+    pattern = r"###QUESTION\s*(\d+)###\s*(.*?)\s*###EVALUATION###\s*(.*?)(?=###QUESTION\s*\d+###|$)"
+    matches = re.findall(pattern, raw_text, re.DOTALL)
+
+    if not matches:
+        msg.info("parse_multiple_evals: No valid question-evaluation pairs were found with expected delimiters.")
+        raise ValueError("Invalid format: Expected at least one numbered question-evaluation pair.")
+
+    result = []
+    for num, question, evaluation in matches:
+        result.append({
+            "number": int(num),
+            "question": question.strip(),
+            "evaluation": evaluation.strip()
+        })
+
+    msg.info(f"parse_multiple_evals: Found {len(result)} question-evaluation pairs.")
+    return result
+
 @app.post("/api/upload_pdf")
 async def upload_pdf(
     request: Request,
@@ -2237,13 +2286,13 @@ async def evaluate_pdf_answers(
             )
             
             # Process the responses: if an exception occurred, record its message.
-            qna_pairs = parse_multiple_qna(full_response)
-            msg.good(f"Successfully processed qna_pairs {qna_pairs}")
+            qna_evals = parse_multiple_evals(full_response)
+            msg.good(f"Successfully processed qna_pairs {qna_evals}")
             return JSONResponse(content={
                 "status": "success",
                 "request_id": request_id,
                 "filename": file.filename,
-                "qna_pairs": qna_pairs,
+                "qna_pairs": qna_evals,
                 "error": None
             })
             
