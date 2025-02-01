@@ -2202,6 +2202,102 @@ async def upload_pdf(
     finally:
         await file.close()
 
+
+@app.post("/api/evaluate_pdf_answers")
+async def evaluate_pdf_answers(
+    request: Request,
+    file: UploadFile = File(...),
+    rate_limit: None = Depends(check_rate_limit)
+) -> JSONResponse:
+    """
+    Handle PDF upload and processing, evaluating the answer sheet for 10 questions concurrently.
+    For each question number (1 to 10), this endpoint calls the Gemini multimodal generator API concurrently
+    and collects all responses into a final JSON response.
+
+    Args:
+        request: FastAPI request object
+        file: Uploaded PDF file
+        rate_limit: Rate limiting dependency
+
+    Returns:
+        JSONResponse with processing results:
+            - request_id: Unique ID of the request.
+            - filename: Original file name.
+            - evaluations: List containing evaluation responses for each question numbered 1 to 10.
+            - error: Any error message captured (if applicable).
+
+    Raises:
+        PDFValidationError: For invalid files.
+        PDFProcessingError: For processing errors.
+    """
+    request_id = str(uuid.uuid4())
+    msg.info(f"Processing evaluate_pdf_answers request {request_id} for file: {file.filename}")
+    
+    try:
+        # Validate file metadata and format
+        await validate_pdf_file(file)
+        
+        async with handle_upload_file(file) as temp_path:
+            # Read the PDF file asynchronously for efficiency
+            async with aiofiles.open(temp_path, 'rb') as f:
+                pdf_bytes = await f.read()
+            
+            # Prepare tasks for evaluating questions 1 to 10 concurrently.
+            tasks = []
+            for question_num in range(1, 11):
+                # Get a prompt for this question evaluation 
+                mains_evaluation_prompt = prompts.get_prompt("MAINS_EVALUATION", question_num=question_num)
+                # Create a coroutine to call the generate_pdf endpoint with the generated prompt
+                tasks.append(
+                    gemini_multimodal_generator.generate_pdf(
+                        prompt=mains_evaluation_prompt,
+                        context='',
+                        pdf_data=pdf_bytes,
+                        model_name="gemini-1.5-flash-002"
+                    )
+                )
+            
+            # Run all tasks concurrently. return_exceptions=True to handle individual call failures gracefully.
+            responses = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Process the responses: if an exception occurred, record its message.
+            evaluations = []
+            for idx, result in enumerate(responses, start=1):
+                if isinstance(result, Exception):
+                    msg.fail(f"Evaluation failed for question {idx}: {str(result)}")
+                    evaluations.append({
+                        "question_num": idx,
+                        "evaluation": None,
+                        "error": str(result)
+                    })
+                else:
+                    evaluations.append({
+                        "question_num": idx,
+                        "evaluation": result,
+                        "error": None
+                    })
+            
+            msg.good(f"Successfully processed evaluate_pdf_answers request {evaluations}")
+            return JSONResponse(content={
+                "status": "success",
+                "request_id": request_id,
+                "filename": file.filename,
+                "evaluations": evaluations,
+                "error": None
+            })
+    
+    except PDFValidationError as ve:
+        msg.fail(f"Validation error for request {request_id}: {str(ve)}")
+        raise
+        
+    except Exception as e:
+        msg.fail(f"Processing error for request {request_id}: {str(e)}")
+        raise PDFProcessingError(f"Failed to process PDF: {str(e)}")
+    
+    finally:
+        await file.close()
+
+
 # Cleanup task
 @app.on_event("startup")
 async def startup_event():

@@ -592,6 +592,86 @@ class UPSCPrompts:
     """
 
 
+    MAINS_EVALUATION="""
+    You are an experienced UPSC Mains examiner. Please evaluate the Question Number -{question_num} in the following content using the holistic rubric described below. 
+            
+    For each Criterion:
+
+    Provide a score from 1 to 10.
+    Give a brief explanation (2–3 lines) highlighting strengths and weaknesses.
+    Suggest one or two specific actionable improvements.
+    After evaluating all eight criteria, provide an overall concluding advice paragraph (2–3 lines) summarizing the key positives and negatives.
+
+    HOLISTIC RUBRIC (UPSC Mains Answer Evaluation)
+
+    Criterion 1: Comprehension & Relevance
+
+    What to Check: Does the answer directly address all parts/subparts of the question? Is there any digression or missing aspect?
+    Guiding Questions: “Are all parts of the question answered? Are examples/facts used to stay on topic?”
+    Why It Matters: Ensures the student is on-topic and covers all demands of the question.
+    
+    Criterion 2: Structure & Organization
+
+    What to Check: Does the answer have a clear introduction, body, and conclusion? Are headings/subheadings or paragraphs used effectively? Is the flow of ideas logical?
+    Guiding Questions: “Does the answer have a coherent layout?”
+    Why It Matters: Helps examiners quickly see coherence and logical progression.
+    
+    Criterion 3: Content Mastery & Depth
+
+    What to Check: How well does the answer demonstrate knowledge of key facts, theories, data? Are relevant examples, stats, or case studies provided? Is there a multi-dimensional view (social, economic, political)?
+    Guiding Questions: “Has the candidate demonstrated depth and relevance in content?”
+    Why It Matters: UPSC values strong subject knowledge, factual backing, and a balanced perspective.
+    
+    Criterion 4: Analysis & Critical Thinking
+
+    What to Check: Does the student go beyond mere narration (cause-effect, pros-cons, solutions)? Does the answer reflect original insight or a balanced argument?
+    Guiding Questions: “Is there a genuine attempt to analyze rather than just list information?”
+    Why It Matters: Critical thinking is a key skill for effective administration and problem-solving.
+    
+    Criterion 5: Language & Clarity
+
+    What to Check: Is the language clear, concise, and grammatically correct? Are sentences easy to follow? Is complex jargon used correctly?
+    Guiding Questions: “Is the answer free of grammatical errors and overly complex wording?”
+    Why It Matters: Clear articulation ensures the examiner quickly grasps the arguments made.
+    
+    Criterion 6: Presentation & Neatness
+
+    What to Check: Is the handwriting legible (if a scanned copy)? Is there effective use of bullet points, numbering, underlining key phrases, or diagrams? Overall readability and visual appeal?
+    Guiding Questions: “Does the format aid understanding or hinder it?”
+    Why It Matters: Good presentation creates a better impression and prevents misinterpretation.
+    
+    Criterion 7: Innovation & Value Addition
+
+    What to Check: Has the student used relevant diagrams, flowcharts, or tables? Are there unique insights, real-life examples, quotes, or a concluding punch line?
+    Guiding Questions: “Are there unique touches that enhance the quality of the answer?”
+    Why It Matters: Differentiates a good answer from a great one; shows creative or practical thinking.
+    
+    Criterion 8: Word Limit Adherence
+
+    What to Check: Does the student respect the approximate word limit? Is the content dense yet within boundaries?
+    Guiding Questions: “Does the answer appear too long or too short for the typical UPSC limit (say 200-250 words)?”
+    Why It Matters: Time & space management is critical; going off-limit or too brief can be penalized in UPSC.
+    
+    Instructions:
+
+    Evaluate and assign scores for each metric by deeply analyzing the question and its answer, assessing with respect to the evaluation metrics carefully and logically.
+    Present your feedback in a structured format (e.g., bullet points or short paragraphs).
+    Output Format:
+
+    Return the results using the following exact text format for each question–answer pair:
+
+    ###QUESTION <number>### <Question text> ###EVALUATION### <Evaluation text>
+    For example, if evaluating Question 1, your output should start with:
+
+    ###QUESTION 1### [Insert Question 1 text here] ###EVALUATION### [Insert the detailed evaluation text for Question 1 here]
+
+    Ensure that each question and its corresponding evaluation are clearly separated using the provided delimiters.
+    Use the above guidelines to perform a holistic evaluation of the given answer.
+
+    Attention: Output must contain exactly the above delimiters in the specified structure with no additional text.   
+    
+    """
+
     DIFFICULTY_ASSESSMENT = """
     Assess the difficulty level of the following UPSC exam question:
     {question_text}
