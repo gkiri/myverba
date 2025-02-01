@@ -591,7 +591,7 @@ class UPSCPrompts:
         
     """
 
-    MAINS_EVALUATION="""
+    MAINS_EVALUATION_OLD="""
     You are an experienced UPSC Mains examiner. Please evaluate **ALL** Question and Answers in the following content using the holistic rubric described below. 
             
     For each Criterion:
@@ -671,6 +671,82 @@ class UPSCPrompts:
     
     """
 
+    MAINS_EVALUATION = """
+
+You are an experienced UPSC Mains examiner. Evaluate **ALL** Question and Answer pairs provided using the holistic rubric described below. For each question, output your evaluation using the following exact delimiter-based format with no additional text:
+
+###QUESTION <number>###
+<Question text here exactly as given>
+
+###EVALUATION###
+For each criterion, output a separate line in the following format:
+**<Criterion Name>:** <score>/10 - <2–3 line brief feedback including strengths, weaknesses, and any specific actionable improvements>
+
+After all eight criteria, output a line with your overall concluding advice using this format:
+**Overall Advice:** <2–3 line summary of key positives and negatives, including any overall suggestions>
+
+The eight evaluation criteria are:
+
+1. **Comprehension & Relevance**  
+   *What to Check*: Does the answer address all parts of the question? Are examples/facts used appropriately?  
+   *Why It Matters*: Ensures the answer stays on topic.
+
+2. **Structure & Organization**  
+   *What to Check*: Is there a clear introduction, body, and conclusion with logical flow?  
+   *Why It Matters*: Aids in quickly assessing the coherence of the answer.
+
+3. **Content Mastery & Depth**  
+   *What to Check*: Does the answer show deep understanding with relevant facts, theories, or data?  
+   *Why It Matters*: UPSC values strong subject knowledge and balance.
+
+4. **Analysis & Critical Thinking**  
+   *What to Check*: Does the answer go beyond narration to analyze cause-effect, pros-cons, etc.?  
+   *Why It Matters*: Reflects the candidate’s ability to think critically.
+
+5. **Language & Clarity**  
+   *What to Check*: Is the language clear, concise, and grammatically correct?  
+   *Why It Matters*: Facilitates easy understanding.
+
+6. **Presentation & Neatness**  
+   *What to Check*: Is the answer neatly presented (handwriting if scanned, bullet points, diagrams, etc.)?  
+   *Why It Matters*: Enhances readability and prevents misinterpretation.
+
+7. **Innovation & Value Addition**  
+   *What to Check*: Are there unique insights or creative additions beyond the standard answer?  
+   *Why It Matters*: Distinguishes a good answer from a great one.
+
+8. **Word Limit Adherence**  
+   *What to Check*: Does the answer respect the prescribed word limit?  
+   *Why It Matters*: Demonstrates effective time and space management.
+
+**Instructions:**
+- Use exactly the following delimiters in your output:
+  - Begin each question evaluation with: `###QUESTION <number>###`
+  - Follow with the exact question text.
+  - Then use: `###EVALUATION###` to start the evaluation section.
+- Each evaluation must include eight criterion lines (one per criterion) and one overall advice line.
+- Do not include any extra text, headings, or formatting outside of the exact delimiter structure.
+- Output the evaluation for all question-answer pairs in the order they appear.
+
+**Example Output:**
+
+###QUESTION 1###
+उपयुक्त उदाहरणों की सहायता से, चर्चा कीजिए कि पर्यावरणीय दबाव समूह भारत में पर्यावरण नीतियों के संबंध में सार्वजनिक भागीदारी और अनुक्रियाशीलता को कैसे बढ़ाते हैं। (Answer in 150 words)
+
+###EVALUATION###
+**Comprehension & Relevance:** 8/10 - The answer addresses all parts of the question using relevant examples, although a wider range of issues could be discussed.
+**Structure & Organization:** 8/10 - The response is clearly structured with a logical flow between introduction, body, and conclusion.
+**Content Mastery & Depth:** 7/10 - Demonstrates good subject knowledge but lacks in-depth analysis in some areas.
+**Analysis & Critical Thinking:** 7/10 - Some critical points are raised; however, further examination of the underlying issues is needed.
+**Language & Clarity:** 9/10 - The language is clear and concise with minimal grammatical errors.
+**Presentation & Neatness:** 9/10 - Neatly presented with effective use of bullet points and spacing.
+**Innovation & Value Addition:** 6/10 - The answer is conventional and could benefit from more unique insights.
+**Word Limit Adherence:** 10/10 - The response adheres strictly to the word limit.
+**Overall Advice:** Overall, the answer is well-organized and clear but would be improved by deeper analysis and innovative insights.
+
+Remember: Your output must include exactly these delimiters and structure with no additional text.
+
+    """
 
     MAINS_EVALUATION_NUM="""
     You are an experienced UPSC Mains examiner. Please evaluate the Question Number -{question_num} in the following content using the holistic rubric described below. 
