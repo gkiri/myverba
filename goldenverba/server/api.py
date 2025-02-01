@@ -2287,12 +2287,12 @@ async def evaluate_pdf_answers(
             
             # Process the responses: if an exception occurred, record its message.
             qna_evals = parse_multiple_evals(full_response)
-            msg.good(f"Successfully processed qna_pairs {qna_evals}")
+            msg.good(f"Successfully processed qna_evals {qna_evals}")
             return JSONResponse(content={
                 "status": "success",
                 "request_id": request_id,
                 "filename": file.filename,
-                "qna_pairs": qna_evals,
+                "qna_evals": qna_evals,
                 "error": None
             })
             
