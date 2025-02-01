@@ -2152,7 +2152,7 @@ async def upload_pdf(
             # Output must be exactly the JSON array with no additional text.
             # """
 
-            prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as they appear in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
+            prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer in the document with high quality and precision. 
 
             Rules:
             1. For questions with no answer, output "Not Answered" as the answer.
