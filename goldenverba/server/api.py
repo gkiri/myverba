@@ -2244,7 +2244,7 @@ async def evaluate_pdf_answers(
             
             # Prepare tasks for evaluating questions 1 to 10 concurrently.
             tasks = []
-            for question_num in range(1, 11):
+            for question_num in range(1, 3):
                 # Get a prompt for this question evaluation 
                 mains_evaluation_prompt = prompts.get_prompt("MAINS_EVALUATION", question_num=question_num)
                 # Create a coroutine to call the generate_pdf endpoint with the generated prompt
