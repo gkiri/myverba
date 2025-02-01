@@ -2036,80 +2036,6 @@ async def check_rate_limit(request: Request):
     # Add your rate limiting logic
     pass
 
-def fix_json_on_backend(raw_text: str) -> str:
-    """
-    Attempt to convert the raw response from the LLM into a valid, predictable JSON string.
-    This function removes markdown code fences, strips extraneous text outside of the JSON block,
-    removes trailing commas, and returns a minified JSON string.
-    
-    It now logs key steps using msg.info to help with debugging.
-    
-    Args:
-        raw_text (str): Raw response from LLM.
-        
-    Returns:
-        str: A minified, valid JSON string.
-        
-    Raises:
-        ValueError: If JSON extraction or parsing fails.
-    """
-    import json
-    import re
-    from wasabi import msg
-
-    msg.info("fix_json_on_backend: Starting JSON cleanup process.")
-    
-    # Step 1: Remove any leading/trailing whitespace.
-    text = raw_text.strip()
-    msg.info(f"After strip: text length = {len(text)}.")
-
-    # Step 2: Remove markdown code fences if they exist.
-    text = re.sub(r'^```(?:json)?\s*', '', text)
-    text = re.sub(r'\s*```$', '', text)
-    msg.info(f"After code fence removal: text length = {len(text)}.")
-
-    # Step 3: Extract JSON structure by locating the first occurrence of a JSON-initiating character.
-    possible_starts = [text.find(ch) for ch in ['[', '{'] if text.find(ch) != -1]
-    if not possible_starts:
-        msg.info("No valid JSON starting character found in the response.")
-        raise ValueError("No valid JSON structure found in the response.")
-    start_index = min(possible_starts)
-    if text[start_index] == '[':
-        end_index = text.rfind(']')
-    else:
-        end_index = text.rfind('}')
-    if start_index == -1 or end_index == -1:
-        msg.info("No matching JSON closing bracket found.")
-        raise ValueError("No matching JSON structure found in the response.")
-
-    text = text[start_index:end_index + 1]
-    msg.info(f"Extracted JSON block: text length = {len(text)}.")
-
-    # Step 4: Remove any non-printable/control characters that can disrupt JSON parsing.
-    text = ''.join(ch for ch in text if ch.isprintable())
-    msg.info("Removed non-printable characters from text.")
-
-    # Step 5: Remove trailing commas inside JSON objects and arrays.
-    text = re.sub(r',\s*([}\]])', r'\1', text)
-    msg.info("Removed trailing commas from JSON text.")
-
-    # Optionally, if single quotes are used instead of double quotes, convert them.
-    if text.count('"') < text.count("'"):
-        text = text.replace("'", '"')
-        msg.info("Replaced single quotes with double quotes.")
-
-    # Step 6: Attempt to parse the cleaned JSON text.
-    try:
-        parsed = json.loads(text)
-        msg.info("JSON parsed successfully.")
-    except json.JSONDecodeError as e:
-        msg.info(f"JSON parsing failed with error: {e}.")
-        raise ValueError("Unable to fix JSON: " + str(e))
-
-    # Return a minified, predictable JSON string (without extraneous whitespace)
-    final_json = json.dumps(parsed, ensure_ascii=False, separators=(',', ':'))
-    msg.info(f"Final JSON minified. Length = {len(final_json)}.")
-    return final_json
 
 def parse_multiple_qna(raw_text: str) -> list:
     """
@@ -2229,10 +2155,10 @@ async def upload_pdf(
             prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as they appear in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
 
             Rules:
-            1. Extract each question and answer exactly as they appear in the document.
-            2. Preserve the original structure of the answer.
-            3. For questions with no answer, output "Not Answered" as the answer.
-            4. Do not add any extra explanations, commentary, or markdown formatting.
+            1. For questions with no answer, output "Not Answered" as the answer.
+            2. Do not add any extra explanations, commentary, or markdown formatting.
+            3. If there are any diagrams/maps/tables or any diagram please indicate it type of diagram in Bold letters(eg: Figure : , Table: , Map:, etc) and explain the information it captured and conveys in text and dont miss any information .
+            4. If there are tables , use stick diagram and represent table and its content
             5. Return the results using the following exact text format for each question–answer pair:
             "###QUESTION <number>### <Question text> ###ANSWER### <Answer text>"
             Example for three pairs:
