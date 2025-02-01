@@ -2137,20 +2137,6 @@ async def upload_pdf(
             # 4.Please think carefully before every word generation
             # 5.Please dont hallucinate
             
-            # """
-
-            # prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer exactly as present in the document with high quality and precision. For any question that is unattempted or has no answer, include the question and set its answer to "Not Answered".
-
-            # Rules:
-            # 1. Extract each question and answer exactly as they appear in the document.
-            # 2. Preserve the original structure of the answer.
-            # 3. For questions with no answer, output "Not Answered" as the answer.
-            # 4. Do not add any extra explanations, commentary, or markdown formatting.
-            # 5. Return only a valid, minified JSON array of objects with exactly two keys: "question" and "answer". For example: [{"question":"Question text","answer":"Answer text"}, ...].
-            # 6. Think carefully before every word generation and do not hallucinate.
-
-            # Output must be exactly the JSON array with no additional text.
-            # """
 
             prompt = """Below is a UPSC exam mains answer sheet. Your task is to extract every Question and its Answer in the document with high quality and precision. 
 
@@ -2202,8 +2188,79 @@ async def upload_pdf(
     finally:
         await file.close()
 
-
 @app.post("/api/evaluate_pdf_answers")
+async def evaluate_pdf_answers(
+    request: Request,
+    file: UploadFile = File(...),
+    rate_limit: None = Depends(check_rate_limit)
+) -> JSONResponse:
+    """
+    Handle PDF upload and processing, evaluating the answer sheet for 10 questions concurrently.
+    For each question number (1 to 10), this endpoint calls the Gemini multimodal generator API concurrently
+    and collects all responses into a final JSON response.
+
+    Args:
+        request: FastAPI request object
+        file: Uploaded PDF file
+        rate_limit: Rate limiting dependency
+
+    Returns:
+        JSONResponse with processing results:
+            - request_id: Unique ID of the request.
+            - filename: Original file name.
+            - evaluations: List containing evaluation responses for each question numbered 1 to 10.
+            - error: Any error message captured (if applicable).
+
+    Raises:
+        PDFValidationError: For invalid files.
+        PDFProcessingError: For processing errors.
+    """
+    request_id = str(uuid.uuid4())
+    msg.info(f"Processing evaluate_pdf_answers request {request_id} for file: {file.filename}")
+    
+    try:
+        # Validate file metadata and format
+        await validate_pdf_file(file)
+        
+        async with handle_upload_file(file) as temp_path:
+            # Read the PDF file asynchronously for efficiency
+            async with aiofiles.open(temp_path, 'rb') as f:
+                pdf_bytes = await f.read()
+            
+            mains_evaluation_prompt = prompts.get_prompt("MAINS_EVALUATION", question_num=question_num)
+            # Create a coroutine to call the generate_pdf endpoint with the generated prompt
+            full_response = await gemini_multimodal_generator.generate_pdf(
+                prompt=prompt,
+                context='',
+                pdf_data=pdf_bytes,
+                model_name="gemini-2.0-flash-exp"
+            )
+            
+            # Process the responses: if an exception occurred, record its message.
+            qna_pairs = parse_multiple_qna(full_response)
+            msg.good(f"Successfully processed qna_pairs {qna_pairs}")
+            return JSONResponse(content={
+                "status": "success",
+                "request_id": request_id,
+                "filename": file.filename,
+                "qna_pairs": qna_pairs,
+                "error": None
+            })
+            
+    
+    except PDFValidationError as ve:
+        msg.fail(f"Validation error for request {request_id}: {str(ve)}")
+        raise
+        
+    except Exception as e:
+        msg.fail(f"Processing error for request {request_id}: {str(e)}")
+        raise PDFProcessingError(f"Failed to process PDF: {str(e)}")
+    
+    finally:
+        await file.close()
+
+
+@app.post("/api/evaluate_pdf_answers_multi")
 async def evaluate_pdf_answers(
     request: Request,
     file: UploadFile = File(...),
