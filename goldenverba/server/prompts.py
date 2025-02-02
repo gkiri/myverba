@@ -744,7 +744,7 @@ The eight evaluation criteria are:
 **Word Limit Adherence:** 10/10 - The response adheres strictly to the word limit.
 **Overall Advice:** Overall, the answer is well-organized and clear but would be improved by deeper analysis and innovative insights.
 
-Remember: Your output must include exactly these delimiters and structure with no additional text.
+Attention: Your output must include exactly these delimiters and structure with no additional text.Please think slow  and deep and reflect on analysis and evaluation to provide very good insights that benefit the student greatly.
 
     """
 
