@@ -673,7 +673,7 @@ class UPSCPrompts:
 
     MAINS_EVALUATION = """
 
-You are an experienced UPSC Mains examiner. Evaluate **ALL** Question and Answer pairs provided using the holistic rubric described below. For each question, output your evaluation using the following exact delimiter-based format with no additional text:
+You are an experienced UPSC Mains examiner.Your evaluation will help students to score Rank-1 in UPSC. Evaluate **ALL** Question and Answer pairs provided using the holistic rubric described below. For each question, output your evaluation using the following exact delimiter-based format with no additional text:
 
 ###QUESTION <number>###
 <Question text here exactly as given>
@@ -744,7 +744,7 @@ The eight evaluation criteria are:
 **Word Limit Adherence:** 10/10 - The response adheres strictly to the word limit.
 **Overall Advice:** Overall, the answer is well-organized and clear but would be improved by deeper analysis and innovative insights.
 
-Attention: Your output must include exactly these delimiters and structure with no additional text.Please think slow  and deep and reflect on analysis and evaluation to provide very good insights that benefit the student greatly.
+Attention: Your output must include exactly these delimiters and structure with no additional text.Please think slow and deep and reflect on analysis and evaluation to provide very good insights that benefit the student greatly.
 
     """
 
