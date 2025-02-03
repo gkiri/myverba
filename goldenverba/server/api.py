@@ -2499,9 +2499,9 @@ async def get_mock_exam_data(request: GetMOCKSRequest):
         )
         
         if "data" in results and "Get" in results["data"] and "MOCKS" in results["data"]["Get"]:
-            questions = [Question(**question_data).dict() for question_data in results["data"]["Get"]["MOCKS"]]
+            # Replace .dict() with .model_dump() for Pydantic v2 compatibility
+            questions = [Question(**question_data).model_dump() for question_data in results["data"]["Get"]["MOCKS"]]
             mock_exam_data = {"questions": questions}
-            #print("mock_exam_data Format:", mock_exam_data)
             return JSONResponse(content=mock_exam_data)
         else:
             return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
