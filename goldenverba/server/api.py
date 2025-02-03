@@ -2453,7 +2453,7 @@ async def startup_event():
 #         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.get("/api/get_mock_exam")
+@app.post("/api/get_mock_exam")
 async def get_mock_exam_data(request: GetMOCKSRequest):
     try:
         #QUESTIONS_TO_RETRIEVE = 100
