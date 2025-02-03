@@ -958,6 +958,10 @@ class GetSuggestContentRequest(BaseModel):
     count: int
     model_id: int 
 
+class GetMOCKSRequest(BaseModel):
+    user_id: str
+    count: int
+
 
 # @app.post("/api/get_syllabus_chapter_with_userstatus")
 # async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterRequest):
@@ -2418,3 +2422,89 @@ async def startup_event():
     except Exception as e:
         msg.warn(f"Error in startup cleanup: {e}")
         msg.warn(f"Error in startup cleanup: {e}")
+
+
+############################################ Mock Exam
+
+# @app.get("/api/get_mock_exam2")
+# async def get_mock_exam_data(request: GetMOCKSRequest):
+#     # Retrieve random 30 questions from Weaviate
+#     try:
+
+#         count = request.count  # Total number of questions requested
+
+#         results = (
+#             manager.client.query.get(
+#                 "MOCKS",
+#                 ["question", "options", "answer_key", "year", "topic", "description", "question_number","global_questionID"],
+#             )
+#             .with_limit(count)
+#             .do()
+#         )
+#         print("Results Format:", results)
+#         if "data" in results and "Get" in results["data"] and "MOCKS" in results["data"]["Get"]:
+#             questions = [Question(**question_data).dict() for question_data in results["data"]["Get"]["MOCKS"]]
+#             mock_exam_data = {"questions": questions}
+#             return JSONResponse(content=mock_exam_data)
+#         else:
+#             return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
+#     except Exception as e:
+#         msg.fail(f"Error retrieving mock exam questions: {e}")
+#         return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/api/get_mock_exam")
+async def get_mock_exam_data(request: GetMOCKSRequest):
+    try:
+        #QUESTIONS_TO_RETRIEVE = 100
+        count = request.count  # Total number of questions requested
+        # Get total count of questions
+        count_result = (
+            manager.client.query
+            .aggregate("MOCKS")
+            .with_meta_count()
+            .do()
+        )
+        
+        total_questions = count_result['data']['Aggregate']['MOCKS'][0]['meta']['count']
+
+        # Retrieve all global_questionIDs
+        id_results = (
+            manager.client.query
+            .get("MOCKS", ["global_questionID"])
+            .with_additional(["id"])
+            .with_limit(total_questions)
+            .do()
+        )
+        
+        all_question_ids = [q["global_questionID"] for q in id_results["data"]["Get"]["MOCKS"]]
+        
+        # Randomly select 100 unique question IDs
+        selected_ids = random.sample(all_question_ids, min(count, len(all_question_ids)))
+        
+
+        # Retrieve the selected questions
+        results = (
+            manager.client.query.get(
+                "MOCKS",
+                ["question", "options", "answer_key", "year", "topic", "description", "question_number", "global_questionID"]
+            )
+            .with_where({
+                "path": ["global_questionID"],
+                "operator": "ContainsAny",
+                "valueString": selected_ids
+            })
+            .with_limit(count)
+            .do()
+        )
+        
+        if "data" in results and "Get" in results["data"] and "MOCKS" in results["data"]["Get"]:
+            questions = [Question(**question_data).dict() for question_data in results["data"]["Get"]["MOCKS"]]
+            mock_exam_data = {"questions": questions}
+            #print("mock_exam_data Format:", mock_exam_data)
+            return JSONResponse(content=mock_exam_data)
+        else:
+            return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
+    except Exception as e:
+        msg.fail(f"Error retrieving mock exam questions: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
