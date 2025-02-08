@@ -39,7 +39,7 @@ from goldenverba.server.types import (
     ImportPayload,
 )
 from goldenverba.server.util import get_config, set_config, setup_managers
-from goldenverba.components.types import Question # Add  Question model to types
+from goldenverba.components.types import Question,MockQuestion # Add  Question model to types
 from pydantic import ValidationError
 import goldenverba.server.prompts as prompts
 from goldenverba.server.supabase.supabase_client import supabase
@@ -49,7 +49,8 @@ from goldenverba.server.api_helpers import (
     fetch_subtopic_content,
     perform_pyqs_search,
     sort_pyqs_by_score,
-    filter_top_pyqs_with_llm
+    filter_top_pyqs_with_llm,
+    get_random_mock_questions
 )
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
@@ -702,60 +703,20 @@ from fastapi.responses import JSONResponse
 from wasabi import msg
 
 @app.get("/api/mock_exam")
-async def get_mock_exam_data():
+async def get_mock_exam_data(request: GetMOCKSRequest):
     try:
-        QUESTIONS_TO_RETRIEVE = 100
-
-        # Get total count of questions
-        count_result = (
-            manager.client.query
-            .aggregate("MockExamQuestion")
-            .with_meta_count()
-            .do()
-        )
-        
-        total_questions = count_result['data']['Aggregate']['MockExamQuestion'][0]['meta']['count']
-
-        # Retrieve all global_questionIDs
-        id_results = (
-            manager.client.query
-            .get("MockExamQuestion", ["global_questionID"])
-            .with_additional(["id"])
-            .with_limit(total_questions)
-            .do()
-        )
-        
-        all_question_ids = [q["global_questionID"] for q in id_results["data"]["Get"]["MockExamQuestion"]]
-        
-        # Randomly select 100 unique question IDs
-        selected_ids = random.sample(all_question_ids, min(QUESTIONS_TO_RETRIEVE, len(all_question_ids)))
-        
-
-        # Retrieve the selected questions
-        results = (
-            manager.client.query.get(
-                "MockExamQuestion",
-                ["question", "options", "answer_key", "year", "topic", "description", "question_number", "global_questionID"]
-            )
-            .with_where({
-                "path": ["global_questionID"],
-                "operator": "ContainsAny",
-                "valueNumber": selected_ids
-            })
-            .with_limit(QUESTIONS_TO_RETRIEVE)
-            .do()
-        )
-        
-        if "data" in results and "Get" in results["data"] and "MockExamQuestion" in results["data"]["Get"]:
-            questions = [Question(**question_data).dict() for question_data in results["data"]["Get"]["MockExamQuestion"]]
-            mock_exam_data = {"questions": questions}
-            #print("mock_exam_data Format:", mock_exam_data)
-            return JSONResponse(content=mock_exam_data)
-        else:
-            return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
+        questions = await get_random_mock_questions(manager, request.count)
+        formatted_questions = [Question(**question_data).model_dump() 
+                             for question_data in questions]
+        return JSONResponse(content={"questions": formatted_questions})
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        msg.fail(f"Error retrieving mock exam questions: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        msg.fail(f"Error in mock exam endpoint: {str(e)}")
+        return JSONResponse(
+            status_code=500, 
+            content={"error": str(e)}
+        )
     
 # New routes for bullet points, summarize, and visualize (without chunk retrieval)
 # @app.post("/api/bullet_points")
@@ -2456,55 +2417,15 @@ async def startup_event():
 @app.post("/api/get_mock_exam")
 async def get_mock_exam_data(request: GetMOCKSRequest):
     try:
-        #QUESTIONS_TO_RETRIEVE = 100
-        count = request.count  # Total number of questions requested
-        # Get total count of questions
-        count_result = (
-            manager.client.query
-            .aggregate("MOCKS")
-            .with_meta_count()
-            .do()
-        )
-        
-        total_questions = count_result['data']['Aggregate']['MOCKS'][0]['meta']['count']
-
-        # Retrieve all global_questionIDs
-        id_results = (
-            manager.client.query
-            .get("MOCKS", ["global_questionID"])
-            .with_additional(["id"])
-            .with_limit(total_questions)
-            .do()
-        )
-        
-        all_question_ids = [q["global_questionID"] for q in id_results["data"]["Get"]["MOCKS"]]
-        
-        # Randomly select 100 unique question IDs
-        selected_ids = random.sample(all_question_ids, min(count, len(all_question_ids)))
-        
-
-        # Retrieve the selected questions
-        results = (
-            manager.client.query.get(
-                "MOCKS",
-                ["question", "options", "answer_key", "year", "topic", "description", "question_number", "global_questionID"]
-            )
-            .with_where({
-                "path": ["global_questionID"],
-                "operator": "ContainsAny",
-                "valueString": selected_ids
-            })
-            .with_limit(count)
-            .do()
-        )
-        
-        if "data" in results and "Get" in results["data"] and "MOCKS" in results["data"]["Get"]:
-            # Replace .dict() with .model_dump() for Pydantic v2 compatibility
-            questions = [Question(**question_data).model_dump() for question_data in results["data"]["Get"]["MOCKS"]]
-            mock_exam_data = {"questions": questions}
-            return JSONResponse(content=mock_exam_data)
-        else:
-            return JSONResponse(status_code=500, content={"error": "Unexpected data structure in results"})
+        questions = await get_random_mock_questions(manager, request.count)
+        formatted_questions = [MockQuestion(**question_data).model_dump() 
+                             for question_data in questions]
+        return JSONResponse(content={"questions": formatted_questions})
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        msg.fail(f"Error retrieving mock exam questions: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        msg.fail(f"Error in mock exam endpoint: {str(e)}")
+        return JSONResponse(
+            status_code=500, 
+            content={"error": str(e)}
+        )

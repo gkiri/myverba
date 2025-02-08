@@ -4,6 +4,7 @@ from wasabi import msg
 import goldenverba.server.prompts as prompts  # Add this import
 import re
 from goldenverba.verba_manager import VerbaManager
+import random
 
 def fetch_subtopic_content(manager: VerbaManager, subtopic_id: str) -> str:
     """
@@ -167,4 +168,69 @@ async def filter_top_pyqs_with_llm(sorted_pyqs: list, subtopic_content: str) -> 
         msg.warn(f"Gemini filtering failed: {str(e)}")
         # Fallback to top 10 questions by score
         return sorted_pyqs[:10]
+
+
+async def get_random_mock_questions(manager: VerbaManager, count: int = 100) -> list:
+    """
+    Efficiently retrieve random mock exam questions from Weaviate with buffer.
+    
+    Args:
+        manager: VerbaManager instance for database access
+        count: Number of questions to retrieve (default: 100)
+        
+    Returns:
+        List of exactly 'count' formatted question dictionaries
+        
+    Raises:
+        HTTPException: If database query fails
+    """
+    try:
+        # Get total question count
+        count_result = (
+            manager.client.query
+            .aggregate("MOCKS")
+            .with_meta_count()
+            .do()
+        )
+        total = count_result['data']['Aggregate']['MOCKS'][0]['meta']['count']
+
+        # Calculate buffered count (20% extra)
+        buffered_count = int(count * 1.2)
+        
+        # Generate random unique IDs with buffer, but don't exceed total
+        random_ids = random.sample(range(total), min(buffered_count, total))
+        selected_ids = [str(i) for i in random_ids]
+
+        # Fetch questions in single query
+        results = (
+            manager.client.query.get(
+                "MOCKS",
+                ["question", "options", "answer_key", "year", "topic", 
+                 "description", "question_number", "global_questionID"]
+            )
+            .with_where({
+                "path": ["global_questionID"],
+                "operator": "ContainsAny",
+                "valueString": selected_ids
+            })
+            .with_limit(buffered_count)  # Increased limit to match buffer
+            .do()
+        )
+
+        if not results.get("data", {}).get("Get", {}).get("MOCKS"):
+            msg.warn("No questions found in MOCKS collection")
+            return []
+
+        questions = results["data"]["Get"]["MOCKS"]
+        msg.good(f"Retrieved {len(questions)} random mock questions before truncation")
+        
+        # Return exactly 'count' questions
+        return questions[:count]
+
+    except Exception as e:
+        msg.fail(f"Error retrieving mock exam questions: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to retrieve mock exam questions: {str(e)}"
+        )
 
