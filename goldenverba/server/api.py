@@ -37,7 +37,6 @@ from goldenverba.server.types import (
     GetDocumentPayload,
     SearchQueryPayload,
     ImportPayload,
-    GetMOCKSRequest
 )
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question,MockQuestion # Add  Question model to types
@@ -703,21 +702,21 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from wasabi import msg
 
-@app.get("/api/mock_exam")
-async def get_mock_exam_data(request: GetMOCKSRequest):
-    try:
-        questions = await get_random_mock_questions(manager, request.count)
-        formatted_questions = [Question(**question_data).model_dump() 
-                             for question_data in questions]
-        return JSONResponse(content={"questions": formatted_questions})
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        msg.fail(f"Error in mock exam endpoint: {str(e)}")
-        return JSONResponse(
-            status_code=500, 
-            content={"error": str(e)}
-        )
+# @app.get("/api/mock_exam")
+# async def get_mock_exam_data(request: GetMOCKSRequest):
+#     try:
+#         questions = await get_random_mock_questions(manager, request.count)
+#         formatted_questions = [Question(**question_data).model_dump() 
+#                              for question_data in questions]
+#         return JSONResponse(content={"questions": formatted_questions})
+#     except HTTPException as e:
+#         raise e
+#     except Exception as e:
+#         msg.fail(f"Error in mock exam endpoint: {str(e)}")
+#         return JSONResponse(
+#             status_code=500, 
+#             content={"error": str(e)}
+#         )
     
 # New routes for bullet points, summarize, and visualize (without chunk retrieval)
 # @app.post("/api/bullet_points")
@@ -920,7 +919,9 @@ class GetSuggestContentRequest(BaseModel):
     count: int
     model_id: int 
 
-
+class GetMOCKSRequest(BaseModel):
+    user_id: str
+    count: int
 
 
 # @app.post("/api/get_syllabus_chapter_with_userstatus")
