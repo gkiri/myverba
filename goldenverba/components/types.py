@@ -39,3 +39,42 @@ class Question(BaseModel):
     #         except ValueError:
     #             raise ValueError("Year must be an integer")
     #     return value
+
+
+class MockQuestion(BaseModel):
+    global_questionID: str  # Unique identifier for the question
+    year: str = ""          # Allow empty string if 'None' is encountered
+    question: str           # The question text
+    options: List[str]      # A list of answer options
+    answer_key: str         # The correct answer key (e.g., 'a', 'b', 'c', 'd')
+    topic: str = ""         # Topic of the question (optional)
+    description: str = ""   # Explanation for the answer (optional)
+    question_number: str = ""  # Question number in the original exam (optional)
+
+    @field_validator("year", mode="before")
+    def convert_year_to_str_or_empty(cls, value):
+        """
+        If 'year' is None, return an empty string.
+        Otherwise, force it to string.
+        """
+        if value is None:
+            return ""
+        return str(value)
+        
+    @field_validator("description", mode="before")
+    def convert_description_to_str_or_empty(cls, value):
+        if value is None:
+            return ""
+        return str(value)
+        
+    @field_validator("question_number", mode="before")
+    def convert_number_to_str(cls, value):
+        if value is None:
+            return ""
+        return str(value)
+    
+    @field_validator("topic", mode="before")
+    def convert_topic(cls, value):
+        if value is None:
+            return ""
+        return str(value)
