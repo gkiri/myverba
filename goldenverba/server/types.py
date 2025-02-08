@@ -1,7 +1,10 @@
 from pydantic import BaseModel
 from goldenverba.components.types import FileData
 
-
+class GetMOCKSRequest(BaseModel):
+    user_id: str
+    count: int
+    
 class QueryPayload(BaseModel):
     query: str
 

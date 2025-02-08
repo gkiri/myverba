@@ -37,6 +37,7 @@ from goldenverba.server.types import (
     GetDocumentPayload,
     SearchQueryPayload,
     ImportPayload,
+    GetMOCKSRequest
 )
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question,MockQuestion # Add  Question model to types
@@ -919,9 +920,7 @@ class GetSuggestContentRequest(BaseModel):
     count: int
     model_id: int 
 
-class GetMOCKSRequest(BaseModel):
-    user_id: str
-    count: int
+
 
 
 # @app.post("/api/get_syllabus_chapter_with_userstatus")
