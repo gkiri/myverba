@@ -45,10 +45,7 @@ class GeminiGenerator_pdf_processor(Generator):
 
         url = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
         if url == "":
-            yield {
-                "message": "Missing GOOGLE_CLOUD_PROJECT",
-                "finish_reason": "stop",
-            }
+            return [{"message": "Missing GOOGLE_CLOUD_PROJECT", "finish_reason": "stop"}]
 
         try:
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
