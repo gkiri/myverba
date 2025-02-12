@@ -1,23 +1,23 @@
 import os
 import base64
+import asyncio  # ensure asyncio is imported
 
 try:
     import vertexai.preview
     from vertexai.preview.generative_models import GenerativeModel, Content, Part
 except ImportError as e:  # Catch the specific ImportError
+    from wasabi import msg
     msg.fail(f"Could not import necessary Vertex AI libraries: {e}")
     raise  # Re-raise the error so it's not ignored
 
 from wasabi import msg
-
 from dotenv import load_dotenv
-
 from goldenverba.components.interfaces import Generator
 
 load_dotenv()
 
 
-class GeminiGenerator(Generator):
+class GeminiGenerator_pdf_processor(Generator):
     """
     Gemini Generator.
     """
@@ -32,14 +32,11 @@ class GeminiGenerator(Generator):
             "GOOGLE_CLOUD_PROJECT",
         ]
         self.streamable = True
-        #self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        # self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-8b")
         self.context_window = 100000
 
-    async def process_pdf_chunks(
-        self,
-        pdf_chunk_paths
-    ):
+    async def process_pdf_chunks(self, pdf_chunk_paths):
         """
         - Upload each 8-page PDF chunk to Gemini
         - Call 'generate_content_async'
@@ -53,7 +50,6 @@ class GeminiGenerator(Generator):
                 "finish_reason": "stop",
             }
 
-
         try:
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
@@ -61,22 +57,20 @@ class GeminiGenerator(Generator):
             credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
             if credentials_path:  # Check if credentials path is set
                 import google.auth
-                credentials, project_id_from_creds = google.auth.load_credentials_from_file(credentials_path)# credentials json file
+                credentials, project_id_from_creds = google.auth.load_credentials_from_file(credentials_path)  # credentials json file
                 vertexai.init(project=project_id, location=REGION, credentials=credentials)
             else:
                 vertexai.init(project=project_id, location=REGION)
 
             # Use provided model_name if available, otherwise fall back to self.model_name
-            model_name_to_use = model_name if model_name is not None else self.model_name
+            model_name_to_use = self.model_name
             
-            model = GenerativeModel(
-                model_name_to_use,
-            )
+            model = GenerativeModel(model_name_to_use)
 
             tasks = []
             for chunk_path in pdf_chunk_paths:
                 # Customize your prompt
-                prompt = create_prompt()
+                prompt = self.create_prompt()
 
                 # 1) Upload the sub-PDF chunk
                 file_ref = genai.upload_file(chunk_path)
@@ -86,10 +80,12 @@ class GeminiGenerator(Generator):
             
             # Run all tasks concurrently
             results = await asyncio.gather(*tasks)
-            return results  # Each result should have a .text property (or your library’s equivalent)
+            return results  # Each result should have a .text property (or your library's equivalent)
+        except Exception as e:
+            msg.fail(f"Failed to process PDF chunks: {e}")
+            raise
 
-
-
+    @staticmethod
     def create_prompt():
         prompt = """
         You are a specialized Language Model assisting the copyright holder of the following UPSC exam-related PDF document.  I, the prompter, am the author and owner of the copyright.  You have full permission to extract the text. Adhere strictly to the following guidelines:
