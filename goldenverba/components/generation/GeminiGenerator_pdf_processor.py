@@ -13,6 +13,7 @@ except ImportError as e:  # Catch the specific ImportError
 from wasabi import msg
 from dotenv import load_dotenv
 from goldenverba.components.interfaces import Generator
+from pathlib import Path
 
 load_dotenv()
 
@@ -36,48 +37,110 @@ class GeminiGenerator_pdf_processor(Generator):
         self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-8b")
         self.context_window = 100000
 
+    # async def process_pdf_chunks(self, pdf_chunk_paths):
+    #     """
+    #     - Upload each 8-page PDF chunk to Gemini
+    #     - Call 'generate_content_async'
+    #     - Gather all results in parallel
+    #     """
+
+    #     url = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+    #     if url == "":
+    #         return [{"message": "Missing GOOGLE_CLOUD_PROJECT", "finish_reason": "stop"}]
+
+    #     try:
+    #         project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+
+    #         REGION = "us-central1"
+    #         credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    #         if credentials_path:  # Check if credentials path is set
+    #             import google.auth
+    #             credentials, project_id_from_creds = google.auth.load_credentials_from_file(credentials_path)  # credentials json file
+    #             vertexai.init(project=project_id, location=REGION, credentials=credentials)
+    #         else:
+    #             vertexai.init(project=project_id, location=REGION)
+
+    #         # Use provided model_name if available, otherwise fall back to self.model_name
+    #         model_name_to_use = self.model_name
+            
+    #         model = GenerativeModel(model_name_to_use)
+
+    #         tasks = []
+    #         for chunk_path in pdf_chunk_paths:
+    #             # Customize your prompt
+    #             prompt = self.create_prompt()
+
+    #             # 1) Upload the sub-PDF chunk
+    #             file_ref = upload_file(chunk_path)
+                
+    #             # 2) Async call to Gemini
+    #             tasks.append(model.generate_content_async([file_ref, prompt]))
+            
+    #         # Run all tasks concurrently
+    #         results = await asyncio.gather(*tasks)
+    #         return results  # Each result should have a .text property (or your library's equivalent)
+    #     except Exception as e:
+    #         msg.fail(f"Failed to process PDF chunks: {e}")
+    #         raise
+
     async def process_pdf_chunks(self, pdf_chunk_paths):
         """
-        - Upload each 8-page PDF chunk to Gemini
-        - Call 'generate_content_async'
-        - Gather all results in parallel
+        Processes PDF chunks with Gemini, uploading and processing them asynchronously.
+
+        Args:
+            pdf_chunk_paths (list): A list of paths to PDF chunk files.
+
+        Returns:
+            list: A list of results from Gemini, one for each chunk.  Returns an error
+                  message if GOOGLE_CLOUD_PROJECT is missing.
         """
 
-        url = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-        if url == "":
-            return [{"message": "Missing GOOGLE_CLOUD_PROJECT", "finish_reason": "stop"}]
+        if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
+            return [
+                {"message": "Missing GOOGLE_CLOUD_PROJECT", "finish_reason": "stop"}
+            ]
 
         try:
             project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
-
             REGION = "us-central1"
             credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-            if credentials_path:  # Check if credentials path is set
+
+            if credentials_path:
                 import google.auth
-                credentials, project_id_from_creds = google.auth.load_credentials_from_file(credentials_path)  # credentials json file
+                credentials, _ = google.auth.load_credentials_from_file(credentials_path)
                 vertexai.init(project=project_id, location=REGION, credentials=credentials)
             else:
                 vertexai.init(project=project_id, location=REGION)
 
-            # Use provided model_name if available, otherwise fall back to self.model_name
-            model_name_to_use = self.model_name
-            
-            model = GenerativeModel(model_name_to_use)
+            model = GenerativeModel(self.model_name)
 
             tasks = []
-            for chunk_path in pdf_chunk_paths:
-                # Customize your prompt
-                prompt = self.create_prompt()
+            for chunk_path_str in pdf_chunk_paths:
+                chunk_path = Path(chunk_path_str)  # Use pathlib
 
-                # 1) Upload the sub-PDF chunk
-                file_ref = genai.upload_file(chunk_path)
-                
-                # 2) Async call to Gemini
-                tasks.append(model.generate_content_async([file_ref, prompt]))
-            
-            # Run all tasks concurrently
+                try:
+                    with open(chunk_path, "rb") as f:
+                        pdf_contents = f.read()
+                except FileNotFoundError:
+                    msg.fail(f"File not found: {chunk_path}")
+                    continue  # Skip this chunk
+                except Exception as e:
+                    msg.fail(f"Error reading file {chunk_path}: {e}")
+                    continue
+
+                prompt = self.create_prompt()  # Get the prompt
+
+                # Create the Parts list (prompt first, then file)
+                parts = [
+                    prompt,
+                    Part.from_data(data=pdf_contents, mime_type="application/pdf"),
+                ]
+
+                tasks.append(model.generate_content_async(parts))
+
             results = await asyncio.gather(*tasks)
-            return results  # Each result should have a .text property (or your library's equivalent)
+            return results
+
         except Exception as e:
             msg.fail(f"Failed to process PDF chunks: {e}")
             raise
