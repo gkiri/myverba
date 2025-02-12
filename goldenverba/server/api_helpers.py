@@ -8,6 +8,10 @@ import goldenverba.server.prompts as prompts  # Add this import
 import re
 from goldenverba.verba_manager import VerbaManager
 import random
+import os
+# PyPDF2 for splitting PDF
+import PyPDF2
+from PyPDF2 import PdfReader, PdfWriter
 
 def fetch_subtopic_content(manager: VerbaManager, subtopic_id: str) -> str:
     """
@@ -270,30 +274,3 @@ def split_pdf_into_subpdfs(pdf_path: str, chunk_size: int = 8, output_dir: str =
     return chunk_files
 
 
-###############################################################################
-# 3. Utility: Async processing of sub-PDFs with Gemini
-###############################################################################
-async def process_pdf_chunks(pdf_chunk_paths):
-    """
-    - Upload each 8-page PDF chunk to Gemini
-    - Call 'generate_content_async'
-    - Gather all results in parallel
-    """
-    model = genai.GenerativeModel(model_name='gemini-2.0-flash')  # or your chosen model
-
-    tasks = []
-    for chunk_path in pdf_chunk_paths:
-        # Customize your prompt
-        prompt_text = (
-            "Please extract the text from these PDF pages (including any images, tables, or diagrams), "
-            "and convert them to Markdown format. Maintain headings, structure, bullet points, etc."
-        )
-        # 1) Upload the sub-PDF chunk
-        file_ref = genai.upload_file(chunk_path)
-        
-        # 2) Async call to Gemini
-        tasks.append(model.generate_content_async([file_ref, prompt_text]))
-    
-    # Run all tasks concurrently
-    results = await asyncio.gather(*tasks)
-    return results  # Each result should have a .text property (or your library’s equivalent)
