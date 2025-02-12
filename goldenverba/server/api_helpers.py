@@ -1,3 +1,6 @@
+
+import asyncio
+
 from fastapi import HTTPException
 #from goldenverba import verba_manager
 from wasabi import msg
@@ -234,3 +237,63 @@ async def get_random_mock_questions(manager: VerbaManager, count: int = 100) -> 
             detail=f"Failed to retrieve mock exam questions: {str(e)}"
         )
 
+
+###############################################################################
+# 2. Utility: Split the PDF into 8-page sub-PDFs
+###############################################################################
+def split_pdf_into_subpdfs(pdf_path: str, chunk_size: int = 8, output_dir: str = "tmp_chunks"):
+    """
+    Splits the PDF at 'pdf_path' into multiple PDFs, each with 'chunk_size' pages.
+    Saves them in 'output_dir' and returns a list of paths to the chunked PDF files.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    reader = PdfReader(pdf_path)
+    total_pages = len(reader.pages)
+    
+    chunk_files = []
+    for start_page in range(0, total_pages, chunk_size):
+        end_page = min(start_page + chunk_size, total_pages)
+        
+        writer = PdfWriter()
+        for page_idx in range(start_page, end_page):
+            writer.add_page(reader.pages[page_idx])
+        
+        chunk_file_name = f"chunk_{start_page+1}_to_{end_page}.pdf"
+        chunk_path = os.path.join(output_dir, chunk_file_name)
+        
+        with open(chunk_path, "wb") as out_f:
+            writer.write(out_f)
+        
+        chunk_files.append(chunk_path)
+    
+    return chunk_files
+
+
+###############################################################################
+# 3. Utility: Async processing of sub-PDFs with Gemini
+###############################################################################
+async def process_pdf_chunks(pdf_chunk_paths):
+    """
+    - Upload each 8-page PDF chunk to Gemini
+    - Call 'generate_content_async'
+    - Gather all results in parallel
+    """
+    model = genai.GenerativeModel(model_name='gemini-2.0-flash')  # or your chosen model
+
+    tasks = []
+    for chunk_path in pdf_chunk_paths:
+        # Customize your prompt
+        prompt_text = (
+            "Please extract the text from these PDF pages (including any images, tables, or diagrams), "
+            "and convert them to Markdown format. Maintain headings, structure, bullet points, etc."
+        )
+        # 1) Upload the sub-PDF chunk
+        file_ref = genai.upload_file(chunk_path)
+        
+        # 2) Async call to Gemini
+        tasks.append(model.generate_content_async([file_ref, prompt_text]))
+    
+    # Run all tasks concurrently
+    results = await asyncio.gather(*tasks)
+    return results  # Each result should have a .text property (or your library’s equivalent)

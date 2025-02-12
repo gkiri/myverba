@@ -22,6 +22,7 @@ from goldenverba.components.generation.GroqGenerator import GroqGenerator
 from goldenverba.components.generation.GeminiGenerator import GeminiGenerator
 from goldenverba.components.generation.DeepseekGenerator import DeepseekGenerator
 from goldenverba.components.generation.GeminiGenerator_Multimodal import GeminiGenerator_Multimodal
+from goldenverba.components.generation.GeminiGenerator_pdf_processor import GeminiGenerator_pdf_processor
 
 #from goldenverba.components.generation.OpenrouterGenerator import OpenrouterGenerator
 
@@ -56,6 +57,7 @@ from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
 from typing import AsyncGenerator
 import aiofiles
+from goldenverba.server.api_helpers import split_pdf_into_subpdfs
 
 load_dotenv()
 
@@ -64,6 +66,7 @@ groq_generator = GroqGenerator()
 gemini_generator = GeminiGenerator()
 deepseek_generator = DeepseekGenerator()
 gemini_multimodal_generator = GeminiGenerator_Multimodal()
+gemini_pdf_processor = GeminiGenerator_pdf_processor()
 #openrouter_generator = OpenrouterGenerator()
 
 async def generate_gpt3_response(prompt: str,context: str) -> str:
@@ -2429,3 +2432,54 @@ async def get_mock_exam_data(request: GetMOCKSRequest):
             status_code=500, 
             content={"error": str(e)}
         )
+
+
+###############################################################################
+# 5. Endpoint: Upload a PDF + get Markdown
+###############################################################################
+@app.post("/process-pdf")
+async def process_pdf_endpoint(pdf_file: UploadFile = File(...)) -> JSONResponse:
+    """
+    - Accept a PDF file
+    - Create a unique temp directory for this request
+    - Split the PDF into 8-page sub-PDFs
+    - Call Gemini for each chunk asynchronously
+    - Cleanup (remove all files) before returning
+    """
+    # 1) Create a unique directory for this request
+    request_id = uuid.uuid4().hex
+    temp_root = f"temp_{request_id}"
+    os.makedirs(temp_root, exist_ok=True)
+    
+    # Path to store the user's uploaded PDF
+    input_pdf_path = os.path.join(temp_root, "uploaded.pdf")
+    
+    # 2) Save the uploaded PDF to that folder
+    file_bytes = await pdf_file.read()
+    with open(input_pdf_path, "wb") as f:
+        f.write(file_bytes)
+    
+    # Directory for sub-PDF chunks
+    chunk_dir = os.path.join(temp_root, "chunks")
+    
+    # 3) Split into multiple 8-page PDFs
+    chunk_paths = split_pdf_into_subpdfs(
+        pdf_path=input_pdf_path, 
+        chunk_size=8,
+        output_dir=chunk_dir
+    )
+    
+    try:
+        # 4) Process chunks with Gemini asynchronously
+        gemini_results = await gemini_pdf_processor.process_pdf_chunks(chunk_paths)
+        
+        # 5) Concatenate Gemini text outputs into final Markdown
+        final_markdown = "\n\n".join([res.text for res in gemini_results])
+        
+    finally:
+        # 6) Clean up: remove the unique folder and all its contents
+        if os.path.exists(temp_root):
+            shutil.rmtree(temp_root, ignore_errors=True)
+    
+    # 7) Return final Markdown
+    return JSONResponse(content={"markdown": final_markdown})
