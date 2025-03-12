@@ -83,15 +83,117 @@ class GeminiGenerator_pdf_processor(Generator):
     #         msg.fail(f"Failed to process PDF chunks: {e}")
     #         raise
 
+
+
+
+    # async def process_pdf_chunks(self, pdf_chunk_paths):
+    #     """
+    #     Processes PDF chunks with Gemini, uploading and processing them asynchronously.
+
+    #     Args:
+    #         pdf_chunk_paths (list): A list of paths to PDF chunk files.
+
+    #     Returns:
+    #         list: A list of results from Gemini, one for each chunk.  Returns an error
+    #               message if GOOGLE_CLOUD_PROJECT is missing.
+    #     """
+
+    #     if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
+    #         return [
+    #             {"message": "Missing GOOGLE_CLOUD_PROJECT", "finish_reason": "stop"}
+    #         ]
+
+    #     try:
+    #         project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+    #         REGION = "us-central1"
+    #         credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    #         if credentials_path:
+    #             import google.auth
+    #             credentials, _ = google.auth.load_credentials_from_file(credentials_path)
+    #             vertexai.init(project=project_id, location=REGION, credentials=credentials)
+    #         else:
+    #             vertexai.init(project=project_id, location=REGION)
+
+    #         model = GenerativeModel(self.model_name)
+
+    #         tasks = []
+    #         for chunk_path_str in pdf_chunk_paths:
+    #             chunk_path = Path(chunk_path_str)  # Use pathlib
+
+    #             try:
+    #                 with open(chunk_path, "rb") as f:
+    #                     pdf_contents = f.read()
+    #             except FileNotFoundError:
+    #                 msg.fail(f"File not found: {chunk_path}")
+    #                 continue  # Skip this chunk
+    #             except Exception as e:
+    #                 msg.fail(f"Error reading file {chunk_path}: {e}")
+    #                 continue
+
+    #             prompt = self.create_prompt()  # Get the prompt
+
+    #             # Create the Parts list (prompt first, then file)
+    #             parts = [
+    #                 prompt,
+    #                 Part.from_data(data=pdf_contents, mime_type="application/pdf"),
+    #             ]
+
+    #             tasks.append(model.generate_content_async(parts))
+
+    #         results = await asyncio.gather(*tasks)
+    #         return results
+
+    #     except Exception as e:
+    #         msg.fail(f"Failed to process PDF chunks: {e}")
+    #         raise
+
+
+
+    async def call_with_retries(self, model, parts, chunk_path, chunk_index, max_retries=3):
+        """
+        Helper function that tries model.generate_content_async with retries.
+        
+        Args:
+            model: The GenerativeModel instance
+            parts: The content parts to send (prompt and PDF data)
+            chunk_path: Path to the PDF chunk (for logging)
+            chunk_index: Index of the chunk (for logging)
+            max_retries: Maximum number of retry attempts
+            
+        Returns:
+            The model response or an empty response after max retries
+        """
+        for attempt in range(max_retries):
+            try:
+                response = await model.generate_content_async(parts)
+                return response
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    msg.warn(
+                        f"[Retry {attempt+1}/{max_retries}] "
+                        f"Error processing chunk #{chunk_index} ({chunk_path}):\n{e}\n"
+                        "Retrying..."
+                    )
+                    await asyncio.sleep(1)  # Small delay before retry
+                else:
+                    # Exceeded max retries, log final error
+                    msg.fail(
+                        f"[Error] Max retries ({max_retries}) exceeded for chunk #{chunk_index} "
+                        f"({chunk_path}). Error was:\n{e}"
+                    )
+                    # Return empty response that won't break the gather
+                    return ""
+
     async def process_pdf_chunks(self, pdf_chunk_paths):
         """
-        Processes PDF chunks with Gemini, uploading and processing them asynchronously.
+        Processes PDF chunks with Gemini, uploading and processing them asynchronously with retry logic.
 
         Args:
             pdf_chunk_paths (list): A list of paths to PDF chunk files.
 
         Returns:
-            list: A list of results from Gemini, one for each chunk.  Returns an error
+            list: A list of results from Gemini, one for each chunk. Returns an error
                   message if GOOGLE_CLOUD_PROJECT is missing.
         """
 
@@ -115,7 +217,7 @@ class GeminiGenerator_pdf_processor(Generator):
             model = GenerativeModel(self.model_name)
 
             tasks = []
-            for chunk_path_str in pdf_chunk_paths:
+            for chunk_index, chunk_path_str in enumerate(pdf_chunk_paths):
                 chunk_path = Path(chunk_path_str)  # Use pathlib
 
                 try:
@@ -136,7 +238,16 @@ class GeminiGenerator_pdf_processor(Generator):
                     Part.from_data(data=pdf_contents, mime_type="application/pdf"),
                 ]
 
-                tasks.append(model.generate_content_async(parts))
+                # Add task with retry logic
+                tasks.append(
+                    self.call_with_retries(
+                        model=model,
+                        parts=parts,
+                        chunk_path=chunk_path_str,
+                        chunk_index=chunk_index,
+                        max_retries=3
+                    )
+                )
 
             results = await asyncio.gather(*tasks)
             return results
