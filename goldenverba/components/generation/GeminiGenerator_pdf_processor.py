@@ -183,7 +183,10 @@ class GeminiGenerator_pdf_processor(Generator):
                         f"({chunk_path}). Error was:\n{e}"
                     )
                     # Return empty response that won't break the gather
-                    return ""
+                    # Return empty response that won't break the gather
+                    class EmptyResponse:
+                        text = f"[Error processing chunk {chunk_index}]"
+                    return EmptyResponse()
 
     async def process_pdf_chunks(self, pdf_chunk_paths):
         """
