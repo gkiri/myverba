@@ -167,6 +167,10 @@ class GeminiGenerator_pdf_processor(Generator):
         for attempt in range(max_retries):
             try:
                 response = await model.generate_content_async(parts)
+                # ===== Force the text extraction here, so we can catch errors in context =====
+                extracted_text = response.text  # This is where the recitation or empty-candidate error may occur
+
+                # If everything goes well, return the text
                 return response
             except Exception as e:
                 if attempt < max_retries - 1:
