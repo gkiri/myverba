@@ -179,7 +179,8 @@ class GeminiGenerator_pdf_processor(Generator):
                         f"Error processing chunk #{chunk_index} ({chunk_path}):\n{e}\n"
                         "Retrying..."
                     )
-                    await asyncio.sleep(1)  # Small delay before retry
+                    #await asyncio.sleep(1)  # Small 1sec delay before retry
+                    await asyncio.sleep(0.1)
                 else:
                     # Exceeded max retries, log final error
                     msg.fail(
