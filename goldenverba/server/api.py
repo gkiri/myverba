@@ -2475,8 +2475,8 @@ async def process_pdf_endpoint(pdf_file: UploadFile = File(...)) -> JSONResponse
         gemini_results = await gemini_pdf_processor.process_pdf_chunks(chunk_paths)
         
         # 5) Concatenate Gemini text outputs into final Markdown
-        #final_markdown = "\n\n".join([res.text for res in gemini_results])
-        final_markdown = "\n\n".join(gemini_results)
+        final_markdown = "\n\n".join([res.text for res in gemini_results])
+        #final_markdown = "\n\n".join(gemini_results)
         
     finally:
         # 6) Clean up: remove the unique folder and all its contents
