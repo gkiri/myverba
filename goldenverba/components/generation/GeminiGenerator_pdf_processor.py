@@ -33,8 +33,8 @@ class GeminiGenerator_pdf_processor(Generator):
             "GOOGLE_CLOUD_PROJECT",
         ]
         self.streamable = True
-        # self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
-        self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-8b")
+        self.model_name = os.getenv("GEMINI_MODEL_PDF", "gemini-1.5-flash")
+        #self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-8b")
         self.context_window = 100000
 
     # async def process_pdf_chunks(self, pdf_chunk_paths):
