@@ -243,6 +243,8 @@ class GeminiGenerator_pdf_processor(Generator):
                 try:
                     with open(chunk_path, "rb") as f:
                         pdf_contents = f.read()
+                        # Base64-encode the PDF content
+                        pdf_base64 = base64.b64encode(pdf_contents).decode('utf-8')
                 except FileNotFoundError:
                     msg.fail(f"File not found: {chunk_path}")
                     continue  # Skip this chunk
@@ -255,7 +257,7 @@ class GeminiGenerator_pdf_processor(Generator):
                 # Create the Parts list (prompt first, then file)
                 parts = [
                     prompt,
-                    Part.from_data(data=pdf_contents, mime_type="application/pdf"),
+                    Part.from_data(data=pdf_base64, mime_type="application/pdf"),
                 ]
 
                 # Add task with retry logic
