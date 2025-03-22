@@ -2449,7 +2449,8 @@ async def process_pdf_endpoint(pdf_file: UploadFile = File(...)) -> JSONResponse
     """
     # 1) Create a unique directory for this request
     request_id = uuid.uuid4().hex
-    temp_root = f"temp_{request_id}"
+    #temp_root = f"temp_{request_id}"
+    temp_root = os.path.join("/tmp", f"pdf_process_{request_id}")
     os.makedirs(temp_root, exist_ok=True)
     
     # Path to store the user's uploaded PDF
