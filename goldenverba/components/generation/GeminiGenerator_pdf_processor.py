@@ -36,6 +36,8 @@ class GeminiGenerator_pdf_processor(Generator):
         self.model_name = os.getenv("GEMINI_MODEL_PDF", "gemini-1.5-flash")
         #self.model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-8b")
         self.context_window = 100000
+        # Add debug tracking fields
+        self.chunk_results = []  # Will store tuples of (chunk_path, content_length)
 
     # async def process_pdf_chunks(self, pdf_chunk_paths):
     #     """
@@ -169,6 +171,12 @@ class GeminiGenerator_pdf_processor(Generator):
                 response = await model.generate_content_async(parts)
                 # ===== Force the text extraction here, so we can catch errors in context =====
                 extracted_text = response.text  # This is where the recitation or empty-candidate error may occur
+                
+                # Store debug info about this chunk and its content
+                self.chunk_results.append((chunk_path, len(extracted_text)))
+                
+                # Print debug info
+                msg.info(f"Chunk #{chunk_index} ({chunk_path}): {len(extracted_text)} chars extracted")
 
                 # If everything goes well, return the text
                 return response
@@ -187,7 +195,9 @@ class GeminiGenerator_pdf_processor(Generator):
                         f"[Error] Max retries ({max_retries}) exceeded for chunk #{chunk_index} "
                         f"({chunk_path}). Error was:\n{e}"
                     )
-                    # Return empty response that won't break the gather
+                    # Update debug info for failed chunk
+                    self.chunk_results.append((chunk_path, 0))
+                    msg.info(f"Chunk #{chunk_index} ({chunk_path}): NO CONTENT EXTRACTED")
                     # Return empty response that won't break the gather
                     class EmptyResponse:
                         text = f"[Error processing chunk {chunk_index}]"
@@ -204,6 +214,8 @@ class GeminiGenerator_pdf_processor(Generator):
             list: A list of results from Gemini, one for each chunk. Returns an error
                   message if GOOGLE_CLOUD_PROJECT is missing.
         """
+        # Reset debug tracking for new processing run
+        self.chunk_results = []
 
         if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
             return [
@@ -247,17 +259,28 @@ class GeminiGenerator_pdf_processor(Generator):
                 ]
 
                 # Add task with retry logic
-                tasks.append(
-                    self.call_with_retries(
+                task =  self.call_with_retries(
                         model=model,
                         parts=parts,
                         chunk_path=chunk_path_str,
                         chunk_index=chunk_index,
-                        max_retries=3
-                    )
-                )
+                        max_retries=3)
+                
+                tasks.append(task)
 
             results = await asyncio.gather(*tasks)
+            
+            # Print summary of chunk processing results
+            print("\n--- PDF CHUNK PROCESSING SUMMARY ---")
+            empty_chunks = [path for path, length in self.chunk_results if length == 0]
+            print(f"Total chunks: {len(self.chunk_results)}")
+            print(f"Empty chunks: {len(empty_chunks)}")
+            if empty_chunks:
+                print("Empty chunk paths:")
+                for path in empty_chunks:
+                    print(f"  - {path}")
+            print("-----------------------------------\n")
+            
             return results
 
         except Exception as e:
