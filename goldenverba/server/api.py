@@ -2614,11 +2614,10 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
             chunks_to_insert.append(chunk_record)
 
         # -- 3) Bulk insert text chunks --
+        #Note: Revisist and check error status for db insert
         if chunks_to_insert:
-            insert_resp = supabase.table("text_chunks").insert(chunks_to_insert).execute()
-            if insert_resp.error:
-                msg.fail(f"Failed to insert text chunks: {insert_resp.error}")
-                raise HTTPException(status_code=400, detail=f"Failed to insert text chunks: {insert_resp.error}")
+            supabase.table("text_chunks").insert(chunks_to_insert).execute()
+
 
         msg.info(f"Gkiri3:: upload_file_chunks: text_chunks inserted =.....")
         # return {
