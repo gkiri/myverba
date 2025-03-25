@@ -45,7 +45,6 @@ setup(
         "aiofiles==23.2.1",
         "PyPDF2==3.0.1",
         "voyageai==0.3.2",
-        "tiktoken==0.9.0",
         "langchain-text-splitters==0.3.7"
     ],
     extras_require={
