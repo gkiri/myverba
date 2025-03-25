@@ -2575,7 +2575,7 @@ async def vectorize_chunks(chunks: List[str],
     return embeddings
 
 
-async def upload_file_chunks(user_id: str, filename: str, file_size:int , chunks: List[str], embeddings: List[List[float]]) -> int:
+async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunks: List[str], embeddings: List[List[float]]) -> int:
     """
     1. Creates a new record in `files` to track the uploaded file.
     2. For each chunk of text:
