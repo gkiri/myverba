@@ -2691,10 +2691,10 @@ async def process_pdf_endtoend(user_id: str, pdf_file: UploadFile = File(...)) -
     except Exception as e:
         # Log the error
         if "Failed to upload file chunks" in str(e):
-            logger.error(f"Failed to upload file chunks: {e}")
+            msg.fail(f"Failed to upload file chunks: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to store processed document")
         else:
-            logger.error(f"Error processing PDF: {e}")
+            msg.fail(f"Error processing PDF: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to process PDF document")
     finally:
         # 6) Clean up: remove the unique folder and all its contents
