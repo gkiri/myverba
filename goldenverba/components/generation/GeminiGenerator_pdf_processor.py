@@ -4,7 +4,8 @@ import asyncio  # ensure asyncio is imported
 
 try:
     import vertexai.preview
-    from vertexai.preview.generative_models import GenerativeModel, Content, Part
+    from vertexai.preview.generative_models import GenerativeModel, Content, Part, HarmCategory, HarmBlockThreshold, SafetySetting
+
 except ImportError as e:  # Catch the specific ImportError
     from wasabi import msg
     msg.fail(f"Could not import necessary Vertex AI libraries: {e}")
@@ -17,6 +18,8 @@ from pathlib import Path
 
 load_dotenv()
 
+#https://github.com/GITHUBFIXUREMAILCODE/GeminiTL/blob/main/src/translation/config.py
+#https://github.com/LindaLawton/vertex_batch_predictions/tree/main
 
 class GeminiGenerator_pdf_processor(Generator):
     """
@@ -233,6 +236,17 @@ class GeminiGenerator_pdf_processor(Generator):
                 vertexai.init(project=project_id, location=REGION, credentials=credentials)
             else:
                 vertexai.init(project=project_id, location=REGION)
+
+            ##Safety settings apply for better control
+
+            safety_settings = [
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold=HarmBlockThreshold.BLOCK_NONE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold=HarmBlockThreshold.BLOCK_NONE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold=HarmBlockThreshold.BLOCK_NONE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_HARASSMENT, threshold=HarmBlockThreshold.BLOCK_NONE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY, threshold=HarmBlockThreshold.BLOCK_NONE),
+                SafetySetting(category=HarmCategory.HARM_CATEGORY_UNSPECIFIED, threshold=HarmBlockThreshold.BLOCK_NONE),
+            ]
 
             model = GenerativeModel(self.model_name)
 

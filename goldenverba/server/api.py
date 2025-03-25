@@ -2717,3 +2717,163 @@ async def process_pdf_endtoend(user_id: str, pdf_file: UploadFile = File(...)) -
         if os.path.exists(temp_root):
             shutil.rmtree(temp_root, ignore_errors=True)
 
+
+###############################################################################
+# Lexical Search 
+###############################################################################
+
+class LexicalSearchRequest(BaseModel):
+    query_text: str
+    match_count: int = 10
+    file_ids: Optional[List[str]] = None  # If empty/None => search all user chunks
+
+class SemanticSearchRequest(BaseModel):
+    query_text: str
+    match_threshold: float = 0.78
+    match_count: int = 10
+    file_ids: Optional[List[str]] = None
+
+class HybridSearchRequest(BaseModel):
+    query_text: str
+    match_count: int = 10
+    file_ids: Optional[List[str]] = None
+
+# @app.post("/search/lexical")
+# async def lexical_search(request: LexicalSearchRequest, user_id: str = Depends(get_current_user_id)):
+#     if not request.file_ids:
+#         # no specific file, so search entire "bucket" (all user chunks)
+#         response = supabase.rpc("search_text_chunks", {
+#             "user_id": user_id,
+#             "query_text": request.query_text,
+#             "match_count": request.match_count
+#         }).execute()
+
+#         msg.info(f"GKIRI:: lexical_search whole Bucket PDF: {response}")
+#     else:
+#         # search only on specific file_ids
+#         response = supabase.rpc("search_text_chunks_customfiles", {
+#             "user_id": user_id,
+#             "file_ids": request.file_ids, #"file_ids": ["UUID1", "UUID2"],  # or an empty list
+#             "query_text": request.query_text,
+#             "match_count": request.match_count
+#         }).execute()
+
+#         msg.info(f"GKIRI:: lexical_search few file IDs PDF: {response}")
+
+#     return response.data
+
+
+@router.post("/search/lexical")
+async def lexical_search(request: LexicalSearchRequest, user_id: str = Depends(get_current_user_id)):
+    """
+    If file_ids is not specified or empty, call 'search_text_chunks'.
+    Otherwise, call 'search_text_chunks_customfiles'.
+    """
+    try:
+        if not request.file_ids:
+            # Search across all text_chunks for this user
+            rpc_resp = supabase.rpc("search_text_chunks", {
+                "p_user_id": user_id,
+                "p_query_text": request.query_text,
+                "p_match_count": request.match_count
+            }).execute()
+
+            msg.info(f"GKIRI:: lexical_search whole Bucket PDF: {rpc_resp.data}")
+        else:
+            # Search only in specific file IDs
+            rpc_resp = supabase.rpc("search_text_chunks_customfiles", {
+                "p_user_id": user_id,
+                "p_file_ids": request.file_ids,
+                "p_query_text": request.query_text,
+                "p_match_count": request.match_count
+            }).execute()
+
+            msg.info(f"GKIRI:: lexical_search few file IDs PDF: {rpc_resp.data}")
+
+        if rpc_resp.error:
+            raise HTTPException(status_code=400, detail=rpc_resp.error.get('message', 'RPC Error'))
+        
+        return rpc_resp.data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/search/semantic")
+async def semantic_search(request: SemanticSearchRequest, user_id: str = Depends(get_current_user_id)):
+    """
+    If file_ids is not specified or empty, call 'match_text_chunks'.
+    Otherwise, call 'match_text_chunks_customfiles'.
+
+    The function also calls generate_embedding() on the query_text.
+    """
+    try:
+        query_embedding = generate_embedding(request.query_text)
+
+        if not request.file_ids:
+            rpc_resp = supabase.rpc("match_text_chunks", {
+                "p_user_id": user_id,
+                "p_query_embedding": query_embedding,
+                "p_match_threshold": request.match_threshold,
+                "p_match_count": request.match_count
+            }).execute()
+
+            msg.info(f"GKIRI:: lexical_search whole Bucket PDF: {rpc_resp.data}")
+        else:
+            rpc_resp = supabase.rpc("match_text_chunks_customfiles", {
+                "p_user_id": user_id,
+                "p_file_ids": request.file_ids,
+                "p_query_embedding": query_embedding,
+                "p_match_threshold": request.match_threshold,
+                "p_match_count": request.match_count
+            }).execute()
+
+            msg.info(f"GKIRI:: lexical_search few file IDs PDF: {rpc_resp.data}")
+
+        if rpc_resp.error:
+            raise HTTPException(status_code=400, detail=rpc_resp.error.get('message', 'RPC Error'))
+
+        return rpc_resp.data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/search/hybrid")
+async def hybrid_search(request: HybridSearchRequest, user_id: str = Depends(get_current_user_id)):
+    """
+    If file_ids is not specified or empty, call 'hybrid_search_text_chunks'.
+    Otherwise, call 'hybrid_search_text_chunks_customfiles'.
+
+    This also calls generate_embedding() on the query_text.
+    """
+    try:
+        query_embedding = generate_embedding(request.query_text)
+
+        if not request.file_ids:
+            rpc_resp = supabase.rpc("hybrid_search_text_chunks", {
+                "p_user_id": user_id,
+                "p_query_text": request.query_text,
+                "p_query_embedding": query_embedding,
+                "p_match_count": request.match_count
+            }).execute()
+
+            msg.info(f"GKIRI:: lexical_search whole Bucket PDF: {rpc_resp.data}")
+        else:
+            rpc_resp = supabase.rpc("hybrid_search_text_chunks_customfiles", {
+                "p_user_id": user_id,
+                "p_file_ids": request.file_ids,
+                "p_query_text": request.query_text,
+                "p_query_embedding": query_embedding,
+                "p_match_count": request.match_count
+            }).execute()
+
+            msg.info(f"GKIRI:: lexical_search few file IDs PDF: {rpc_resp.data}")
+
+        if rpc_resp.error:
+            raise HTTPException(status_code=400, detail=rpc_resp.error.get('message', 'RPC Error'))
+
+        return rpc_resp.data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
