@@ -55,7 +55,7 @@ from goldenverba.server.api_helpers import (
 )
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
-from typing import AsyncGenerator
+from typing import List,AsyncGenerator
 import aiofiles
 from goldenverba.server.api_helpers import split_pdf_into_subpdfs
 
