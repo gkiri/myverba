@@ -2598,7 +2598,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
             raise HTTPException(status_code=400, detail="Failed to create file record.")
 
         file_id = file_insert_resp.data[0]["id"]  # The newly created file's UUID
-        msg.info(f"Gkiri2:: upload_file_chunks: files inseretd file_id =.....{file_id}")
+        msg.info(f"Gkiri2:: upload_file_chunks: files inseretd file_id ={file_id}")
 
         # -- 2) Prepare the data for bulk insertion into `text_chunks` --
         # For large files, generating embeddings chunk-by-chunk can be expensive.
@@ -2617,6 +2617,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
         if chunks_to_insert:
             insert_resp = supabase.table("text_chunks").insert(chunks_to_insert).execute()
             if insert_resp.error:
+                msg.error(f"Failed to insert text chunks: {insert_resp.error}")
                 raise HTTPException(status_code=400, detail=f"Failed to insert text chunks: {insert_resp.error}")
 
         msg.info(f"Gkiri3:: upload_file_chunks: text_chunks inserted =.....")
@@ -2629,6 +2630,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
         return file_id
 
     except Exception as e:
+        msg.error(f"Error in upload_file_chunks: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
