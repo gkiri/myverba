@@ -2583,6 +2583,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
        - Insert a record into `text_chunks` with `file_id` & `user_id`.
     3. Returns the newly created file_id to the client.
     """
+    msg.info("Gkiri:: upload_file_chunks: ENTER.....!")
 
     try:
         # -- 1) Insert metadata into `files` table --
@@ -2597,7 +2598,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
             raise HTTPException(status_code=400, detail="Failed to create file record.")
 
         file_id = file_insert_resp.data[0]["id"]  # The newly created file's UUID
-
+        msg.info(f"Gkiri2:: upload_file_chunks: files inseretd file_id =.....{file_id}")
 
         # -- 2) Prepare the data for bulk insertion into `text_chunks` --
         # For large files, generating embeddings chunk-by-chunk can be expensive.
@@ -2618,6 +2619,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
             if insert_resp.error:
                 raise HTTPException(status_code=400, detail=f"Failed to insert text chunks: {insert_resp.error}")
 
+        msg.info(f"Gkiri3:: upload_file_chunks: text_chunks inserted =.....")
         # return {
         #     "status": "success",
         #     "file_id": file_id,
@@ -2680,6 +2682,7 @@ async def process_pdf_endtoend(user_id: str, pdf_file: UploadFile = File(...)) -
         if len(all_embeddings) != len(chunks):
             raise HTTPException(status_code=500, detail="Embedding generation failed")        
 
+        msg.info(f"Gkiri:: vectorize_chunks: ENTER.....! {len(all_embeddings)}") 
 
         file_id = await upload_file_chunks(user_id, pdf_file.filename, len(file_bytes), chunks, all_embeddings)
         # Return final Markdown
