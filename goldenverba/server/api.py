@@ -2486,3 +2486,218 @@ async def process_pdf_endpoint(pdf_file: UploadFile = File(...)) -> JSONResponse
     
     # 7) Return final Markdown
     return JSONResponse(content={"markdown": final_markdown})
+
+
+###############################################################################
+# 5. Endpoint: Upload a PDF + get Markdown + chunkify + vectorize + upload to supabase 
+###############################################################################
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+import tiktoken
+
+def load_and_split_markdown(markdown_content, chunk_size=8000, chunk_overlap=2000):
+    """
+    Loads a Markdown file, splits it into chunks, and returns the chunks.
+
+    Args:
+        markdown_file_path (str): Path to the Markdown file.
+        chunk_size (int, optional): Desired chunk size in tokens. Defaults to 8000.
+        chunk_overlap (int, optional): Desired chunk overlap in tokens. Defaults to 2000.
+
+    Returns:
+        list: List of text chunks.
+    """
+
+
+    # Initialize the splitter
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        model_name="gpt-4",
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", " ", ""]
+    )
+
+    # Split the text
+    chunks = text_splitter.split_text(markdown_content)
+
+    return chunks
+
+import voyageai
+voyage_client = voyageai.Client(api_key=VOYAGEAI_API_KEY)
+
+def generate_embedding(text: str) -> list[float]:
+    response = voyage.embeddings.create(input=text, model="voyage-3")
+    return response.data[0].embedding
+
+# # Helper function to generate embeddings
+# async def generate_embeddings(chunks: List[str]) -> List[List[float]]:
+#     """Generate embeddings for text chunks using Voyage AI."""
+#     response = voyage_client.embed(chunks, model="voyage-3", input_type="document")
+#     return [embedding.embedding for embedding in response.embeddings]
+
+
+async def vectorize_chunks(chunks: List[str],
+                           batch_size: int = 10,
+                           concurrency: int = 5) -> List[List[float]]:
+    """
+    Vectorize text chunks using Voyage AI in batches, running up to `concurrency`
+    requests in parallel. Each request handles `batch_size` chunks.
+    """
+    
+    # If voyage_client.embed is synchronous, wrap in to_thread
+    async def embed_batch(batch: List[str]) -> List[List[float]]:
+        # Synchronous call in a thread (non-blocking for the event loop)
+        response = await asyncio.to_thread(
+            voyage_client.embed,
+            batch,
+            model="voyage-3"
+        )
+        return response.embeddings
+
+    # Semaphore to limit concurrency
+    semaphore = asyncio.Semaphore(concurrency)
+    tasks = []
+
+    # Create a task for each batch of chunks
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i : i + batch_size]
+
+        async def run_embedding(b=batch):
+            async with semaphore:
+                return await embed_batch(b)
+
+        tasks.append(asyncio.create_task(run_embedding()))
+
+    # Run all tasks concurrently (up to `concurrency`)
+    results = await asyncio.gather(*tasks)
+
+    # Flatten the list of embeddings
+    embeddings = [emb for batch_embeddings in results for emb in batch_embeddings]
+    return embeddings
+
+
+async def upload_file_chunks(user_id: str, filename: str, file_size:int , chunks: List[str], embeddings: List[List[float]]) -> int:
+    """
+    1. Creates a new record in `files` to track the uploaded file.
+    2. For each chunk of text:
+       - Generate embedding
+       - Insert a record into `text_chunks` with `file_id` & `user_id`.
+    3. Returns the newly created file_id to the client.
+    """
+
+    try:
+        # -- 1) Insert metadata into `files` table --
+        file_insert_resp = supabase.table("files").insert({
+            "user_id": user_id,
+            "file_name": file_name,
+            "file_size": file_size,
+            "file_type": 'pdf'
+        }).execute()
+
+        if not file_insert_resp.data:
+            raise HTTPException(status_code=400, detail="Failed to create file record.")
+
+        file_id = file_insert_resp.data[0]["id"]  # The newly created file's UUID
+
+
+        # -- 2) Prepare the data for bulk insertion into `text_chunks` --
+        # For large files, generating embeddings chunk-by-chunk can be expensive.
+        # You might do it asynchronously or in batches.
+        chunks_to_insert = []
+        for i in range(len(chunks)):
+            chunk_record = {
+                "user_id": user_id,
+                "file_id": file_id,
+                "text": chunks[i],
+                "embedding": embeddings[i]
+            }
+            chunks_to_insert.append(chunk_record)
+
+        # -- 3) Bulk insert text chunks --
+        if chunks_to_insert:
+            insert_resp = supabase.table("text_chunks").insert(chunks_to_insert).execute()
+            if insert_resp.error:
+                raise HTTPException(status_code=400, detail=f"Failed to insert text chunks: {insert_resp.error}")
+
+        # return {
+        #     "status": "success",
+        #     "file_id": file_id,
+        #     "message": f"File '{request.file_name}' uploaded successfully with {len(request.text_chunks)} chunks."
+        # }
+
+        return file_id
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@app.post("/process-pdf-endtoend")
+async def process_pdf_endtoend(user_id: str, pdf_file: UploadFile = File(...)) -> JSONResponse:
+    """
+    - Accept a PDF file
+    - Create a unique temp directory for this request
+    - Split the PDF into 8-page sub-PDFs
+    - Call Gemini for each chunk asynchronously
+    - Cleanup (remove all files) before returning
+    """
+
+    # 1) Create a unique directory for this request
+    request_id = uuid.uuid4().hex
+    #temp_root = f"temp_{request_id}"
+    temp_root = os.path.join("/tmp", f"pdf_process_{request_id}")
+    os.makedirs(temp_root, exist_ok=True)
+    
+    # Path to store the user's uploaded PDF
+    input_pdf_path = os.path.join(temp_root, "uploaded.pdf")
+    
+    # 2) Save the uploaded PDF to that folder
+    file_bytes = await pdf_file.read()
+    with open(input_pdf_path, "wb") as f:
+        f.write(file_bytes)
+    
+    # Directory for sub-PDF chunks
+    chunk_dir = os.path.join(temp_root, "chunks")
+    
+    # 3) Split into multiple 8-page PDFs
+    chunk_paths = split_pdf_into_subpdfs(
+        pdf_path=input_pdf_path, 
+        chunk_size=8,
+        output_dir=chunk_dir
+    )
+    
+    try:
+        # 4) Process chunks with Gemini asynchronously
+        gemini_results = await gemini_pdf_processor.process_pdf_chunks(chunk_paths)
+        
+        # 5) Concatenate Gemini text outputs into final Markdown
+        final_markdown = "\n\n".join([res.text for res in gemini_results])
+        #final_markdown = "\n\n".join(gemini_results)
+
+        #chunkify markdown content in to 8k chunks
+        chunks = load_and_split_markdown(final_markdown)
+
+        all_embeddings = await vectorize_chunks(chunks, batch_size=20, concurrency=5)
+        if len(all_embeddings) != len(chunks):
+            raise HTTPException(status_code=500, detail="Embedding generation failed")        
+
+
+        file_id = await upload_file_chunks(user_id, pdf_file.filename, len(file_bytes), chunks, all_embeddings)
+        # Return final Markdown
+        return JSONResponse(content={
+            "file_id": file_id,
+            "status": "success"
+        })
+            
+    except Exception as e:
+        # Log the error
+        if "Failed to upload file chunks" in str(e):
+            logger.error(f"Failed to upload file chunks: {e}")
+            raise HTTPException(status_code=500, detail="Failed to store processed document")
+        else:
+            logger.error(f"Error processing PDF: {e}")
+            raise HTTPException(status_code=500, detail="Failed to process PDF document")
+    finally:
+        # 6) Clean up: remove the unique folder and all its contents
+        if os.path.exists(temp_root):
+            shutil.rmtree(temp_root, ignore_errors=True)
+
