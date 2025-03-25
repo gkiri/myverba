@@ -2617,7 +2617,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
         if chunks_to_insert:
             insert_resp = supabase.table("text_chunks").insert(chunks_to_insert).execute()
             if insert_resp.error:
-                msg.error(f"Failed to insert text chunks: {insert_resp.error}")
+                msg.fail(f"Failed to insert text chunks: {insert_resp.error}")
                 raise HTTPException(status_code=400, detail=f"Failed to insert text chunks: {insert_resp.error}")
 
         msg.info(f"Gkiri3:: upload_file_chunks: text_chunks inserted =.....")
@@ -2630,7 +2630,7 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
         return file_id
 
     except Exception as e:
-        msg.error(f"Error in upload_file_chunks: {str(e)}")
+        msg.fail(f"Error in upload_file_chunks: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
