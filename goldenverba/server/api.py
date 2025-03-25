@@ -2522,7 +2522,7 @@ def load_and_split_markdown(markdown_content, chunk_size=8000, chunk_overlap=200
     return chunks
 
 import voyageai
-voyage_client = voyageai.Client(api_key=VOYAGEAI_API_KEY)
+voyage_client = voyageai.Client(api_key=os.getenv("VOYAGEAI_API_KEY"))
 
 def generate_embedding(text: str) -> list[float]:
     response = voyage.embeddings.create(input=text, model="voyage-3")
