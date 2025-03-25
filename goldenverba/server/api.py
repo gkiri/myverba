@@ -2763,7 +2763,7 @@ class HybridSearchRequest(BaseModel):
 #     return response.data
 
 
-@router.post("/search/lexical")
+@app.post("/search/lexical")
 async def lexical_search(request: LexicalSearchRequest, user_id: str = Depends(get_current_user_id)):
     """
     If file_ids is not specified or empty, call 'search_text_chunks'.
@@ -2799,7 +2799,7 @@ async def lexical_search(request: LexicalSearchRequest, user_id: str = Depends(g
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/search/semantic")
+@app.post("/search/semantic")
 async def semantic_search(request: SemanticSearchRequest, user_id: str = Depends(get_current_user_id)):
     """
     If file_ids is not specified or empty, call 'match_text_chunks'.
@@ -2839,7 +2839,7 @@ async def semantic_search(request: SemanticSearchRequest, user_id: str = Depends
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/search/hybrid")
+@app.post("/search/hybrid")
 async def hybrid_search(request: HybridSearchRequest, user_id: str = Depends(get_current_user_id)):
     """
     If file_ids is not specified or empty, call 'hybrid_search_text_chunks'.
