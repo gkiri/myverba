@@ -2791,7 +2791,7 @@ async def lexical_search(user_id: str, request: LexicalSearchRequest):
             msg.info(f"GKIRI:: lexical_search few file IDs PDF: {rpc_resp.data}")
 
         if 'error' in rpc_resp:
-            raise HTTPException(status_code=400, detail=rpc_resp.error.get('message', 'RPC Error'))
+            raise HTTPException(status_code=400, detail=rpc_resp['error'].get('message', 'RPC Error'))
         
         return rpc_resp.data
 
