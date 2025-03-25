@@ -2524,9 +2524,12 @@ def load_and_split_markdown(markdown_content, chunk_size=8000, chunk_overlap=200
 import voyageai
 voyage_client = voyageai.Client(api_key=os.getenv("VOYAGEAI_API_KEY"))
 
-def generate_embedding(text: str) -> list[float]:
-    response = voyage.embeddings.create(input=text, model="voyage-3")
-    return response.data[0].embedding
+
+# Note: input_type = query for search related embeddings , input_type = document for documents embedding
+
+def generate_embedding(text, model="voyage-3", input_type="query", **kwargs):
+    result = voyage_client.embed([text], model=model, input_type=input_type, **kwargs)
+    return result.embeddings[0]
 
 # # Helper function to generate embeddings
 # async def generate_embeddings(chunks: List[str]) -> List[List[float]]:
@@ -2796,6 +2799,7 @@ async def lexical_search(user_id: str, request: LexicalSearchRequest):
         return rpc_resp.data
 
     except Exception as e:
+        msg.info(f"GKIRI:: supabase.rpc call lexical search errors: {rpc_resp}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
