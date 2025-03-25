@@ -2834,8 +2834,8 @@ async def semantic_search(user_id: str, request: SemanticSearchRequest):
 
             msg.info(f"GKIRI:: lexical_search few file IDs PDF: {rpc_resp.data}")
 
-        if rpc_resp.error:
-            raise HTTPException(status_code=400, detail=rpc_resp.error.get('message', 'RPC Error'))
+        if 'error' in rpc_resp:
+            raise HTTPException(status_code=400, detail=rpc_resp['error'].get('message', 'RPC Error'))
 
         return rpc_resp.data
 
@@ -2874,8 +2874,8 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
 
             msg.info(f"GKIRI:: lexical_search few file IDs PDF: {rpc_resp.data}")
 
-        if rpc_resp.error:
-            raise HTTPException(status_code=400, detail=rpc_resp.error.get('message', 'RPC Error'))
+        if 'error' in rpc_resp:
+            raise HTTPException(status_code=400, detail=rpc_resp['error'].get('message', 'RPC Error'))
 
         return rpc_resp.data
 
