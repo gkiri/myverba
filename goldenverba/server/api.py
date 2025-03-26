@@ -2881,3 +2881,137 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+###############################################################################
+# Chat with Files and Buckets
+###############################################################################
+
+
+# New request models
+class ChatCustomFilesRequest(BaseModel):
+    user_id: str
+    file_ids: List[str]
+    query: str
+    model_id: int
+
+class ChatBucketRequest(BaseModel):
+    user_id: str
+    query: str
+    model_id: int
+
+@app.post("/api/chat_custom_files", response_class=StreamingResponse)
+async def chat_custom_files(request: ChatCustomFilesRequest):
+    debug_log(f"Received chat_custom_files request: {request}")
+    try:
+        # 1. Perform hybrid search on specified files
+        search_results = await hybrid_search(request.user_id, HybridSearchRequest(
+            query_text=request.query,
+            match_count=4,
+            file_ids=request.file_ids
+        ))
+        
+        # 2. Extract and sort top 4 results by similarity score
+        context_chunks = sorted(
+            search_results,
+            key=lambda x: x.get('similarity', 0),
+            reverse=True
+        )[:4]
+        
+        # 3. Combine context chunks into single context with chunk numbering and separation
+        formatted_chunks = []
+        for i, chunk in enumerate(context_chunks, 1):
+            chunk_text = chunk.get('text', '')
+            formatted_chunk = f"Here is CHUNK #{i}:\n{chunk_text}\n{'='*50}"  # Adding separator line
+            formatted_chunks.append(formatted_chunk)
+        
+        context = "\n\n".join(formatted_chunks)
+
+
+        # 4. Create chat prompt
+        chat_prompt = f"Based on the following context, please answer the user's question. If the answer cannot be found in the context, say so.\n\nContext:\n{context}\n\nQuestion: {request.query}"
+
+        # 5. Stream response based on model_id
+        async def event_stream():
+            try:
+                generator = None
+                if request.model_id in [0, 1]:
+                    model_name = "gemini-1.5-flash-002" if request.model_id == 0 else "gemini-2.0-flash"
+                    generator = gemini_generator.generate_stream([chat_prompt], [""], [], model_name)
+                else:
+                    model_name = "deepseek-r1" if request.model_id == 2 else "deepseek-chat"
+                    generator = deepseek_generator.generate_stream([chat_prompt], [""], [], model_name)
+
+                async for chunk in generator:
+                    if chunk["finish_reason"] == "stop":
+                        break
+                    yield f"data: {json.dumps({'type': 'text-delta', 'content': chunk['message']})}\n\n"
+                
+                yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+
+            except Exception as e:
+                msg.fail(f"Streaming failed: {str(e)}")
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+    except Exception as e:
+        msg.fail(f"Error in chat_custom_files: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/chat_bucket", response_class=StreamingResponse)
+async def chat_bucket(request: ChatBucketRequest):
+    debug_log(f"Received chat_bucket request: {request}")
+    try:
+        # 1. Perform hybrid search on entire bucket (no file_ids specified)
+        search_results = await hybrid_search(request.user_id, HybridSearchRequest(
+            query_text=request.query,
+            match_count=4
+        ))
+        
+        # 2. Extract and sort top 4 results by similarity score
+        context_chunks = sorted(
+            search_results,
+            key=lambda x: x.get('similarity', 0),
+            reverse=True
+        )[:4]
+        
+        # 3. Combine context chunks into single context with chunk numbering and separation
+        formatted_chunks = []
+        for i, chunk in enumerate(context_chunks, 1):
+            chunk_text = chunk.get('text', '')
+            formatted_chunk = f"Here is CHUNK #{i}:\n{chunk_text}\n{'='*50}"  # Adding separator line
+            formatted_chunks.append(formatted_chunk)
+        
+        context = "\n\n".join(formatted_chunks)
+        
+        # 4. Create chat prompt
+        chat_prompt = f"Based on the following context, please answer the user's question. If the answer cannot be found in the context, say so.\n\nContext:\n{context}\n\nQuestion: {request.query}"
+
+        # 5. Stream response based on model_id
+        async def event_stream():
+            try:
+                generator = None
+                if request.model_id in [0, 1]:
+                    model_name = "gemini-1.5-flash-002" if request.model_id == 0 else "gemini-2.0-flash"
+                    generator = gemini_generator.generate_stream([chat_prompt], [""], [], model_name)
+                else:
+                    model_name = "deepseek-r1" if request.model_id == 2 else "deepseek-chat"
+                    generator = deepseek_generator.generate_stream([chat_prompt], [""], [], model_name)
+
+                async for chunk in generator:
+                    if chunk["finish_reason"] == "stop":
+                        break
+                    yield f"data: {json.dumps({'type': 'text-delta', 'content': chunk['message']})}\n\n"
+                
+                yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+
+            except Exception as e:
+                msg.fail(f"Streaming failed: {str(e)}")
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+    except Exception as e:
+        msg.fail(f"Error in chat_bucket: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
