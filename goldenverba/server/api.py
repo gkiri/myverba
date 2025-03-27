@@ -2873,7 +2873,7 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
 
             msg.info(f"GKIRI3:: hybrid_search_text_chunks whole Bucket PDF: {rpc_resp.data}")
         else:
-            rpc_resp = supabase.rpc("hybrid_search_text_chunks_customfiles", {
+            rpc_resp = supabase.rpc("hybrid_search_text_chunks_customfiles_v2", {
                 "p_user_id": user_id,
                 "p_file_ids": request.file_ids,
                 "p_query_text": request.query_text,
