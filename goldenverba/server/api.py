@@ -2864,7 +2864,7 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
         msg.info(f"GKIRI2:: hybrid_search request : {query_embedding}")
 
         if not request.file_ids:
-            rpc_resp = supabase.rpc("hybrid_search_text_chunks", {
+            rpc_resp = supabase.rpc("hybrid_search_text_chunks_v2", {
                 "p_user_id": user_id,
                 "p_query_text": request.query_text,
                 "p_query_embedding": query_embedding,
