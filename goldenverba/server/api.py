@@ -2521,6 +2521,8 @@ def load_and_split_markdown(markdown_content, chunk_size=8000, chunk_overlap=200
 
     return chunks
 
+
+
 import voyageai
 voyage_client = voyageai.Client(api_key=os.getenv("VOYAGEAI_API_KEY"))
 
@@ -2600,6 +2602,9 @@ async def upload_file_chunks(user_id: str, file_name: str, file_size:int , chunk
         if not file_insert_resp.data:
             raise HTTPException(status_code=400, detail="Failed to create file record.")
 
+        # Table: files , entry: id --> metadata of pdf file used for search 
+        # Note: Frontend uploads same pdf in to storage 
+        # (Table: user_files : external_file_id which is above files table : id returned by process_pdf_endtoend)
         file_id = file_insert_resp.data[0]["id"]  # The newly created file's UUID
         msg.info(f"Gkiri2:: upload_file_chunks: files inseretd file_id ={file_id}")
 
@@ -2703,7 +2708,7 @@ async def process_pdf_endtoend(user_id: str, pdf_file: UploadFile = File(...)) -
                 status_code=500,
                 content={
                     "status": "fail",
-                    "detail": "Failed to store processed document"
+                    "detail": "Failed to store or upload processed document"
                 }
             )
         else:
@@ -2961,7 +2966,8 @@ async def chat_custom_files(request: ChatCustomFilesRequest):
 
 @app.post("/api/chat_bucket", response_class=StreamingResponse)
 async def chat_bucket(request: ChatBucketRequest):
-    debug_log(f"Received chat_bucket request: {request}")
+    #debug_log(f"Received chat_bucket request: {request}")
+    msg.info(f"GKIRI1:: chat_bucket: {request}")
     try:
         # 1. Perform hybrid search on entire bucket (no file_ids specified)
         search_results = await hybrid_search(request.user_id, HybridSearchRequest(
@@ -2969,6 +2975,7 @@ async def chat_bucket(request: ChatBucketRequest):
             match_count=4
         ))
         
+        msg.info(f"GKIRI2::chat_bucket  hybrid_search search_results: {search_results}")
         # 2. Extract and sort top 4 results by similarity score
         context_chunks = sorted(
             search_results,
