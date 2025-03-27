@@ -2857,7 +2857,11 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
     This also calls generate_embedding() on the query_text.
     """
     try:
+        msg.info(f"GKIRI1:: hybrid_search user_id : {user_id}")
+        msg.info(f"GKIRI1:: hybrid_search request : {request}")
+        
         query_embedding = generate_embedding(request.query_text)
+        msg.info(f"GKIRI2:: hybrid_search request : {query_embedding}")
 
         if not request.file_ids:
             rpc_resp = supabase.rpc("hybrid_search_text_chunks", {
@@ -2867,7 +2871,7 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
                 "p_match_count": request.match_count
             }).execute()
 
-            msg.info(f"GKIRI:: lexical_search whole Bucket PDF: {rpc_resp.data}")
+            msg.info(f"GKIRI3:: hybrid_search_text_chunks whole Bucket PDF: {rpc_resp.data}")
         else:
             rpc_resp = supabase.rpc("hybrid_search_text_chunks_customfiles", {
                 "p_user_id": user_id,
@@ -2877,7 +2881,7 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
                 "p_match_count": request.match_count
             }).execute()
 
-            msg.info(f"GKIRI:: lexical_search few file IDs PDF: {rpc_resp.data}")
+            msg.info(f"GKIRI3:: hybrid_search_text_chunks_customfiles few file IDs PDF: {rpc_resp.data}")
 
         if 'error' in rpc_resp:
             raise HTTPException(status_code=400, detail=rpc_resp['error'].get('message', 'RPC Error'))
@@ -2885,6 +2889,7 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
         return rpc_resp.data
 
     except Exception as e:
+        msg.fail(f"GKIRI4 Error in hybrid_search: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
