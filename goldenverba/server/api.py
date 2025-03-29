@@ -2893,6 +2893,60 @@ async def hybrid_search(user_id: str ,request: HybridSearchRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/search/hybrid_shared")
+async def hybrid_shared_search(user_id: str, request: HybridSearchRequest):
+    """
+    Perform a hybrid search on shared text chunks.
+
+    This endpoint searches all shared text chunks in the shared_text_chunks table using a combination
+    of full-text and semantic search. It leverages the hybrid_search_shared_text_chunks_v2 SQL function
+    and does not require a user ID or specific file IDs, as the content is shared across authenticated users.
+
+    Parameters:
+    - query_text: The text to search for.
+    - match_count: The number of results to return (default: 10).
+    - file_ids: Optional list of file IDs (unused in this endpoint).
+
+    Returns:
+    - A list of dictionaries containing: id, text, text_similarity, vector_similarity, combined_similarity.
+
+    Raises:
+    - HTTPException: 400 if the RPC call returns an error, 500 for other exceptions.
+    """
+    try:
+        # Configure logging similar to msg.info in the reference code
+        msg.info(f"GKIRI1:: hybrid_shared_search user_id : {user_id}")
+        msg.info(f"GKIRI1:: hybrid_shared_search request : {request}")
+
+        # Generate a 1536-dimensional embedding for the query text
+        query_embedding = generate_embedding(request.query_text)
+        msg.info(f"GKIRI2:: hybrid_search request : {query_embedding}")
+
+        # Call the hybrid_search_shared_text_chunks_v2 SQL function via Supabase RPC
+        rpc_resp = supabase.rpc("hybrid_search_shared_text_chunks_v2", {
+            "p_query_text": request.query_text,
+            "p_query_embedding": query_embedding,
+            "p_match_count": request.match_count,
+            "p_full_text_weight": 1.0,  # Default weight for full-text search
+            "p_semantic_weight": 1.0,   # Default weight for semantic search
+            "p_rrf_k": 50               # Default RRF k value
+        }).execute()
+
+        msg.info(f"GKIRI3:: hybrid_search_shared_text_chunks_v2 few file IDs PDF: {rpc_resp.data}")
+
+        # Check for errors in the RPC response
+        if hasattr(rpc_resp, 'error') and rpc_resp.error:
+            raise HTTPException(
+                status_code=400,
+                detail=rpc_resp.error.get('message', 'RPC Error')
+            )
+        # Return the search results
+        return rpc_resp.data
+
+    except Exception as e:
+        msg.fail(f"GKIRI4 Error in hybrid_shared_search: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 ###############################################################################
 # Chat with Files and Buckets
 ###############################################################################
@@ -3026,4 +3080,65 @@ async def chat_bucket(request: ChatBucketRequest):
 
     except Exception as e:
         msg.fail(f"Error in chat_bucket: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+#public sttaic books bucket shared for all users    
+@app.post("/api/chat_shared", response_class=StreamingResponse)
+async def chat_shared(request: ChatBucketRequest):
+    #debug_log(f"Received chat_bucket request: {request}")
+    msg.info(f"GKIRI1:: chat_shared: {request}")
+    try:
+        # 1. Perform hybrid search on entire bucket (no file_ids specified)
+        search_results = await hybrid_shared(request.user_id, HybridSearchRequest(
+            query_text=request.query,
+            match_count=4
+        ))
+        
+        msg.info(f"GKIRI2::chat_shared  hybrid_shared search_results: {search_results}")
+        # 2. Extract and sort top 4 results by similarity score
+        context_chunks = sorted(
+            search_results,
+            key=lambda x: x.get('similarity', 0),
+            reverse=True
+        )[:4]
+        
+        # 3. Combine context chunks into single context with chunk numbering and separation
+        formatted_chunks = []
+        for i, chunk in enumerate(context_chunks, 1):
+            chunk_text = chunk.get('text', '')
+            formatted_chunk = f"Here is CHUNK #{i}:\n{chunk_text}\n{'='*50}"  # Adding separator line
+            formatted_chunks.append(formatted_chunk)
+        
+        context = "\n\n".join(formatted_chunks)
+        
+        # 4. Create chat prompt
+        chat_prompt = f"Based on the following context, please answer the user's question. If the answer cannot be found in the context, say so.\n\nContext:\n{context}\n\nQuestion: {request.query}"
+
+        # 5. Stream response based on model_id
+        async def event_stream():
+            try:
+                generator = None
+                if request.model_id in [0, 1]:
+                    model_name = "gemini-1.5-flash-002" if request.model_id == 0 else "gemini-2.0-flash"
+                    generator = gemini_generator.generate_stream([chat_prompt], [""], [], model_name)
+                else:
+                    model_name = "deepseek-r1" if request.model_id == 2 else "deepseek-chat"
+                    generator = deepseek_generator.generate_stream([chat_prompt], [""], [], model_name)
+
+                async for chunk in generator:
+                    if chunk["finish_reason"] == "stop":
+                        break
+                    yield f"data: {json.dumps({'type': 'text-delta', 'content': chunk['message']})}\n\n"
+                
+                yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+
+            except Exception as e:
+                msg.fail(f"Streaming failed: {str(e)}")
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+    except Exception as e:
+        msg.fail(f"Error in chat_shared: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
