@@ -2935,11 +2935,9 @@ async def hybrid_shared_search(user_id: str, request: HybridSearchRequest):
         msg.info(f"GKIRI3:: hybrid_search_shared_text_chunks_v2 few file IDs PDF: {rpc_resp.data}")
 
         # Check for errors in the RPC response
-        if hasattr(rpc_resp, 'error') and rpc_resp.error:
-            raise HTTPException(
-                status_code=400,
-                detail=rpc_resp.error.get('message', 'RPC Error')
-            )
+        if 'error' in rpc_resp:
+            raise HTTPException(status_code=400, detail=rpc_resp['error'].get('message', 'RPC Error'))
+        
         # Return the search results
         return rpc_resp.data
 
