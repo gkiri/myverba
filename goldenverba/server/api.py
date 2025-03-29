@@ -3090,12 +3090,12 @@ async def chat_shared(request: ChatBucketRequest):
     msg.info(f"GKIRI1:: chat_shared: {request}")
     try:
         # 1. Perform hybrid search on entire bucket (no file_ids specified)
-        search_results = await hybrid_shared(request.user_id, HybridSearchRequest(
+        search_results = await hybrid_shared_search(request.user_id, HybridSearchRequest(
             query_text=request.query,
             match_count=4
         ))
         
-        msg.info(f"GKIRI2::chat_shared  hybrid_shared search_results: {search_results}")
+        msg.info(f"GKIRI2::chat_shared  hybrid_shared_search search_results: {search_results}")
         # 2. Extract and sort top 4 results by similarity score
         context_chunks = sorted(
             search_results,
