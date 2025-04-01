@@ -3195,32 +3195,41 @@ import ast
 
 def parse_numbers(input_string):
     """
-    Parse a string representing a list of five integers, e.g., '[0, 1, 3, 5, 8]'.
+    Parse a string to extract a list of integers.
+    Handles various input formats including:
+    - '[0, 1, 3, 5, 8]'
+    - '0, 1, 3, 5, 8'
+    - '0 1 3 5 8'
+    - Text containing numbers like 'The indices are 0, 1, 3, 5, 8'
     
     Args:
         input_string (str): The input string to parse.
         
     Returns:
-        list: A list of five integers.
+        list: A list of integers.
         
     Raises:
-        ValueError: If the input is not a string representing a list of exactly five integers.
+        ValueError: If no valid integers can be extracted.
     """
     try:
-        # Safely evaluate the string as a Python literal
-        parsed = ast.literal_eval(input_string)
-        
-        # Validate that the result is a list of exactly five integers
-        if (isinstance(parsed, list) and 
-            len(parsed) == 5 and 
-            all(isinstance(x, int) for x in parsed)):
-            return parsed
-        else:
-            raise ValueError("Input must be a list of exactly five integers.")
+        # First try direct ast.literal_eval for standard list format
+        try:
+            parsed = ast.literal_eval(input_string)
+            if isinstance(parsed, list) and all(isinstance(x, int) for x in parsed):
+                return parsed
+        except (ValueError, SyntaxError):
+            pass
+
+        # If that fails, try to extract numbers using regex
+        import re
+        numbers = re.findall(r'\d+', input_string)
+        if numbers:
+            return [int(n) for n in numbers]
             
-    except (ValueError, SyntaxError):
-        # Handle invalid syntax or value errors from ast.literal_eval
-        raise ValueError("Invalid input format. Expected a string like '[0, 1, 3, 5, 8]'.")
+        raise ValueError("No valid integers found in input string.")
+            
+    except Exception as e:
+        raise ValueError(f"Invalid input format. Expected a string containing numbers. Error: {str(e)}")
 
 
 async def filter_top_search_results_with_gemini(
