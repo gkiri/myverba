@@ -3423,7 +3423,7 @@ async def process_urls_to_markdown(urls: List[str]) -> Dict[str, Optional[str]]:
 @app.post("/api/chat_search", response_class=StreamingResponse)
 async def chat_search(request: ChatBucketRequest):
     #debug_log(f"Received chat_bucket request: {request}")
-    msg.info(f"GKIRI1:: chat_shared: {request}")
+    msg.info(f"GKIRI1:: chat_search: {request}")
     try:
         #1 web search
         web_search_results = await serper_search_async(request.query, num_results=20, location="India")
@@ -3526,7 +3526,7 @@ async def chat_search(request: ChatBucketRequest):
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     except Exception as e:
-        msg.fail(f"Error in chat_shared: {str(e)}")
+        msg.fail(f"Error in chat_search: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
