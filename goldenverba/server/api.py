@@ -55,7 +55,7 @@ from goldenverba.server.api_helpers import (
 )
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
-from typing import List,AsyncGenerator
+from typing import List,AsyncGenerator, Dict, Optional
 import aiofiles
 from goldenverba.server.api_helpers import split_pdf_into_subpdfs
 
@@ -3140,3 +3140,393 @@ async def chat_shared(request: ChatBucketRequest):
     except Exception as e:
         msg.fail(f"Error in chat_shared: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+############################web search section
+
+
+import aiohttp
+
+#SERPER_API_KEY = "YOUR_API_KEY_HERE"
+
+async def serper_search_async(query, num_results=20, location="India"):
+    """
+    Performs a search using the Serper.dev API asynchronously and returns the JSON response.
+
+    Args:
+        query (str): The search query string.
+        num_results (int): The number of search results to retrieve (default: 20).
+        location (str): The location for the search (default: "India").
+
+    Returns:
+        str: A string containing the JSON response from the Serper.dev API.
+        None: Returns None if the request fails. Also prints an error message in case of a failed request.
+    """
+    url = "https://google.serper.dev/search"
+    payload = json.dumps({
+        "q": query,
+        "num": num_results,
+        "location": location,
+    })
+    headers = {
+        'X-API-KEY': SERPER_API_KEY,
+        'Content-Type': 'application/json'
+    }
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, data=payload) as response:
+                # If the response status is not 200, raise an exception
+                if response.status != 200:
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=response.history,
+                        status=response.status,
+                        message=f"Request failed with status {response.status}",
+                    )
+                return await response.text()
+    except aiohttp.ClientError as e:
+        # Print to stderr in case of error
+        import sys
+        print(f"Error during Serper API request: {e}", file=sys.stderr)
+        return None
+
+
+import ast
+
+def parse_numbers(input_string):
+    """
+    Parse a string representing a list of five integers, e.g., '[0, 1, 3, 5, 8]'.
+    
+    Args:
+        input_string (str): The input string to parse.
+        
+    Returns:
+        list: A list of five integers.
+        
+    Raises:
+        ValueError: If the input is not a string representing a list of exactly five integers.
+    """
+    try:
+        # Safely evaluate the string as a Python literal
+        parsed = ast.literal_eval(input_string)
+        
+        # Validate that the result is a list of exactly five integers
+        if (isinstance(parsed, list) and 
+            len(parsed) == 5 and 
+            all(isinstance(x, int) for x in parsed)):
+            return parsed
+        else:
+            raise ValueError("Input must be a list of exactly five integers.")
+            
+    except (ValueError, SyntaxError):
+        # Handle invalid syntax or value errors from ast.literal_eval
+        raise ValueError("Invalid input format. Expected a string like '[0, 1, 3, 5, 8]'.")
+
+
+async def filter_top_search_results_with_gemini(
+    search_data: dict,
+    top_n: int = 5,
+    model_id: int = 1,
+    ) -> List:
+    
+    # Validate input
+    if not isinstance(search_data, dict) or 'searchParameters' not in search_data or 'organic' not in search_data:
+        msg.warn("Invalid search_data format")
+        return []
+        
+    query = search_data['searchParameters']['q']
+    organic_results = search_data['organic']
+
+    # --- Construct the Prompt for Gemini ---
+    filter_prompt = f"""
+        Task: You need to help another UPSC AI assistant by analysing and selecting top "{top_n}" search results that are most relevant to answer the user query very correctly, accurately and best way .
+        Also given in order of  first one being most relevant and then next and so on .Think carefully and analyse title, url and snippet to make decision and give just indexes in array.
+        Final answer should be array of indexes separated by comma and nothing else.
+
+        Sample output format = [0,5,8,11,15]
+
+        Original Search Query: "{query}"
+
+        Here are Search Results:
+        {organic_results}
+        """
+    
+    # Generate response based on model_id
+    try:
+        if model_id == 0:
+            filter_results = await generate_gemini_response(filter_prompt, "", "gemini-1.5-flash-002")
+        elif model_id == 1:
+            filter_results = await generate_gemini_response(filter_prompt, "", "gemini-2.0-flash")
+        elif model_id == 2:
+            filter_results = await generate_deepseek_response(filter_prompt, "", "deepseek-r1")
+        elif model_id == 3:
+            filter_results = await generate_deepseek_response(filter_prompt, "", "deepseek-chat")
+        else:
+            filter_results = await generate_gemini_response(filter_prompt, "", "gemini-1.5-flash-002")
+
+        # Parse the response to get the list of indices
+        indices = parse_numbers(filter_results)
+        # Return only the top N results
+        return indices[:top_n]
+    except Exception as e:
+        msg.warn(f"Error in filter_top_search_results_with_gemini: {str(e)}")
+        return []
+
+
+
+import trafilatura
+import httpx # Async HTTP client
+import logging
+from typing import Optional # Use Optional for older Python versions if needed
+
+# Configure basic logging (important for production)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Configure a reusable httpx client (good practice for connection pooling)
+# Set appropriate timeouts for production!
+# Adjust limits based on expected load and server capabilities
+# keepalive_expiry: How long to keep connections open after last use.
+# max_keepalive_connections: Max idle connections to keep per host. None = no limit.
+# max_connections: Max total connections. None = no limit. Adjust based on ulimit!
+limits = httpx.Limits(max_keepalive_connections=20, max_connections=100, keepalive_expiry=15)
+timeout_config = httpx.Timeout(15.0, connect=5.0) # 15s total, 5s connect timeout
+
+# Create the client outside the function if you plan to reuse it across multiple calls
+# in your API. If creating per request, use 'async with httpx.AsyncClient(...)' inside.
+# For this example function structure, creating inside is simpler to show.
+# Consider dependency injection in your API framework (e.g., FastAPI).
+
+async def extract_markdown_from_url_async(
+    url: str,
+    client: httpx.AsyncClient # Allow passing a pre-configured client
+) -> Optional[str]:
+    """
+    Asynchronously fetches a webpage using httpx and extracts its main content
+    as Markdown using Trafilatura, running extraction in a thread pool.
+
+    Designed for use in high-concurrency environments like async web APIs.
+
+    Args:
+        url (str): The URL of the webpage to process.
+        client (httpx.AsyncClient): An active httpx AsyncClient instance.
+
+    Returns:
+        Optional[str]: The extracted content in Markdown format if successful,
+                       otherwise None.
+    """
+    logging.info(f"Attempting to fetch URL asynchronously: {url}")
+    downloaded_content: Optional[bytes] = None
+
+    try:
+        # --- Asynchronous HTTP GET Request ---
+        response = await client.get(url, follow_redirects=True)
+        response.raise_for_status() # Raise HTTPStatusError for 4xx/5xx responses
+        downloaded_content = response.content # Get raw bytes, trafilatura handles encoding
+        logging.info(f"Successfully downloaded content ({len(downloaded_content)} bytes) from {url}")
+
+    except httpx.TimeoutException:
+        logging.warning(f"Request timed out for {url}")
+        return None
+    except httpx.RequestError as exc:
+        # Handles connection errors, invalid URLs, resolution errors, etc.
+        logging.warning(f"HTTP request failed for {url}: {exc}")
+        return None
+    except Exception as e:
+        # Catch potential unexpected errors during download/response handling
+        logging.error(f"Unexpected error during download phase for {url}: {e}", exc_info=True)
+        return None
+
+    if not downloaded_content:
+        # Should be caught by exceptions above, but belt-and-suspenders
+        logging.warning(f"Download succeeded but content was empty for {url}.")
+        return None
+
+    try:
+        # --- Run Blocking Trafilatura Extraction in Thread Pool ---
+        # This prevents blocking the main asyncio event loop
+        logging.debug(f"Starting Trafilatura extraction for {url} in thread pool.")
+        markdown_output = await asyncio.to_thread(
+            trafilatura.extract, # The blocking function to call
+            downloaded_content,  # Argument for the function
+            output_format='markdown', # Keyword argument
+            include_comments=False, # Example: other trafilatura options
+            include_tables=True
+        )
+        logging.debug(f"Finished Trafilatura extraction for {url}.")
+
+        if not markdown_output:
+            logging.warning(f"Content downloaded, but Trafilatura couldn't extract main content from {url}.")
+            return None
+
+        logging.info(f"Successfully extracted Markdown content from {url}.")
+        return markdown_output
+
+    except Exception as e:
+        # Catch potential errors *within* trafilatura.extract
+        logging.error(f"An unexpected error occurred during Trafilatura extraction for {url}: {e}", exc_info=True)
+        return None
+
+
+
+async def process_urls_to_markdown(urls: List[str]) -> Dict[str, Optional[str]]:
+    """
+    Process a list of URLs and extract markdown content from each one.
+    
+    Args:
+        urls (List[str]): List of URLs to process
+        max_concurrent (int): Maximum number of concurrent requests (default: 5)
+        
+    Returns:
+        Dict[str, Optional[str]]: Dictionary mapping URLs to their extracted markdown content
+    """
+    results = {}
+    
+    # Configure httpx client with reasonable limits
+    limits = httpx.Limits(max_keepalive_connections=20, max_connections=100, keepalive_expiry=15)
+    timeout_config = httpx.Timeout(15.0, connect=5.0)  # 30s total timeout, 10s connect timeout
+    
+    try:
+        async with httpx.AsyncClient(limits=limits, timeout=timeout_config, http2=True) as client:
+            # Process URLs in chunks to control concurrency
+            for i in range(0, len(urls), max_concurrent):
+                chunk = urls[i:i + max_concurrent]
+                tasks = [extract_markdown_from_url_async(url, client) for url in chunk]
+                
+                # Gather results for this chunk
+                chunk_results = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                # Process results
+                for url, result in zip(chunk, chunk_results):
+                    if isinstance(result, Exception):
+                        logging.error(f"Failed to process {url}: {str(result)}")
+                        results[url] = None
+                    else:
+                        results[url] = result
+                        
+                # Small delay between chunks to avoid overwhelming servers
+                if i + max_concurrent < len(urls):
+                    await asyncio.sleep(1)
+                    
+    except Exception as e:
+        logging.error(f"Error processing URLs: {str(e)}", exc_info=True)
+        # Mark remaining URLs as failed
+        for url in urls:
+            if url not in results:
+                results[url] = None
+                
+    return results
+
+
+
+
+#public static books bucket shared for all users web search  
+@app.post("/api/chat_search", response_class=StreamingResponse)
+async def chat_search(request: ChatBucketRequest):
+    #debug_log(f"Received chat_bucket request: {request}")
+    msg.info(f"GKIRI1:: chat_shared: {request}")
+    try:
+        #1 web search
+        web_search_results = await serper_search_async(request.query, num_results=20, location="India"):
+
+
+        search_data = json.loads(result)
+
+        #1.1 filter top n relvant search results
+        top_n=10
+        final_web_search_results=filter_top_search_results_with_gemini(search_data,top_n,1)
+
+        url_list=[]
+        for index in range(len(final_web_search_results)):
+            url_list.append(search_data['organic'][index]['link'])
+
+        #2 call process_urls_to_markdown
+        web_search_markdown_results = await process_urls_to_markdown(url_list)
+
+        #3 web_search_markdown_results
+        # Format web search markdown results with URL attribution
+        formatted_web_content = ""
+        for idx, (url, markdown_content) in enumerate(web_search_markdown_results.items(), 1):
+            if markdown_content:  # Only add if content exists
+                formatted_web_content += f"Here is web source #{idx} of url: '{url}'\n\n{markdown_content}\n\n"
+
+        
+        msg.info(f"GKIRI2::chat_search  formatted_web_content search_results: {formatted_web_content}")
+
+        # 4. Perform hybrid search on entire bucket (no file_ids specified)
+        search_results = await hybrid_shared_search(request.user_id, HybridSearchRequest(
+            query_text=request.query,
+            match_count=4
+        ))
+        
+        msg.info(f"GKIRI2::chat_search  hybrid_shared_search search_results: {search_results}")
+        # 5. Extract and sort top 4 results by similarity score
+        context_chunks = sorted(
+            search_results,
+            key=lambda x: x.get('similarity', 0),
+            reverse=True
+        )[:4]
+        
+        # 6. Combine context chunks into single context with chunk numbering and separation
+        formatted_chunks = []
+        for i, chunk in enumerate(context_chunks, 1):
+            chunk_text = chunk.get('text', '')
+            doc_name = chunk.get('doc_name', 'Unknown Document')
+            formatted_chunk = f"Document: {doc_name}\nContent:\n{chunk_text}\n{'='*50}"  # Adding separator line
+            formatted_chunks.append(formatted_chunk)
+        
+        context = "\n\n".join(formatted_chunks)
+        
+        # 7. Create enhanced chat prompt with clear instructions for source attribution
+        chat_prompt = f"""You are a helpful UPSC AI assistant that provides well-researched answers based on multiple sources. 
+        Please analyze the following information carefully and provide a comprehensive answer:
+
+        CONTEXT FROM KNOWLEDGE BASE:
+        {context}
+
+        WEB-BASED CONTENT:
+        {formatted_web_content}
+
+        Instructions for your response:
+        1. Synthesize information from both knowledge base and web sources
+        2. For each key point or claim, cite the specific source:
+        - For knowledge base content: Cite the Document name
+        - For web content: Cite the web source URL
+        3. If information appears in multiple sources, acknowledge all relevant sources
+        4. If sources provide conflicting information, highlight the differences
+        5. If the answer cannot be found in the provided context, clearly state this
+        6. Structure your response in a clear, logical manner with proper paragraphs
+
+        Question: {request.query}
+
+        Please provide a detailed answer with proper citations.
+        """
+
+        # 8. Stream response based on model_id
+        async def event_stream():
+            try:
+                generator = None
+                if request.model_id in [0, 1]:
+                    model_name = "gemini-1.5-flash-002" if request.model_id == 0 else "gemini-2.0-flash"
+                    generator = gemini_generator.generate_stream([chat_prompt], [""], [], model_name)
+                else:
+                    model_name = "deepseek-r1" if request.model_id == 2 else "deepseek-chat"
+                    generator = deepseek_generator.generate_stream([chat_prompt], [""], [], model_name)
+
+                async for chunk in generator:
+                    if chunk["finish_reason"] == "stop":
+                        break
+                    yield f"data: {json.dumps({'type': 'text-delta', 'content': chunk['message']})}\n\n"
+                
+                yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+
+            except Exception as e:
+                msg.fail(f"Streaming failed: {str(e)}")
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+    except Exception as e:
+        msg.fail(f"Error in chat_shared: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+

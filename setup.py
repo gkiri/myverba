@@ -45,7 +45,10 @@ setup(
         "aiofiles==23.2.1",
         "PyPDF2==3.0.1",
         "voyageai==0.3.2",
-        "langchain-text-splitters==0.3.7"
+        "langchain-text-splitters==0.3.7",
+        "aiohttp==3.11.14",
+        "trafilatura==2.0.0",
+        "httpx==0.28.1"
     ],
     extras_require={
         "dev": ["pytest", "wheel", "twine", "black>=23.7.0", "setuptools"],
