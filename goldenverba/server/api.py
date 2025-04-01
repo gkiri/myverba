@@ -3433,7 +3433,7 @@ async def chat_search(request: ChatBucketRequest):
 
         #1.1 filter top n relvant search results
         top_n=10
-        final_web_search_results=filter_top_search_results_with_gemini(search_data,top_n,1)
+        final_web_search_results=await filter_top_search_results_with_gemini(search_data,top_n,1)
 
         url_list=[]
         for index in range(len(final_web_search_results)):
