@@ -3368,7 +3368,7 @@ async def extract_markdown_from_url_async(
 
 
 
-async def process_urls_to_markdown(urls: List[str]) -> Dict[str, Optional[str]]:
+async def process_urls_to_markdown(urls: List[str], max_concurrent: int = 10) -> Dict[str, Optional[str]]:
     """
     Process a list of URLs and extract markdown content from each one.
     
