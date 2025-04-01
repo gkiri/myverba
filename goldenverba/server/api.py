@@ -3433,7 +3433,7 @@ async def chat_search(request: ChatBucketRequest):
 
         #1.1 filter top n relvant search results
         top_n=10
-        final_web_search_results=await filter_top_search_results_with_gemini(search_data,top_n,1)
+        final_web_search_results = await filter_top_search_results_with_gemini(search_data,top_n,1)
 
         url_list=[]
         for index in range(len(final_web_search_results)):
@@ -3527,6 +3527,91 @@ async def chat_search(request: ChatBucketRequest):
 
     except Exception as e:
         msg.fail(f"Error in chat_search: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+#public static books bucket shared for all users web search  
+@app.post("/api/search", response_class=StreamingResponse)
+async def search(request: ChatBucketRequest):
+    #debug_log(f"Received chat_bucket request: {request}")
+    msg.info(f"GKIRI1:: search: {request}")
+    try:
+        #1 web search
+        web_search_results = await serper_search_async(request.query, num_results=20, location="India")
+
+
+        search_data = json.loads(web_search_results)
+
+        #1.1 filter top n relvant search results
+        top_n=10
+        final_web_search_results = await filter_top_search_results_with_gemini(search_data,top_n,1)
+
+        url_list=[]
+        for index in range(len(final_web_search_results)):
+            url_list.append(search_data['organic'][index]['link'])
+
+        #2 call process_urls_to_markdown
+        web_search_markdown_results = await process_urls_to_markdown(url_list)
+
+        #3 web_search_markdown_results
+        # Format web search markdown results with URL attribution
+        formatted_web_content = ""
+        for idx, (url, markdown_content) in enumerate(web_search_markdown_results.items(), 1):
+            if markdown_content:  # Only add if content exists
+                formatted_web_content += f"Here is web source #{idx} of url: '{url}'\n\n{markdown_content}\n\n"
+
+        
+        msg.info(f"GKIRI2::search  formatted_web_content search_results: {formatted_web_content}")
+
+       
+        # 7. Create enhanced chat prompt with clear instructions for source attribution
+        chat_prompt = f"""You are a helpful UPSC AI assistant that provides well-researched answers based on multiple sources in the internet. 
+        Please analyze the following information carefully and provide a comprehensive answer:
+
+        WEB-BASED CONTENT:
+        {formatted_web_content}
+
+        Instructions for your response:
+        1. Synthesize information from all the web sources
+        2. For each key point or claim, cite the specific source:
+        - For web content: Cite the web source URL
+        3. If information appears in multiple sources, acknowledge all relevant sources
+        4. If sources provide conflicting information, highlight the differences
+        5. If the answer cannot be found in the provided context, clearly state this
+        6. Structure your response in a clear, logical manner with proper paragraphs
+
+        Question: {request.query}
+
+        Please provide a detailed answer with proper citations.
+        """
+
+        # 8. Stream response based on model_id
+        async def event_stream():
+            try:
+                generator = None
+                if request.model_id in [0, 1]:
+                    model_name = "gemini-1.5-flash-002" if request.model_id == 0 else "gemini-2.0-flash"
+                    generator = gemini_generator.generate_stream([chat_prompt], [""], [], model_name)
+                else:
+                    model_name = "deepseek-r1" if request.model_id == 2 else "deepseek-chat"
+                    generator = deepseek_generator.generate_stream([chat_prompt], [""], [], model_name)
+
+                async for chunk in generator:
+                    if chunk["finish_reason"] == "stop":
+                        break
+                    yield f"data: {json.dumps({'type': 'text-delta', 'content': chunk['message']})}\n\n"
+                
+                yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+
+            except Exception as e:
+                msg.fail(f"Streaming failed: {str(e)}")
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+    except Exception as e:
+        msg.fail(f"Error in search: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
