@@ -3486,8 +3486,7 @@ async def chat_search(request: ChatBucketRequest):
         context = "\n\n".join(formatted_chunks)
         
         # 7. Create enhanced chat prompt with clear instructions for source attribution
-        chat_prompt = f"""You are a helpful UPSC AI assistant that provides well-researched answers based on multiple sources. 
-        Please analyze the following information carefully and provide a comprehensive answer:
+        chat_prompt = f"""You are a helpful UPSC AI assistant that provides well-researched, comprehensive answers based on multiple sources.
 
         CONTEXT FROM KNOWLEDGE BASE:
         {context}
@@ -3496,19 +3495,41 @@ async def chat_search(request: ChatBucketRequest):
         {formatted_web_content}
 
         Instructions for your response:
-        1. Synthesize information from both knowledge base and web sources
-        2. For each key point or claim, cite the specific source:
-        - For knowledge base content: Cite the Document name
-        - For web content: Cite the web source URL
-        3. If information appears in multiple sources, acknowledge all relevant sources
-        4. If sources provide conflicting information, highlight the differences
-        5. If the answer cannot be found in the provided context, clearly state this
-        6. Structure your response in a clear, logical manner with proper paragraphs
+        1. Provide a detailed, well-structured answer to the question
+        2. Use numbered citations in square brackets [1], [2], etc. for ALL references
+        3. After your main answer, include a numbered reference list with full source information
+        4. Format your citations EXACTLY as follows:
+
+        For knowledge base sources:
+        [1]: Document Title | Knowledge Base
+
+        For web sources:
+        [2]: Title of Web Page | https://example.com/full-url
 
         Question: {request.query}
 
-        Please provide a detailed answer with proper citations.
+        IMPORTANT FORMATTING REQUIREMENTS:
+        - Use numbered citations [n] inline within your text whenever you reference information from a source
+        - Place citations immediately after the relevant statement
+        - Include a complete numbered list of all references at the end of your response
+        - Maintain consistent citation numbering throughout your answer
+        - Do not use footnotes, parenthetical citations, or any other citation style
+        - Any statement of fact MUST have at least one citation
+
+        Your response structure should follow this format:
+        1. Detailed answer with inline numbered citations [n]
+        2. Line break
+        3. "References:" heading
+        4. Numbered list of all sources in the format specified above
+
+        Example reference format:
+        References:
+        [1]: NCERT History Textbook | Knowledge Base
+        [2]: Evolution of Administration in India | https://example.com/indian-administration
+
+        If you cannot find a reliable answer from the provided sources, clearly state this and suggest what information would be needed.
         """
+
 
         # 8. Stream response based on model_id
         async def event_stream():
