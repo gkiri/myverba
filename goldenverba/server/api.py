@@ -3426,7 +3426,7 @@ async def chat_search(request: ChatBucketRequest):
     msg.info(f"GKIRI1:: chat_shared: {request}")
     try:
         #1 web search
-        web_search_results = await serper_search_async(request.query, num_results=20, location="India"):
+        web_search_results = await serper_search_async(request.query, num_results=20, location="India")
 
 
         search_data = json.loads(result)
