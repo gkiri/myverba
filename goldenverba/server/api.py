@@ -3429,7 +3429,7 @@ async def chat_search(request: ChatBucketRequest):
         web_search_results = await serper_search_async(request.query, num_results=20, location="India")
 
 
-        search_data = json.loads(result)
+        search_data = json.loads(web_search_results)
 
         #1.1 filter top n relvant search results
         top_n=10
