@@ -48,7 +48,7 @@ setup(
         "langchain-text-splitters==0.3.7",
         "aiohttp==3.11.14",
         "trafilatura==2.0.0",
-        "httpx==0.28.1"
+        "httpx==0.27.0"
     ],
     extras_require={
         "dev": ["pytest", "wheel", "twine", "black>=23.7.0", "setuptools"],
