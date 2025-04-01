@@ -3146,7 +3146,7 @@ async def chat_shared(request: ChatBucketRequest):
 
 import aiohttp
 
-#SERPER_API_KEY = "YOUR_API_KEY_HERE"
+SERPER_API_KEY=os.getenv("SERPER_API_KEY")
 
 async def serper_search_async(query, num_results=20, location="India"):
     """
