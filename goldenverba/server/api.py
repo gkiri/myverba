@@ -3696,6 +3696,8 @@ async def chat_search(request: ChatBucketRequest):
 
         CITATION FORMAT:
         - Inline citations: Use unique tokens in the form ((cite:1)), ((cite:2)), etc., placed immediately after the relevant paragraph or statement.
+          If multiple sources are being cited for a single point, combine them on one line using the format: ((cite:2), (cite:4)).
+          
         - Reference List: Include at the end of your response under the heading "## References." For each citation, use the format:
         ((ref:1)): Document Title | Source Description or URL
 
