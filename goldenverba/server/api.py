@@ -3704,9 +3704,7 @@ async def chat_search(request: ChatBucketRequest):
           If multiple sources are being cited for a single point, combine them on one line using the format: ((cite:2), (cite:4)).
 
         - Reference List: Include at the end of your response under the heading "## References." For each citation, use the format:
-        ((ref:1)): [Title or short description] | [URL or “Knowledge Base”]
-        ((ref:2)): [Title or short description] | [URL or “Knowledge Base”]
-
+        ((ref:<number>)): <Title or short description> | <URL or "Knowledge Base">
 
         Question: {request.query}
 
