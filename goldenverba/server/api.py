@@ -3694,6 +3694,7 @@ async def chat_search(request: ChatBucketRequest):
         4. Provide inline citations sparingly and effectively—only cite the single most relevant source if multiple sources convey similar points.
         5. Prefer paragraph-level citations rather than frequent sentence-level citations to maintain readability.
 
+        **ATTENTION**
         CITATION FORMAT:
         - Please strictly follow below syntax and citation format as its very critical for the project
         - Inline citations: Use unique tokens in the form ((cite:1)), ((cite:2)), etc., placed immediately after the relevant paragraph or statement.
@@ -3730,6 +3731,7 @@ async def chat_search(request: ChatBucketRequest):
         ((ref:1)): NCERT History Textbook | Knowledge Base  
         ((ref:2)): Evolution of Administration in India | https://example.com/indian-administration
 
+        please pay careful attention and think and reflect and finally generate  high quality answers. 
         If sufficient information isn't available from the provided sources, clearly state this and suggest what additional information would be helpful for a comprehensive answer.""" 
 
         # 8. Stream response based on model_id
