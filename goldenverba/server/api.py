@@ -3441,7 +3441,7 @@ async def chat_search(request: ChatBucketRequest):
         search_data = json.loads(web_search_results)
 
         #1.1 filter top n relvant search results
-        top_n=10
+        top_n=4
         final_web_search_results = await filter_top_search_results_with_gemini(search_data,top_n,1)
 
         url_list=[]
