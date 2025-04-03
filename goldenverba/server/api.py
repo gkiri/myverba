@@ -3697,10 +3697,15 @@ async def chat_search(request: ChatBucketRequest):
         CITATION FORMAT:
         - Please strictly follow below syntax and citation format as its very critical for the project
         - Inline citations: Use unique tokens in the form ((cite:1)), ((cite:2)), etc., placed immediately after the relevant paragraph or statement.
+          Always use numeric references in ascending order, starting from 1, like ((cite:1)), ((cite:2)).
+          Never use labels like ((cite:web2)), ((cite:kb1)), or anything other than numeric tokens.
+          If you see references in the provided context labeled “web2” or “web4,” map them to numeric references in ascending order. For example, if “web4” is your second source, you must cite it as ((cite:2)).
           If multiple sources are being cited for a single point, combine them on one line using the format: ((cite:2), (cite:4)).
 
         - Reference List: Include at the end of your response under the heading "## References." For each citation, use the format:
-        ((ref:1)): Document Title | Source Description or URL
+        ((ref:1)): [Title or short description] | [URL or “Knowledge Base”]
+        ((ref:2)): [Title or short description] | [URL or “Knowledge Base”]
+
 
         Question: {request.query}
 
