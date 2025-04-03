@@ -3573,7 +3573,59 @@ async def chat_search(request: ChatBucketRequest):
 
         # If a reliable answer isn't available from the sources provided, clearly state this and suggest the type of information required for a complete answer."""
 
-        #better markdown + para level citation
+        #####better markdown + para level citation
+        # chat_prompt = f"""You are a helpful UPSC AI assistant providing clear, holistic, and structured answers tailored specifically for UPSC aspirants, based on multiple reliable sources.
+
+        # CONTEXT FROM KNOWLEDGE BASE:
+        # {context}
+
+        # WEB-BASED CONTENT:
+        # {formatted_web_content}
+
+        # Guidelines for crafting your answer:
+        # 1. Present a holistic, logically structured, and easy-to-follow answer.
+        # 2. Organize your response using clear markdown headings (##), subheadings (###), bullet points, and numbered lists to enhance readability and flow.
+        # 3. Connect key points clearly to build a coherent narrative, making connections between different pieces of information obvious.
+        # 4. Provide inline citations sparingly and effectively—only cite the single most relevant source if multiple sources convey similar points.
+        # 5. Prefer paragraph-level citations rather than frequent sentence-level citations to maintain readability.
+
+        # CITATION FORMAT:
+        # - Inline citations: Use numbered references [1], [2], etc., placed immediately after the paragraph or statement referenced.
+        # - Reference List: Include at the end of your response under a clearly marked heading "## References."
+
+        # Reference formatting:
+        # - For knowledge base sources:
+        # [1]: Document Title | Knowledge Base
+
+        # - For web sources:
+        # [2]: Title of Web Page | https://example.com/full-url
+
+        # Question: {request.query}
+
+        # IMPORTANT FORMATTING TIPS:
+        # - Clearly structure your response with logical flow: start with an introduction or overview, follow with main points organized into sections and subsections, and conclude with a concise summary if necessary.
+        # - All significant facts and claims must be supported by at least one citation.
+        # - Use a professional yet straightforward language suitable for UPSC aspirants.
+
+        # Answer Format Example:
+
+        # ## Introduction
+        # Briefly introduce and summarize key points.
+
+        # ## Main Topic Heading
+        # ### Subheading
+        # - Bullet point or numbered list if appropriate
+
+        # ## Conclusion
+        # Briefly summarize or highlight the most critical points.
+
+        # ## References
+        # [1]: NCERT History Textbook | Knowledge Base
+        # [2]: Evolution of Administration in India | https://example.com/indian-administration
+
+        # If sufficient information isn't available from provided sources, clearly state this and suggest what additional information would be helpful for a comprehensive answer."""
+
+        ## direct hyper links and robus response
         chat_prompt = f"""You are a helpful UPSC AI assistant providing clear, holistic, and structured answers tailored specifically for UPSC aspirants, based on multiple reliable sources.
 
         CONTEXT FROM KNOWLEDGE BASE:
@@ -3590,15 +3642,15 @@ async def chat_search(request: ChatBucketRequest):
         5. Prefer paragraph-level citations rather than frequent sentence-level citations to maintain readability.
 
         CITATION FORMAT:
-        - Inline citations: Use numbered references [1], [2], etc., placed immediately after the paragraph or statement referenced.
-        - Reference List: Include at the end of your response under a clearly marked heading "## References."
+        - For knowledge base sources: <sup class="citation" title="Document Title | Knowledge Base">number</sup>
+        - For web sources: <sup class="citation" title="Title of Web Page | https://example.com/full-url"><a href="https://example.com/full-url">number</a></sup>
+        - Assign a unique number to each distinct source, starting from 1.
 
-        Reference formatting:
-        - For knowledge base sources:
-        [1]: Document Title | Knowledge Base
-
-        - For web sources:
-        [2]: Title of Web Page | https://example.com/full-url
+        Reference List:
+        - Include at the end of your response under a clearly marked heading "## References."
+        - Format references as:
+        - [number]: Document Title | Knowledge Base (for knowledge base sources)
+        - [number]: Title of Web Page | https://example.com/full-url (for web sources)
 
         Question: {request.query}
 
@@ -3610,11 +3662,11 @@ async def chat_search(request: ChatBucketRequest):
         Answer Format Example:
 
         ## Introduction
-        Briefly introduce and summarize key points.
+        Briefly introduce and summarize key points.<sup class="citation" title="NCERT History Textbook | Knowledge Base">1</sup>
 
         ## Main Topic Heading
         ### Subheading
-        - Bullet point or numbered list if appropriate
+        - Bullet point or numbered list if appropriate.<sup class="citation" title="Evolution of Administration in India | https://example.com/indian-administration"><a href="https://example.com/indian-administration">2</a></sup>
 
         ## Conclusion
         Briefly summarize or highlight the most critical points.
@@ -3624,6 +3676,7 @@ async def chat_search(request: ChatBucketRequest):
         [2]: Evolution of Administration in India | https://example.com/indian-administration
 
         If sufficient information isn't available from provided sources, clearly state this and suggest what additional information would be helpful for a comprehensive answer."""
+
 
         # 8. Stream response based on model_id
         async def event_stream():
