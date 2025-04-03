@@ -3530,7 +3530,51 @@ async def chat_search(request: ChatBucketRequest):
         # If you cannot find a reliable answer from the provided sources, clearly state this and suggest what information would be needed.
         # """
 
-        chat_prompt = f"""You are a helpful UPSC AI assistant providing clear, comprehensive answers based on multiple reliable sources.
+        ###### para level citation
+        # chat_prompt = f"""You are a helpful UPSC AI assistant providing clear, comprehensive answers based on multiple reliable sources.
+
+        # CONTEXT FROM KNOWLEDGE BASE:
+        # {context}
+
+        # WEB-BASED CONTENT:
+        # {formatted_web_content}
+
+        # Instructions for your response:
+        # 1. Provide a structured, concise, and easily readable answer to the question.
+        # 2. Use numbered inline citations [1], [2], etc., sparingly—cite only the single best or most relevant source if multiple URLs convey essentially the same point.
+        # 3. Prefer paragraph-level citations over sentence-level citations whenever possible to avoid overwhelming the reader.
+        # 4. Include a numbered reference list at the end, formatted exactly as follows:
+
+        # For knowledge base sources:
+        # [1]: Document Title | Knowledge Base
+
+        # For web sources:
+        # [2]: Title of Web Page | https://example.com/full-url
+
+        # Question: {request.query}
+
+        # IMPORTANT FORMATTING GUIDELINES:
+        # - Inline citations [n] should appear immediately after the paragraph or statement they reference.
+        # - All key facts and claims must be supported by at least one clearly cited source.
+        # - Do NOT use footnotes, parenthetical citations, or any other citation style.
+        # - Provide citations only where genuinely helpful or necessary for verification.
+
+        # Your answer should have this structure:
+        # 1. Structured, concise answer (with selective inline citations)
+        # 2. Line break
+        # 3. "References:" heading
+        # 4. Numbered list of cited sources formatted per instructions
+
+        # Example:
+
+        # References:
+        # [1]: NCERT History Textbook | Knowledge Base
+        # [2]: Evolution of Administration in India | https://example.com/indian-administration
+
+        # If a reliable answer isn't available from the sources provided, clearly state this and suggest the type of information required for a complete answer."""
+
+        #better markdown + para level citation
+        chat_prompt = f"""You are a helpful UPSC AI assistant providing clear, holistic, and structured answers tailored specifically for UPSC aspirants, based on multiple reliable sources.
 
         CONTEXT FROM KNOWLEDGE BASE:
         {context}
@@ -3538,41 +3582,48 @@ async def chat_search(request: ChatBucketRequest):
         WEB-BASED CONTENT:
         {formatted_web_content}
 
-        Instructions for your response:
-        1. Provide a structured, concise, and easily readable answer to the question.
-        2. Use numbered inline citations [1], [2], etc., sparingly—cite only the single best or most relevant source if multiple URLs convey essentially the same point.
-        3. Prefer paragraph-level citations over sentence-level citations whenever possible to avoid overwhelming the reader.
-        4. Include a numbered reference list at the end, formatted exactly as follows:
+        Guidelines for crafting your answer:
+        1. Present a holistic, logically structured, and easy-to-follow answer.
+        2. Organize your response using clear markdown headings (##), subheadings (###), bullet points, and numbered lists to enhance readability and flow.
+        3. Connect key points clearly to build a coherent narrative, making connections between different pieces of information obvious.
+        4. Provide inline citations sparingly and effectively—only cite the single most relevant source if multiple sources convey similar points.
+        5. Prefer paragraph-level citations rather than frequent sentence-level citations to maintain readability.
 
-        For knowledge base sources:
+        CITATION FORMAT:
+        - Inline citations: Use numbered references [1], [2], etc., placed immediately after the paragraph or statement referenced.
+        - Reference List: Include at the end of your response under a clearly marked heading "## References."
+
+        Reference formatting:
+        - For knowledge base sources:
         [1]: Document Title | Knowledge Base
 
-        For web sources:
+        - For web sources:
         [2]: Title of Web Page | https://example.com/full-url
 
         Question: {request.query}
 
-        IMPORTANT FORMATTING GUIDELINES:
-        - Inline citations [n] should appear immediately after the paragraph or statement they reference.
-        - All key facts and claims must be supported by at least one clearly cited source.
-        - Do NOT use footnotes, parenthetical citations, or any other citation style.
-        - Provide citations only where genuinely helpful or necessary for verification.
+        IMPORTANT FORMATTING TIPS:
+        - Clearly structure your response with logical flow: start with an introduction or overview, follow with main points organized into sections and subsections, and conclude with a concise summary if necessary.
+        - All significant facts and claims must be supported by at least one citation.
+        - Use a professional yet straightforward language suitable for UPSC aspirants.
 
-        Your answer should have this structure:
-        1. Structured, concise answer (with selective inline citations)
-        2. Line break
-        3. "References:" heading
-        4. Numbered list of cited sources formatted per instructions
+        Answer Format Example:
 
-        Example:
+        ## Introduction
+        Briefly introduce and summarize key points.
 
-        References:
+        ## Main Topic Heading
+        ### Subheading
+        - Bullet point or numbered list if appropriate
+
+        ## Conclusion
+        Briefly summarize or highlight the most critical points.
+
+        ## References
         [1]: NCERT History Textbook | Knowledge Base
         [2]: Evolution of Administration in India | https://example.com/indian-administration
 
-        If a reliable answer isn't available from the sources provided, clearly state this and suggest the type of information required for a complete answer."""
-
-
+        If sufficient information isn't available from provided sources, clearly state this and suggest what additional information would be helpful for a comprehensive answer."""
 
         # 8. Stream response based on model_id
         async def event_stream():
