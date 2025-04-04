@@ -3691,8 +3691,9 @@ async def chat_search(request: ChatBucketRequest):
         1. Present a holistic, logically structured, and easy-to-follow answer.
         2. Organize your response using clear markdown headings (##), subheadings (###), bullet points, and numbered lists to enhance readability and flow.
         3. Connect key points clearly to build a coherent narrative, making connections between different pieces of information obvious.
-        4. Provide inline citations sparingly and effectively—only cite the single most relevant source if multiple sources convey similar points.
-        5. Prefer paragraph-level citations rather than frequent sentence-level citations to maintain readability.
+        4. Provide inline citations sparingly and **effectively—only cite the single most relevant source if multiple sources convey similar points**.
+        5. **Prefer paragraph-level citations rather than frequent sentence-level citations to  avoid overwhelming the reader and maintain readability**.
+
 
         **ATTENTION**
         CITATION FORMAT:
