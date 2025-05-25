@@ -3860,9 +3860,12 @@ async def search(request: ChatBucketRequest):
 async def mentor_chat_search(request: GetMentorSubtopicRequest):
     #debug_log(f"Received chat_bucket request: {request}")
     msg.info(f"GKIRI1:: mentor_chat_search: {request}")
+
+    #####Frame query from chapter name , subtopic name
+    query = "Explain the topic : "+ "In chapter " + request.chapter_name + " explain the subtopic " + request.subtopic_name
     try:
         #1 web search
-        web_search_results = await serper_search_async(request.query, num_results=20, location="India")
+        web_search_results = await serper_search_async(query, num_results=20, location="India")
 
 
         search_data = json.loads(web_search_results)
@@ -3890,7 +3893,7 @@ async def mentor_chat_search(request: GetMentorSubtopicRequest):
 
         # 4. Perform hybrid search on entire bucket (no file_ids specified)
         search_results = await hybrid_shared_search(request.user_id, HybridSearchRequest(
-            query_text=request.query,
+            query_text=query,
             match_count=4
         ))
         
@@ -3941,7 +3944,7 @@ async def mentor_chat_search(request: GetMentorSubtopicRequest):
         - Reference List: Include at the end of your response under the heading "## References." For each citation, use the format:
         ((ref:<number>)): <Title or short description> | <URL or "Knowledge Base">
 
-        Question: {request.query}
+        Question: {query}
 
         IMPORTANT FORMATTING TIPS:
         - Clearly structure your response with logical flow: start with an introduction or overview, follow with main points organized into sections and subsections, and conclude with a concise summary if necessary.
