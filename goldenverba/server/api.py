@@ -930,6 +930,7 @@ class GetMOCKSRequest(BaseModel):
 #####################mentor subtopic structure
 class GetMentorSubtopicRequest(BaseModel):
     user_id: str
+    model_id: int
     subtopic_id: str
     subtopic_name: str
     chapter_name: str
