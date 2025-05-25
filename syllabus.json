@@ -1,0 +1,1495 @@
+{
+  "UPSC_Syllabus": {
+    "GS1": {
+      "comment_GS1": "General Studies Paper 1: Indian Heritage and Culture, History and Geography of the World and Society",
+      "History": {
+        "comment_History": "History of India and Indian National Movement, World History",
+        "AncientIndianHistory": [
+          {
+            "chapter_id": "AIH01",
+            "title": "Introduction: Understanding Ancient India",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH01_S01",
+                "order": 1,
+                "title": "Significance of Studying Ancient Indian History for UPSC",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S02",
+                "order": 2,
+                "title": "Sources of Ancient Indian History: Overview and Classification",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S03",
+                "order": 3,
+                "title": "Literary Sources: Indigenous Texts (Religious & Secular)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S04",
+                "order": 4,
+                "title": "Literary Sources: Foreign Accounts (Greek, Roman, Chinese)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S05",
+                "order": 5,
+                "title": "Archaeological Sources: Excavations, Epigraphy (Inscriptions), Numismatics (Coins)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S06",
+                "order": 6,
+                "title": "Methods of Historical Reconstruction and Dating",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S07",
+                "order": 7,
+                "title": "Historiography of Ancient India: Colonial, Nationalist, Marxist, Subaltern Perspectives",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S08",
+                "order": 8,
+                "title": "Geographical Setting of Ancient India and its Impact on History",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH01_S09",
+                "order": 9,
+                "title": "Ecology and Environment in Ancient India",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH02",
+            "title": "Prehistoric Cultures in India",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH02_S01",
+                "order": 1,
+                "title": "The Palaeolithic Age (Old Stone Age): Phases and Characteristics",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S02",
+                "order": 2,
+                "title": "Palaeolithic Tools, Technology, and Lifeways",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S03",
+                "order": 3,
+                "title": "Major Palaeolithic Sites in India",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S04",
+                "order": 4,
+                "title": "The Mesolithic Age (Late Stone Age): Characteristics and Transition",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S05",
+                "order": 5,
+                "title": "Mesolithic Tools (Microliths), Art (Rock Paintings), and Lifestyle",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S06",
+                "order": 6,
+                "title": "Major Mesolithic Sites in India (Bhimbetka, Adamgarh)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S07",
+                "order": 7,
+                "title": "The Neolithic Age (New Stone Age): The Agricultural Revolution",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S08",
+                "order": 8,
+                "title": "Neolithic Tools, Pottery, Settlements, and Early Farming Communities",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S09",
+                "order": 9,
+                "title": "Major Neolithic Sites in India (Mehrgarh, Burzahom, Koldihwa, Chirand)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH02_S10",
+                "order": 10,
+                "title": "Prehistoric Art: Rock Paintings and Engravings",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH03",
+            "title": "Chalcolithic Cultures (Copper-Stone Age)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH03_S01",
+                "order": 1,
+                "title": "Characteristics of Chalcolithic Cultures: Technology and Lifestyle",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH03_S02",
+                "order": 2,
+                "title": "Chalcolithic Pottery Traditions (Ochre Coloured Pottery - OCP, Black and Red Ware - BRW)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH03_S03",
+                "order": 3,
+                "title": "Major Chalcolithic Cultures: Ahar-Banas Culture",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH03_S04",
+                "order": 4,
+                "title": "Major Chalcolithic Cultures: Kayatha Culture",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH03_S05",
+                "order": 5,
+                "title": "Major Chalcolithic Cultures: Malwa Culture",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH03_S06",
+                "order": 6,
+                "title": "Major Chalcolithic Cultures: Jorwe Culture",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH03_S07",
+                "order": 7,
+                "title": "Chalcolithic Settlements, Agriculture, and Burial Practices",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH03_S08",
+                "order": 8,
+                "title": "Limitations and Decline of Chalcolithic Cultures",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH04",
+            "title": "Harappan Civilization (Indus Valley Civilization)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH04_S01",
+                "order": 1,
+                "title": "Origin, Chronology, and Geographical Extent of Harappan Civilization",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S02",
+                "order": 2,
+                "title": "Phases of Harappan Civilization: Early, Mature, and Late Harappan",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S03",
+                "order": 3,
+                "title": "Major Harappan Sites: Harappa, Mohenjo-daro, Dholavira, Lothal, Kalibangan, Rakhigarhi",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S04",
+                "order": 4,
+                "title": "Urban Planning and Architecture: Citadel, Lower Town, Grid Pattern, Drainage System",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S05",
+                "order": 5,
+                "title": "Significant Structures: Great Bath, Granaries, Dockyard",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S06",
+                "order": 6,
+                "title": "Harappan Agriculture, Domestication of Animals, and Food Habits",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S07",
+                "order": 7,
+                "title": "Harappan Crafts: Pottery, Terracotta Figurines, Bead Making, Metallurgy",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S08",
+                "order": 8,
+                "title": "Trade and Commerce: Internal and External Trade (Mesopotamia)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S09",
+                "order": 9,
+                "title": "Harappan Seals, Script, Weights, and Measures",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S10",
+                "order": 10,
+                "title": "Harappan Society: Social Structure and Stratification",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S11",
+                "order": 11,
+                "title": "Harappan Political Organization: Nature of the State",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S12",
+                "order": 12,
+                "title": "Religious Beliefs and Practices: Mother Goddess, Pashupati Seal, Rituals",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S13",
+                "order": 13,
+                "title": "Theories on the Decline of the Harappan Civilization",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH04_S14",
+                "order": 14,
+                "title": "Legacy and Continuity of Harappan Civilization",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH05",
+            "title": "The Vedic Period (c. 1500 - 600 BCE)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH05_S01",
+                "order": 1,
+                "title": "Sources for the Vedic Period: Vedic Literature Overview (Vedas, Brahmanas, Aranyakas, Upanishads)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S02",
+                "order": 2,
+                "title": "The Aryan Debate: Origins and Migration Theories",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S03",
+                "order": 3,
+                "title": "Early Vedic (Rigvedic) Period: Geography and Settlements",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S04",
+                "order": 4,
+                "title": "Early Vedic Polity: Tribal Assemblies (Sabha, Samiti), Role of Rajan",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S05",
+                "order": 5,
+                "title": "Early Vedic Society: Kinship, Varna System (Initial Stages), Status of Women",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S06",
+                "order": 6,
+                "title": "Early Vedic Economy: Pastoralism, Limited Agriculture, Barter",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S07",
+                "order": 7,
+                "title": "Early Vedic Religion: Nature Worship, Major Deities (Indra, Agni, Varuna), Rituals",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S08",
+                "order": 8,
+                "title": "Later Vedic Period: Geographical Expansion (Ganga Valley)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S09",
+                "order": 9,
+                "title": "Later Vedic Polity: Rise of Territorial Kingdoms (Janapadas), Changes in Kingship",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S10",
+                "order": 10,
+                "title": "Later Vedic Society: Solidification of Varna System, Ashrama System, Decline in Women's Status",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S11",
+                "order": 11,
+                "title": "Later Vedic Economy: Importance of Agriculture, Crafts, Early Trade",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S12",
+                "order": 12,
+                "title": "Later Vedic Religion: Rise of New Gods (Prajapati, Vishnu, Rudra), Complex Rituals, Upanishadic Philosophy",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S13",
+                "order": 13,
+                "title": "Vedic Literature: Detailed Study (Rig Veda, Sama Veda, Yajur Veda, Atharva Veda)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH05_S14",
+                "order": 14,
+                "title": "Epics (Ramayana, Mahabharata) and Puranas: Historical Significance and Composition",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH06",
+            "title": "Period of Mahajanapadas and Rise of Magadha (c. 600 - 321 BCE)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH06_S01",
+                "order": 1,
+                "title": "Formation of States: From Janapadas to Mahajanapadas",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S02",
+                "order": 2,
+                "title": "The Sixteen Mahajanapadas: Names, Locations, and Key Features",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S03",
+                "order": 3,
+                "title": "Factors Contributing to the Rise of Magadha",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S04",
+                "order": 4,
+                "title": "Major Dynasties of Magadha: Haryanka Dynasty (Bimbisara, Ajatashatru)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S05",
+                "order": 5,
+                "title": "Major Dynasties of Magadha: Shishunaga Dynasty",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S06",
+                "order": 6,
+                "title": "Major Dynasties of Magadha: Nanda Dynasty (Mahapadma Nanda)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S07",
+                "order": 7,
+                "title": "Administration, Economy, and Society during the Mahajanapada Period",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S08",
+                "order": 8,
+                "title": "Second Urbanization in India: Causes and Characteristics",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S09",
+                "order": 9,
+                "title": "Persian (Achaemenid) Invasions: Impact on North-West India",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH06_S10",
+                "order": 10,
+                "title": "Macedonian (Alexander's) Invasion: Causes, Course, and Impact",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH07",
+            "title": "Rise of New Religious Movements: Jainism and Buddhism",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH07_S01",
+                "order": 1,
+                "title": "Causes for the Rise of Heterodox Sects in the 6th Century BCE",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S02",
+                "order": 2,
+                "title": "Jainism: Life and Teachings of Vardhamana Mahavira",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S03",
+                "order": 3,
+                "title": "Core Doctrines of Jainism: Ahimsa, Anekantavada, Syadvada, Triratnas",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S04",
+                "order": 4,
+                "title": "Spread of Jainism, Royal Patronage, and Councils",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S05",
+                "order": 5,
+                "title": "Sects of Jainism: Digambaras and Shvetambaras",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S06",
+                "order": 6,
+                "title": "Contributions of Jainism: Literature, Art, Architecture",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S07",
+                "order": 7,
+                "title": "Buddhism: Life and Teachings of Gautama Buddha",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S08",
+                "order": 8,
+                "title": "Core Doctrines of Buddhism: Four Noble Truths, Eightfold Path, Nirvana, Middle Path",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S09",
+                "order": 9,
+                "title": "Spread of Buddhism, Royal Patronage (Ashoka, Kanishka), and Councils",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S10",
+                "order": 10,
+                "title": "Sects of Buddhism: Hinayana, Mahayana, Vajrayana",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S11",
+                "order": 11,
+                "title": "Contributions of Buddhism: Literature (Tripitakas, Jatakas), Art, Architecture (Stupas, Viharas, Chaityas)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S12",
+                "order": 12,
+                "title": "Comparison between Jainism and Buddhism",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH07_S13",
+                "order": 13,
+                "title": "Other Contemporary Heterodox Sects (Ajivikas etc.)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH08",
+            "title": "The Mauryan Empire (c. 321 - 185 BCE)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH08_S01",
+                "order": 1,
+                "title": "Sources for Mauryan History: Kautilya's Arthashastra, Megasthenes' Indica, Ashokan Edicts",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S02",
+                "order": 2,
+                "title": "Foundation of the Mauryan Empire: Chandragupta Maurya and Chanakya",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S03",
+                "order": 3,
+                "title": "Expansion of the Empire: Bindusara",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S04",
+                "order": 4,
+                "title": "Ashoka the Great: Kalinga War and its Impact",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S05",
+                "order": 5,
+                "title": "Ashoka's Dhamma: Concept, Propagation, and Significance",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S06",
+                "order": 6,
+                "title": "Mauryan Administration: Central Administration (King, Mantriparishad, Officials)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S07",
+                "order": 7,
+                "title": "Mauryan Administration: Provincial, District, and Local Administration",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S08",
+                "order": 8,
+                "title": "Mauryan Administration: Military and Espionage System",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S09",
+                "order": 9,
+                "title": "Mauryan Economy: Agriculture, Taxation, Trade, Industries, State Control",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S10",
+                "order": 10,
+                "title": "Mauryan Society: Social Structure, Varna System, Slavery, Status of Women",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S11",
+                "order": 11,
+                "title": "Mauryan Art and Architecture: Palaces, Pillars, Edicts, Stupas, Caves",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S12",
+                "order": 12,
+                "title": "Decline of the Mauryan Empire: Causes and Consequences",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH08_S13",
+                "order": 13,
+                "title": "Significance of the Mauryan Empire in Indian History",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH09",
+            "title": "Post-Mauryan India (c. 200 BCE - 300 CE)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH09_S01",
+                "order": 1,
+                "title": "Indigenous Dynasties in North India: Shunga Dynasty",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S02",
+                "order": 2,
+                "title": "Indigenous Dynasties in North India: Kanva Dynasty",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S03",
+                "order": 3,
+                "title": "Indigenous Dynasties in Deccan: Satavahana Dynasty (Gautamiputra Satakarni)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S04",
+                "order": 4,
+                "title": "Satavahana Administration, Economy, Society, and Religion",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S05",
+                "order": 5,
+                "title": "Satavahana Art and Architecture (Amaravati School, Caves)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S06",
+                "order": 6,
+                "title": "Foreign Invasions in North-West India: Indo-Greeks (Bactrians)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S07",
+                "order": 7,
+                "title": "Foreign Invasions in North-West India: Shakas (Western Satraps - Rudradaman)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S08",
+                "order": 8,
+                "title": "Foreign Invasions in North-West India: Parthians (Pahlavas)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S09",
+                "order": 9,
+                "title": "Foreign Invasions in North-West India: Kushanas (Kanishka)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S10",
+                "order": 10,
+                "title": "Kushana Administration, Economy, Society, and Religion (Fourth Buddhist Council)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S11",
+                "order": 11,
+                "title": "Development of Art Schools: Gandhara School of Art",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S12",
+                "order": 12,
+                "title": "Development of Art Schools: Mathura School of Art",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S13",
+                "order": 13,
+                "title": "Developments in Trade and Commerce: Silk Route, Roman Trade",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S14",
+                "order": 14,
+                "title": "Developments in Religion: Mahayana Buddhism, Early Bhakti Ideas",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH09_S15",
+                "order": 15,
+                "title": "Developments in Literature and Science during Post-Mauryan Era",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH10",
+            "title": "The Sangam Period (South India - c. 3rd Century BCE - 3rd Century CE)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH10_S01",
+                "order": 1,
+                "title": "Sources for Sangam Period: Sangam Literature, Archaeology, Foreign Accounts",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S02",
+                "order": 2,
+                "title": "The Three Sangams: Legend and History",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S03",
+                "order": 3,
+                "title": "Major Sangam Dynasties: The Cheras",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S04",
+                "order": 4,
+                "title": "Major Sangam Dynasties: The Cholas",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S05",
+                "order": 5,
+                "title": "Major Sangam Dynasties: The Pandyas",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S06",
+                "order": 6,
+                "title": "Sangam Polity and Administration: Kingship, Assemblies, Military",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S07",
+                "order": 7,
+                "title": "Sangam Society: Social Structure (Tinai Concept), Family, Status of Women",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S08",
+                "order": 8,
+                "title": "Sangam Economy: Agriculture, Crafts, Trade (Internal and External - Roman Trade)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S09",
+                "order": 9,
+                "title": "Sangam Religion and Beliefs: Indigenous Gods (Murugan), Influence of North Indian Religions",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S10",
+                "order": 10,
+                "title": "Sangam Literature: Ettuthogai, Pattupattu, Tolkappiyam, Thirukkural",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH10_S11",
+                "order": 11,
+                "title": "End of the Sangam Age and Transition Period (Kalabhras)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH11",
+            "title": "The Gupta Empire (c. 320 - 550 CE)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH11_S01",
+                "order": 1,
+                "title": "Sources for Gupta History: Literary, Epigraphic, Numismatic Sources",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S02",
+                "order": 2,
+                "title": "Rise and Consolidation of Gupta Power: Chandragupta I, Samudragupta (Prayag Prashasti)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S03",
+                "order": 3,
+                "title": "Zenith of the Empire: Chandragupta II (Vikramaditya), Fa-Hien's Visit",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S04",
+                "order": 4,
+                "title": "Later Gupta Rulers: Kumaragupta I, Skandagupta",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S05",
+                "order": 5,
+                "title": "Gupta Administration: Central, Provincial, Local Government, Military Organization",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S06",
+                "order": 6,
+                "title": "Gupta Economy: Agriculture, Land Grants (Agraharas), Trade (Decline with West?), Coinage",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S07",
+                "order": 7,
+                "title": "Gupta Society: Varna System Proliferation (Jatis), Status of Women, Untouchability",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S08",
+                "order": 8,
+                "title": "Gupta Religion: Revival of Brahmanical Hinduism (Vaishnavism, Shaivism), Status of Buddhism and Jainism",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S09",
+                "order": 9,
+                "title": "Developments in Sanskrit Literature: Kalidasa, Other Major Writers",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S10",
+                "order": 10,
+                "title": "Achievements in Science and Technology: Astronomy (Aryabhata, Varahamihira)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S11",
+                "order": 11,
+                "title": "Achievements in Science and Technology: Mathematics (Decimal System), Medicine",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S12",
+                "order": 12,
+                "title": "Gupta Art and Architecture: Temple Architecture (Nagara Style Beginnings), Sculpture (Sarnath School)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S13",
+                "order": 13,
+                "title": "Gupta Art and Architecture: Painting (Ajanta Caves)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S14",
+                "order": 14,
+                "title": "Decline of the Gupta Empire: Internal Factors, Huna Invasions",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH11_S15",
+                "order": 15,
+                "title": "The 'Golden Age' Debate: Evaluating Gupta Period Contributions",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH12",
+            "title": "Post-Gupta Period / Age of Regional Kingdoms (c. 550 - 750 CE)",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH12_S01",
+                "order": 1,
+                "title": "Political Fragmentation after Guptas: Major Regional Powers",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S02",
+                "order": 2,
+                "title": "Pushyabhuti Dynasty of Thanesar: Harshavardhana",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S03",
+                "order": 3,
+                "title": "Harsha's Empire: Extent, Administration, Religious Policies (Kannauj Assembly)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S04",
+                "order": 4,
+                "title": "Hiuen Tsang's (Xuanzang's) Account of India",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S05",
+                "order": 5,
+                "title": "Chalukyas of Badami: Pulakeshin II, Administration, Art (Vesara Style Genesis)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S06",
+                "order": 6,
+                "title": "Pallavas of Kanchi: Mahendravarman I, Narasimhavarman I",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S07",
+                "order": 7,
+                "title": "Pallava Administration, Society, Contribution to Dravidian Temple Architecture (Mahabalipuram)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S08",
+                "order": 8,
+                "title": "Other Contemporary Dynasties (Brief Overview: Maitrakas, Maukharis, Gaudas)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S09",
+                "order": 9,
+                "title": "General Trends in Polity: Feudalism Beginnings, Decentralization",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S10",
+                "order": 10,
+                "title": "General Trends in Economy: Decline of Trade, Importance of Land Grants",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S11",
+                "order": 11,
+                "title": "General Trends in Society: Strengthening of Jati System, Regional Identities",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH12_S12",
+                "order": 12,
+                "title": "General Trends in Religion: Rise of Bhakti Movement, Tantrism",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          },
+          {
+            "chapter_id": "AIH13",
+            "title": "Themes in Ancient Indian History",
+            "status": "not_started",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "AIH13_S01",
+                "order": 1,
+                "title": "Evolution of Political Ideas and Institutions",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S02",
+                "order": 2,
+                "title": "Evolution of Social Structures: Varna, Jati, Family, Gender Relations",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S03",
+                "order": 3,
+                "title": "Economic Development: Agriculture, Trade Routes, Urbanization Patterns",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S04",
+                "order": 4,
+                "title": "Religious Evolution: From Vedic Beliefs to Puranic Hinduism, Buddhism, Jainism",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S05",
+                "order": 5,
+                "title": "Development of Philosophical Schools (Shad-Darshanas)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S06",
+                "order": 6,
+                "title": "Science and Technology in Ancient India: Achievements and Limitations",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S07",
+                "order": 7,
+                "title": "Ancient Indian Art and Architecture: Major Styles and Developments",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S08",
+                "order": 8,
+                "title": "Ancient Indian Education System and Centers of Learning (Nalanda, Taxila)",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S09",
+                "order": 9,
+                "title": "India's Interaction with the Outside World in Ancient Times",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              },
+              {
+                "subtopic_id": "AIH13_S10",
+                "order": 10,
+                "title": "Legacy of Ancient India: Continuity and Change",
+                "status": "not_started",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          }
+        ],
+        "MedievalIndianHistory": [
+          {
+            "chapter_id": "<String_MIH_ChapterID_e.g._MIH01>",
+            "title": "<String_ChapterTitle_e.g._Sources_of_Medieval_History>",
+            "status": "<String_Enum_not_started_in_progress_completed>",
+            "score": [],
+            "wrong_questions": [],
+            "subtopics": [
+              {
+                "subtopic_id": "<String_MIH_SubtopicID_e.g._MIH01_S01>",
+                "order": "<Number_OrderInChapter>",
+                "title": "<String_SubtopicTitle>",
+                "status": "<String_Enum_not_started_in_progress_completed>",
+                "score": [],
+                "wrong_questions": []
+              }
+            ]
+          }
+        ],
+        "ModernIndianHistory": [],
+        "PostIndependenceIndia": [],
+        "WorldHistory": []
+      },
+      "IndianHeritageAndCulture": [
+        {
+          "chapter_id": "<String_IHC_ChapterID_e.g._IHC01>",
+          "title": "<String_ChapterTitle_e.g._Salient_aspects_of_Art_Forms>",
+          "status": "<String_Enum_not_started_in_progress_completed>",
+          "score": [],
+          "wrong_questions": [],
+          "subtopics": [
+            {
+              "subtopic_id": "<String_IHC_SubtopicID_e.g._IHC01_S01>",
+              "order": "<Number_OrderInChapter>",
+              "title": "<String_SubtopicTitle_e.g._Visual_Arts>",
+              "status": "<String_Enum_not_started_in_progress_completed>",
+              "score": [],
+              "wrong_questions": []
+            }
+          ]
+        }
+      ],
+      "Geography": {
+        "comment_Geography": "Physical, Social, Economic Geography of India and the World",
+        "PhysicalGeography": [],
+        "IndianGeography": [],
+        "HumanAndEconomicGeography": []
+      },
+      "IndianSociety": [
+        {
+          "chapter_id": "<String_SOC_ChapterID_e.g._SOC01>",
+          "title": "<String_ChapterTitle_e.g._Salient_features_of_Indian_Society>",
+          "status": "<String_Enum_not_started_in_progress_completed>",
+          "score": [],
+          "wrong_questions": [],
+          "subtopics": [
+            {
+              "subtopic_id": "<String_SOC_SubtopicID_e.g._SOC01_S01>",
+              "order": "<Number_OrderInChapter>",
+              "title": "<String_SubtopicTitle_e.g._Diversity_of_India>",
+              "status": "<String_Enum_not_started_in_progress_completed>",
+              "score": [],
+              "wrong_questions": []
+            }
+          ]
+        }
+      ]
+    },
+    "GS2": {
+      "comment_GS2": "General Studies Paper 2: Governance, Constitution, Polity, Social Justice and International relations",
+      "PolityAndConstitution": [],
+      "Governance": [],
+      "SocialJustice": [],
+      "InternationalRelations": []
+    },
+    "GS3": {
+      "comment_GS3": "General Studies Paper 3: Technology, Economic Development, Bio diversity, Environment, Security and Disaster Management",
+      "IndianEconomy": [],
+      "ScienceAndTechnology": [],
+      "EnvironmentAndEcology": [],
+      "DisasterManagement": [],
+      "InternalSecurity": []
+    },
+    "GS4": {
+      "comment_GS4": "General Studies Paper 4: Ethics, Integrity, and Aptitude",
+      "EthicsAndHumanInterface": [],
+      "Attitude": [],
+      "AptitudeAndFoundationalValues": [],
+      "EmotionalIntelligence": [],
+      "MoralThinkersAndPhilosophers": [],
+      "PublicServiceValuesAndEthicsInAdmin": [],
+      "ProbityInGovernance": [],
+      "CaseStudies": [
+        {
+          "chapter_id": "<String_CS_ChapterID_e.g._CS01>",
+          "title": "<String_CaseStudyCategoryOrChapterTitle_e.g._Ethical_Dilemmas_in_Administration>",
+          "status": "<String_Enum_not_started_in_progress_completed>",
+          "score": [],
+          "wrong_questions": [],
+          "subtopics": [
+            {
+              "subtopic_id": "<String_CS_SubtopicID_e.g._CS01_S01>",
+              "order": "<Number_Order>",
+              "title": "<String_SpecificCaseStudyScenarioTitle_or_ID>",
+              "status": "<String_Enum_not_started_in_progress_completed>",
+              "score": [],
+              "wrong_questions": []
+            }
+          ]
+        }
+      ]
+    },
+    "OptionalSubject": {
+      "comment_Optional": "Structure for an Optional Subject (Replace 'OptionalSubject' with actual subject name e.g., 'PublicAdministration', 'Sociology')",
+      "Paper1": [],
+      "Paper2": []
+    },
+    "Essay": [
+      {
+        "chapter_id": "<String_ESSAY_ChapterID_e.g._ESSAY01>",
+        "title": "<String_EssayThemeOrPracticeSetTitle_e.g._Philosophical_Essays>",
+        "status": "<String_Enum_not_started_in_progress_completed>",
+        "score": [],
+        "wrong_questions": [],
+        "subtopics": [
+          {
+            "subtopic_id": "<String_ESSAY_SubtopicID_e.g._ESSAY01_P01>",
+            "order": "<Number_Order>",
+            "title": "<String_EssayPrompt_or_Technique_or_SubTheme>",
+            "status": "<String_Enum_not_started_in_progress_completed>",
+            "score": [],
+            "wrong_questions": []
+          }
+        ]
+      }
+    ]
+  }
+}
