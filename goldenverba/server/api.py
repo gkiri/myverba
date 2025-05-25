@@ -3885,27 +3885,42 @@ def create_citation_enhanced_prompt(context: str, web_content: str, query: str) 
     # Process knowledge base sources
     kb_sources = []
     if context:
-        # Parse knowledge base chunks (simplified - you'd extract actual doc names)
-        kb_sources = ["Knowledge Base Document 1", "Knowledge Base Document 2"]  # Placeholder
-        for doc_name in kb_sources:
+        # Extract actual document names from context
+        import re
+        doc_pattern = r"Document: ([^\\n]+)"
+        doc_matches = re.findall(doc_pattern, context)
+        
+        if doc_matches:
+            for doc_name in doc_matches[:2]:  # Limit to top 2 KB sources
+                clean_doc_name = doc_name.replace("Unknown Document", "Knowledge Base").strip()
+                citations_metadata.append(CitationMetadata(
+                    id=citation_counter,
+                    title=clean_doc_name,
+                    source_type="knowledge_base"
+                ))
+                citation_counter += 1
+        else:
+            # Fallback if no doc names found
             citations_metadata.append(CitationMetadata(
                 id=citation_counter,
-                title=doc_name,
+                title="Knowledge Base",
                 source_type="knowledge_base"
             ))
             citation_counter += 1
     
     # Process web sources
-    web_sources = []
     if web_content:
-        # Extract URLs and titles from formatted web content
+        # Extract URLs and attempt to get better titles
         import re
         url_pattern = r"Here is web source #\d+ of url: '([^']+)'"
         urls = re.findall(url_pattern, web_content)
         
-        for url in urls:
-            # You'd extract actual titles here
-            title = f"Web Source {citation_counter - len(kb_sources)}"
+        for idx, url in enumerate(urls, 1):
+            # Extract domain for better title
+            domain = url.split('/')[2] if len(url.split('/')) > 2 else url
+            domain = domain.replace('www.', '').replace('.com', '').replace('.in', '').replace('.org', '')
+            title = f"{domain.title()} - Web Source"
+            
             citations_metadata.append(CitationMetadata(
                 id=citation_counter,
                 title=title,
@@ -3927,28 +3942,38 @@ WEB-BASED CONTENT:
 1. Use EXACTLY this format for inline citations: 📚[cite:NUMBER]📚
 2. Use EXACTLY this format for references: 📖[ref:NUMBER]📖
 3. Numbers must start from 1 and increment sequentially
-4. Place citations immediately after relevant paragraphs or key statements
-5. Include a "## References" section at the end with all citations
+4. **IMPORTANT**: Use citations SPARINGLY - only at the end of paragraphs or for key facts
+5. **AVOID**: Citing every sentence - this makes text unreadable
+6. **PREFER**: One citation per paragraph covering the main source
+7. Include a "## References" section at the end with all citations
 
 **CITATION MAPPING:**
 {chr(10).join([f"📚[cite:{c.id}]📚 = {c.title} ({'Knowledge Base' if c.source_type == 'knowledge_base' else c.url})" for c in citations_metadata])}
 
-**EXAMPLE FORMAT:**
-The Indian Constitution was adopted in 1950 📚[cite:1]📚. This established a federal structure with clear separation of powers 📚[cite:2]📚.
+**GOOD EXAMPLE (Readable):**
+## Indian Constitution
+
+The Indian Constitution was adopted in 1950, establishing a federal structure with clear separation of powers. It created a parliamentary democracy with fundamental rights and duties for citizens 📚[cite:1]📚.
+
+### Key Features
+The Constitution includes several important features such as federalism, secularism, and judicial review. These principles ensure democratic governance and protection of individual rights 📚[cite:2]📚.
 
 ## References
 📖[ref:1]📖: NCERT History Textbook | Knowledge Base
-📖[ref:2]📖: Constitutional Framework of India | https://example.com/constitution
+📖[ref:2]📖: Constitutional Framework | https://example.com/constitution
+
+**BAD EXAMPLE (Too many citations):**
+The Indian Constitution 📚[cite:1]📚 was adopted in 1950 📚[cite:1]📚. It established a federal structure 📚[cite:2]📚 with separation of powers 📚[cite:2]📚.
 
 Question: {query}
 
-Provide a comprehensive, well-structured answer using the exact citation format specified above."""
+Provide a comprehensive, well-structured answer using MINIMAL citations for maximum readability."""
 
     return enhanced_prompt, citations_metadata
 
 async def process_citation_stream(generator, citations_metadata: List[CitationMetadata]):
     """
-    Process the LLM stream and extract/enhance citations in real-time
+    Process the LLM stream and extract/enhance citations in real-time with improved quality
     """
     import re
     
@@ -3958,10 +3983,13 @@ async def process_citation_stream(generator, citations_metadata: List[CitationMe
     
     async for chunk in generator:
         if chunk["finish_reason"] == "stop":
-            # Send final citation metadata
+            # Process the complete accumulated text for final cleanup
+            final_text = clean_and_enhance_citations(accumulated_text, citations_metadata)
+            
+            # Send the final cleaned content
             yield {
-                "type": "citations_metadata",
-                "content": "",
+                "type": "final_content",
+                "content": final_text,
                 "citations": [c.model_dump() for c in citations_metadata]
             }
             break
@@ -3969,52 +3997,57 @@ async def process_citation_stream(generator, citations_metadata: List[CitationMe
         chunk_text = chunk["message"]
         accumulated_text += chunk_text
         
-        # Check for citations in the current chunk
-        citations_found = re.findall(citation_pattern, chunk_text)
-        references_found = re.findall(reference_pattern, chunk_text)
-        
-        # Process and enhance the chunk
-        enhanced_chunk = chunk_text
-        
-        # Replace citation tokens with enhanced HTML for frontend
-        for cite_id in citations_found:
-            cite_num = int(cite_id)
-            if cite_num <= len(citations_metadata):
-                citation = citations_metadata[cite_num - 1]
-                if citation.source_type == "web" and citation.url:
-                    # Create clickable link for web sources
-                    enhanced_chunk = enhanced_chunk.replace(
-                        f'📚[cite:{cite_id}]📚',
-                        f'<sup class="citation-link" data-cite-id="{cite_id}" data-url="{citation.url}" title="{citation.title}">[{cite_id}]</sup>'
-                    )
-                else:
-                    # Create non-clickable citation for knowledge base
-                    enhanced_chunk = enhanced_chunk.replace(
-                        f'📚[cite:{cite_id}]📚',
-                        f'<sup class="citation-kb" data-cite-id="{cite_id}" title="{citation.title}">[{cite_id}]</sup>'
-                    )
-        
-        # Replace reference tokens
-        for ref_id in references_found:
-            ref_num = int(ref_id)
-            if ref_num <= len(citations_metadata):
-                citation = citations_metadata[ref_num - 1]
-                if citation.source_type == "web" and citation.url:
-                    enhanced_chunk = enhanced_chunk.replace(
-                        f'📖[ref:{ref_id}]📖',
-                        f'[{ref_id}]: {citation.title} | <a href="{citation.url}" target="_blank" rel="noopener">{citation.url}</a>'
-                    )
-                else:
-                    enhanced_chunk = enhanced_chunk.replace(
-                        f'📖[ref:{ref_id}]📖',
-                        f'[{ref_id}]: {citation.title} | Knowledge Base'
-                    )
-        
+        # For streaming, send raw text without processing to avoid partial citation issues
         yield {
             "type": "text-delta",
-            "content": enhanced_chunk,
+            "content": chunk_text,
             "citations": None
         }
+
+def clean_and_enhance_citations(text: str, citations_metadata: List[CitationMetadata]) -> str:
+    """
+    Clean and enhance the complete text with proper citation formatting
+    """
+    import re
+    
+    # Patterns for citation cleanup
+    citation_pattern = r'📚\[cite:(\d+)\]📚'
+    reference_pattern = r'📖\[ref:(\d+)\]📖'
+    
+    # First, replace all emoji citations with clean HTML
+    def replace_citation(match):
+        cite_id = match.group(1)
+        cite_num = int(cite_id)
+        if cite_num <= len(citations_metadata):
+            citation = citations_metadata[cite_num - 1]
+            if citation.source_type == "web" and citation.url:
+                return f'<sup class="citation-link" data-cite-id="{cite_id}" data-url="{citation.url}" title="{citation.title}">[{cite_id}]</sup>'
+            else:
+                return f'<sup class="citation-kb" data-cite-id="{cite_id}" title="{citation.title}">[{cite_id}]</sup>'
+        return f'[{cite_id}]'
+    
+    # Replace citations
+    enhanced_text = re.sub(citation_pattern, replace_citation, text)
+    
+    # Clean up reference section
+    def replace_reference(match):
+        ref_id = match.group(1)
+        ref_num = int(ref_id)
+        if ref_num <= len(citations_metadata):
+            citation = citations_metadata[ref_num - 1]
+            if citation.source_type == "web" and citation.url:
+                return f'[{ref_id}]: {citation.title} | <a href="{citation.url}" target="_blank" rel="noopener">{citation.url}</a>'
+            else:
+                return f'[{ref_id}]: {citation.title} | Knowledge Base'
+        return f'[{ref_id}]: Unknown Source'
+    
+    enhanced_text = re.sub(reference_pattern, replace_reference, enhanced_text)
+    
+    # Additional cleanup: remove excessive line breaks and format properly
+    enhanced_text = re.sub(r'\n{3,}', '\n\n', enhanced_text)  # Max 2 consecutive newlines
+    enhanced_text = re.sub(r'[ \t]+\n', '\n', enhanced_text)   # Remove trailing spaces
+    
+    return enhanced_text.strip()
 
 @app.post("/api/mentor_chat_search", response_class=StreamingResponse)
 async def mentor_chat_search(request: GetMentorSubtopicRequest):
@@ -4084,9 +4117,13 @@ async def mentor_chat_search(request: GetMentorSubtopicRequest):
                     generator = deepseek_generator.generate_stream([enhanced_prompt], [""], [], model_name)
 
                 async for enhanced_chunk in process_citation_stream(generator, citations_metadata):
-                    yield f"data: {json.dumps(enhanced_chunk)}\n\n"
-                
-                yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+                    if enhanced_chunk["type"] == "final_content":
+                        # Send the final processed content with clean citations
+                        yield f"data: {json.dumps(enhanced_chunk)}\n\n"
+                        yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+                    else:
+                        # Send streaming text chunks
+                        yield f"data: {json.dumps(enhanced_chunk)}\n\n"
 
             except Exception as e:
                 msg.fail(f"Streaming failed: {str(e)}")
