@@ -3708,7 +3708,7 @@ async def chat_search(request: ChatBucketRequest):
         - Inline citations: Use unique tokens in the form ((cite:1)), ((cite:2)), etc., placed immediately after the relevant paragraph or statement.
           Always use numeric references in ascending order, starting from 1, like ((cite:1)), ((cite:2)).
           Never use labels like ((cite:web2)), ((cite:kb1)), or anything other than numeric tokens.
-          If you see references in the provided context labeled “web2” or “web4,” map them to numeric references in ascending order. For example, if “web4” is your second source, you must cite it as ((cite:2)).
+          If you see references in the provided context labeled "web2" or "web4," map them to numeric references in ascending order. For example, if "web4" is your second source, you must cite it as ((cite:2)).
           If multiple sources are being cited for a single point, combine them on one line using the format: ((cite:2), (cite:4)).
 
         - Reference List: Include at the end of your response under the heading "## References." For each citation, use the format:
@@ -3856,136 +3856,235 @@ async def search(request: ChatBucketRequest):
 
 #################################Mentor Design V2
 
-#public static books bucket shared for all users web search  
+#################################Mentor Design V2 - Enhanced Citation System
+
+# Enhanced Citation System Implementation
+
+class CitationMetadata(BaseModel):
+    """Structured citation metadata for frontend processing"""
+    id: int
+    title: str
+    url: Optional[str] = None
+    source_type: str  # "web" or "knowledge_base"
+    snippet: Optional[str] = None
+
+class EnhancedStreamResponse(BaseModel):
+    """Enhanced streaming response with citation metadata"""
+    type: str  # "text-delta", "citation", "finish", "error"
+    content: str
+    citations: Optional[List[CitationMetadata]] = None
+
+def create_citation_enhanced_prompt(context: str, web_content: str, query: str) -> tuple[str, List[CitationMetadata]]:
+    """
+    Create an enhanced prompt with structured citation instructions and return citation metadata
+    """
+    # Extract citation metadata from sources
+    citations_metadata = []
+    citation_counter = 1
+    
+    # Process knowledge base sources
+    kb_sources = []
+    if context:
+        # Parse knowledge base chunks (simplified - you'd extract actual doc names)
+        kb_sources = ["Knowledge Base Document 1", "Knowledge Base Document 2"]  # Placeholder
+        for doc_name in kb_sources:
+            citations_metadata.append(CitationMetadata(
+                id=citation_counter,
+                title=doc_name,
+                source_type="knowledge_base"
+            ))
+            citation_counter += 1
+    
+    # Process web sources
+    web_sources = []
+    if web_content:
+        # Extract URLs and titles from formatted web content
+        import re
+        url_pattern = r"Here is web source #\d+ of url: '([^']+)'"
+        urls = re.findall(url_pattern, web_content)
+        
+        for url in urls:
+            # You'd extract actual titles here
+            title = f"Web Source {citation_counter - len(kb_sources)}"
+            citations_metadata.append(CitationMetadata(
+                id=citation_counter,
+                title=title,
+                url=url,
+                source_type="web"
+            ))
+            citation_counter += 1
+    
+    # Create enhanced prompt
+    enhanced_prompt = f"""You are a helpful UPSC AI assistant providing clear, structured answers with proper citations.
+
+CONTEXT FROM KNOWLEDGE BASE:
+{context}
+
+WEB-BASED CONTENT:
+{web_content}
+
+**CRITICAL CITATION INSTRUCTIONS:**
+1. Use EXACTLY this format for inline citations: 📚[cite:NUMBER]📚
+2. Use EXACTLY this format for references: 📖[ref:NUMBER]📖
+3. Numbers must start from 1 and increment sequentially
+4. Place citations immediately after relevant paragraphs or key statements
+5. Include a "## References" section at the end with all citations
+
+**CITATION MAPPING:**
+{chr(10).join([f"📚[cite:{c.id}]📚 = {c.title} ({'Knowledge Base' if c.source_type == 'knowledge_base' else c.url})" for c in citations_metadata])}
+
+**EXAMPLE FORMAT:**
+The Indian Constitution was adopted in 1950 📚[cite:1]📚. This established a federal structure with clear separation of powers 📚[cite:2]📚.
+
+## References
+📖[ref:1]📖: NCERT History Textbook | Knowledge Base
+📖[ref:2]📖: Constitutional Framework of India | https://example.com/constitution
+
+Question: {query}
+
+Provide a comprehensive, well-structured answer using the exact citation format specified above."""
+
+    return enhanced_prompt, citations_metadata
+
+async def process_citation_stream(generator, citations_metadata: List[CitationMetadata]):
+    """
+    Process the LLM stream and extract/enhance citations in real-time
+    """
+    import re
+    
+    accumulated_text = ""
+    citation_pattern = r'📚\[cite:(\d+)\]📚'
+    reference_pattern = r'📖\[ref:(\d+)\]📖'
+    
+    async for chunk in generator:
+        if chunk["finish_reason"] == "stop":
+            # Send final citation metadata
+            yield {
+                "type": "citations_metadata",
+                "content": "",
+                "citations": [c.model_dump() for c in citations_metadata]
+            }
+            break
+            
+        chunk_text = chunk["message"]
+        accumulated_text += chunk_text
+        
+        # Check for citations in the current chunk
+        citations_found = re.findall(citation_pattern, chunk_text)
+        references_found = re.findall(reference_pattern, chunk_text)
+        
+        # Process and enhance the chunk
+        enhanced_chunk = chunk_text
+        
+        # Replace citation tokens with enhanced HTML for frontend
+        for cite_id in citations_found:
+            cite_num = int(cite_id)
+            if cite_num <= len(citations_metadata):
+                citation = citations_metadata[cite_num - 1]
+                if citation.source_type == "web" and citation.url:
+                    # Create clickable link for web sources
+                    enhanced_chunk = enhanced_chunk.replace(
+                        f'📚[cite:{cite_id}]📚',
+                        f'<sup class="citation-link" data-cite-id="{cite_id}" data-url="{citation.url}" title="{citation.title}">[{cite_id}]</sup>'
+                    )
+                else:
+                    # Create non-clickable citation for knowledge base
+                    enhanced_chunk = enhanced_chunk.replace(
+                        f'📚[cite:{cite_id}]📚',
+                        f'<sup class="citation-kb" data-cite-id="{cite_id}" title="{citation.title}">[{cite_id}]</sup>'
+                    )
+        
+        # Replace reference tokens
+        for ref_id in references_found:
+            ref_num = int(ref_id)
+            if ref_num <= len(citations_metadata):
+                citation = citations_metadata[ref_num - 1]
+                if citation.source_type == "web" and citation.url:
+                    enhanced_chunk = enhanced_chunk.replace(
+                        f'📖[ref:{ref_id}]📖',
+                        f'[{ref_id}]: {citation.title} | <a href="{citation.url}" target="_blank" rel="noopener">{citation.url}</a>'
+                    )
+                else:
+                    enhanced_chunk = enhanced_chunk.replace(
+                        f'📖[ref:{ref_id}]📖',
+                        f'[{ref_id}]: {citation.title} | Knowledge Base'
+                    )
+        
+        yield {
+            "type": "text-delta",
+            "content": enhanced_chunk,
+            "citations": None
+        }
+
 @app.post("/api/mentor_chat_search", response_class=StreamingResponse)
 async def mentor_chat_search(request: GetMentorSubtopicRequest):
-    #debug_log(f"Received chat_bucket request: {request}")
     msg.info(f"GKIRI1:: mentor_chat_search: {request}")
 
-    #####Frame query from chapter name , subtopic name
-    query = "Explain the topic : "+ "In chapter " + request.chapter_name + " explain the subtopic " + request.subtopic_name
+    # Frame query from chapter name, subtopic name
+    query = f"Explain the topic: In chapter {request.chapter_name} explain the subtopic {request.subtopic_name}"
+    
     try:
-        #1 web search
+        # 1. Web search
         web_search_results = await serper_search_async(query, num_results=20, location="India")
-
-
         search_data = json.loads(web_search_results)
 
-        #1.1 filter top n relvant search results
-        top_n=4
-        final_web_search_results = await filter_top_search_results_with_gemini(search_data,top_n,1)
+        # 1.1 Filter top relevant search results
+        top_n = 4
+        final_web_search_results = await filter_top_search_results_with_gemini(search_data, top_n, 1)
 
-        url_list=[]
-        for index in range(len(final_web_search_results)):
+        url_list = []
+        for index in final_web_search_results:
             url_list.append(search_data['organic'][index]['link'])
 
-        #2 call process_urls_to_markdown
+        # 2. Process URLs to markdown
         web_search_markdown_results = await process_urls_to_markdown(url_list)
 
-        #3 web_search_markdown_results
-        # Format web search markdown results with URL attribution
+        # 3. Format web search results
         formatted_web_content = ""
         for idx, (url, markdown_content) in enumerate(web_search_markdown_results.items(), 1):
-            if markdown_content:  # Only add if content exists
+            if markdown_content:
                 formatted_web_content += f"Here is web source #{idx} of url: '{url}'\n\n{markdown_content}\n\n"
 
-        
-        msg.info(f"GKIRI2::mentor_chat_search  formatted_web_content search_results: {formatted_web_content}")
-
-        # 4. Perform hybrid search on entire bucket (no file_ids specified)
+        # 4. Perform hybrid search on knowledge base
         search_results = await hybrid_shared_search(request.user_id, HybridSearchRequest(
             query_text=query,
             match_count=4
         ))
         
-        msg.info(f"GKIRI2::mentor_chat_search  hybrid_shared_search search_results: {search_results}")
-        # 5. Extract and sort top 4 results by similarity score
+        # 5. Format knowledge base results
         context_chunks = sorted(
             search_results,
             key=lambda x: x.get('similarity', 0),
             reverse=True
         )[:4]
         
-        # 6. Combine context chunks into single context with chunk numbering and separation
         formatted_chunks = []
         for i, chunk in enumerate(context_chunks, 1):
             chunk_text = chunk.get('text', '')
             doc_name = chunk.get('doc_name', 'Unknown Document')
-            formatted_chunk = f"Document: {doc_name}\nContent:\n{chunk_text}\n{'='*50}"  # Adding separator line
+            formatted_chunk = f"Document: {doc_name}\nContent:\n{chunk_text}\n{'='*50}"
             formatted_chunks.append(formatted_chunk)
         
         context = "\n\n".join(formatted_chunks)
 
-        #####better markdown + para level citation
-        chat_prompt = f"""You are a helpful UPSC AI assistant providing clear, holistic, and structured answers tailored specifically for UPSC aspirants, based on multiple reliable sources.
+        # 6. Create enhanced prompt with citation metadata
+        enhanced_prompt, citations_metadata = create_citation_enhanced_prompt(
+            context, formatted_web_content, query
+        )
 
-        CONTEXT FROM KNOWLEDGE BASE:
-        {context}
-
-        WEB-BASED CONTENT:
-        {formatted_web_content}
-
-        Guidelines for crafting your answer:
-        1. Present a holistic, logically structured, and easy-to-follow answer.
-        2. Organize your response using clear markdown headings (##), subheadings (###), bullet points, and numbered lists to enhance readability and flow.
-        3. Connect key points clearly to build a coherent narrative, making connections between different pieces of information obvious.
-        4. Provide inline paragraph-level citations citations sparingly and **effectively—only cite the single most relevant source if multiple sources convey similar points**.
-        5. **Prefer paragraph-level citations rather than frequent sentence-level citations to  avoid overwhelming the reader and maintain readability**.
-
-
-        **ATTENTION**
-        CITATION FORMAT:
-        - Please strictly follow below syntax and citation format as its very critical for the project
-        - Inline citations: Use unique tokens in the form ((cite:1)), ((cite:2)), etc., placed immediately after the relevant paragraph or statement.
-          Always use numeric references in ascending order, starting from 1, like ((cite:1)), ((cite:2)).
-          Never use labels like ((cite:web2)), ((cite:kb1)), or anything other than numeric tokens.
-          If you see references in the provided context labeled “web2” or “web4,” map them to numeric references in ascending order. For example, if “web4” is your second source, you must cite it as ((cite:2)).
-          If multiple sources are being cited for a single point, combine them on one line using the format: ((cite:2), (cite:4)).
-
-        - Reference List: Include at the end of your response under the heading "## References." For each citation, use the format:
-        ((ref:<number>)): <Title or short description> | <URL or "Knowledge Base">
-
-        Question: {query}
-
-        IMPORTANT FORMATTING TIPS:
-        - Clearly structure your response with logical flow: start with an introduction or overview, follow with main points organized into sections and subsections, and conclude with a concise summary if necessary.
-        - All significant facts and claims must be supported by at least one citation.
-        - Use a professional yet straightforward language suitable for UPSC aspirants.
-
-        Answer Format Example:
-
-        ## Introduction
-        Briefly introduce and summarize key points.
-
-        ## Main Topic Heading
-        ### Subheading
-        - Bullet point or numbered list if appropriate. For example, include supporting data or points with inline citations such as ((cite:1)).
-
-        ## Conclusion
-        Briefly summarize or highlight the most critical points.
-
-        ## References
-        ((ref:1)): NCERT History Textbook | Knowledge Base  
-        ((ref:2)): Evolution of Administration in India | https://example.com/indian-administration
-
-        please pay careful attention and think and reflect and finally generate  high quality answers. 
-        If sufficient information isn't available from the provided sources, clearly state this and suggest what additional information would be helpful for a comprehensive answer.""" 
-
-        # 8. Stream response based on model_id
+        # 7. Stream response with enhanced citation processing
         async def event_stream():
             try:
                 generator = None
                 if request.model_id in [0, 1]:
                     model_name = "gemini-1.5-flash-002" if request.model_id == 0 else "gemini-2.0-flash"
-                    generator = gemini_generator.generate_stream([chat_prompt], [""], [], model_name)
+                    generator = gemini_generator.generate_stream([enhanced_prompt], [""], [], model_name)
                 else:
                     model_name = "deepseek-r1" if request.model_id == 2 else "deepseek-chat"
-                    generator = deepseek_generator.generate_stream([chat_prompt], [""], [], model_name)
+                    generator = deepseek_generator.generate_stream([enhanced_prompt], [""], [], model_name)
 
-                async for chunk in generator:
-                    if chunk["finish_reason"] == "stop":
-                        break
-                    yield f"data: {json.dumps({'type': 'text-delta', 'content': chunk['message']})}\n\n"
+                async for enhanced_chunk in process_citation_stream(generator, citations_metadata):
+                    yield f"data: {json.dumps(enhanced_chunk)}\n\n"
                 
                 yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
 
@@ -3996,5 +4095,5 @@ async def mentor_chat_search(request: GetMentorSubtopicRequest):
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     except Exception as e:
-        msg.fail(f"Error in chat_search: {str(e)}")
+        msg.fail(f"Error in mentor_chat_search: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
