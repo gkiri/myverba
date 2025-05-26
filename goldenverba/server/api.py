@@ -212,6 +212,7 @@ origins = [
     "https://*.lovable.app",
     "https://preview--conversational-insight-panel.lovable.app",
     "https://preview--lovable-connectify.lovable.app",
+    "http://23.88.126.158:3000", #hetzner
 ]
 
 # Add middleware for handling Cross Origin Resource Sharing (CORS)
