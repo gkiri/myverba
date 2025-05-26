@@ -935,6 +935,12 @@ class GetMentorSubtopicRequest(BaseModel):
     subtopic_name: str
     chapter_name: str
 
+class GetMentorQueryRequest(BaseModel):
+    user_id: str
+    model_id: int
+    subtopic_id: str
+    query: str
+
 # @app.post("/api/get_syllabus_chapter_with_userstatus")
 # async def get_syllabus_chapter_with_userstatus(request: GetSyllabusChapterRequest):
 #     debug_log(f"Received get_syllabus_chapter_with_userstatus request: {request}")
@@ -4055,6 +4061,96 @@ async def mentor_chat_search(request: GetMentorSubtopicRequest):
 
     # Frame query from chapter name, subtopic name
     query = f"Explain the topic: In chapter {request.chapter_name} explain the subtopic {request.subtopic_name}"
+    
+    try:
+        # 1. Web search
+        web_search_results = await serper_search_async(query, num_results=20, location="India")
+        search_data = json.loads(web_search_results)
+
+        # 1.1 Filter top relevant search results
+        top_n = 4
+        final_web_search_results = await filter_top_search_results_with_gemini(search_data, top_n, 1)
+
+        url_list = []
+        for index in final_web_search_results:
+            url_list.append(search_data['organic'][index]['link'])
+
+        # 2. Process URLs to markdown
+        web_search_markdown_results = await process_urls_to_markdown(url_list)
+
+        # 3. Format web search results
+        formatted_web_content = ""
+        for idx, (url, markdown_content) in enumerate(web_search_markdown_results.items(), 1):
+            if markdown_content:
+                formatted_web_content += f"Here is web source #{idx} of url: '{url}'\n\n{markdown_content}\n\n"
+
+        # 4. Perform hybrid search on knowledge base
+        search_results = await hybrid_shared_search(request.user_id, HybridSearchRequest(
+            query_text=query,
+            match_count=4
+        ))
+        
+        # 5. Format knowledge base results
+        context_chunks = sorted(
+            search_results,
+            key=lambda x: x.get('similarity', 0),
+            reverse=True
+        )[:4]
+        
+        formatted_chunks = []
+        for i, chunk in enumerate(context_chunks, 1):
+            chunk_text = chunk.get('text', '')
+            doc_name = chunk.get('doc_name', 'Unknown Document')
+            formatted_chunk = f"Document: {doc_name}\nContent:\n{chunk_text}\n{'='*50}"
+            formatted_chunks.append(formatted_chunk)
+        
+        context = "\n\n".join(formatted_chunks)
+
+        # 6. Create enhanced prompt with citation metadata
+        enhanced_prompt, citations_metadata = create_citation_enhanced_prompt(
+            context, formatted_web_content, query
+        )
+
+        # 7. Stream response with enhanced citation processing
+        async def event_stream():
+            try:
+                generator = None
+                if request.model_id in [0, 1]:
+                    model_name = "gemini-1.5-flash-002" if request.model_id == 0 else "gemini-2.0-flash"
+                    generator = gemini_generator.generate_stream([enhanced_prompt], [""], [], model_name)
+                else:
+                    model_name = "deepseek-r1" if request.model_id == 2 else "deepseek-chat"
+                    generator = deepseek_generator.generate_stream([enhanced_prompt], [""], [], model_name)
+
+                async for enhanced_chunk in process_citation_stream(generator, citations_metadata):
+                    if enhanced_chunk["type"] == "final_content":
+                        # Send the final processed content with clean citations
+                        yield f"data: {json.dumps(enhanced_chunk)}\n\n"
+                        yield f"data: {json.dumps({'type': 'finish', 'content': ''})}\n\n"
+                    else:
+                        # Send streaming text chunks
+                        yield f"data: {json.dumps(enhanced_chunk)}\n\n"
+
+            except Exception as e:
+                msg.fail(f"Streaming failed: {str(e)}")
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+    except Exception as e:
+        msg.fail(f"Error in mentor_chat_search: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+#########################################mentor chat query
+#########when user asks query on top of selected sub topic 
+########when user clicks on bottom suggestion queries
+
+@app.post("/api/mentor_query_search", response_class=StreamingResponse)
+async def mentor_query_search(request: GetMentorQueryRequest):
+    msg.info(f"GKIRI1:: mentor_query_search: {request}")
+
+    # Frame query from chapter name, subtopic name
+    query = request.query
     
     try:
         # 1. Web search
