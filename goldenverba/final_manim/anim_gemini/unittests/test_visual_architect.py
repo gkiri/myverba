@@ -5,8 +5,8 @@ import unittest
 from unittest.mock import patch, MagicMock, mock_open
 import os
 import shutil
-from anim_gemini.project_drishti.visual_architect import VisualArchitect
-from anim_gemini.project_drishti import config # To access configured paths and API key status
+from goldenverba.final_manim.anim_gemini.project_drishti.visual_architect import VisualArchitect
+from goldenverba.final_manim.anim_gemini.project_drishti import config # To access configured paths and API key status
 
 class TestVisualArchitectLLM(unittest.TestCase):
 

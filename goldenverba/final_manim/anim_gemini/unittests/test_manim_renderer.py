@@ -5,8 +5,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 import os
 import shutil
-from anim_gemini.project_drishti.manim_renderer import ManimRenderer
-from anim_gemini.project_drishti import config # To access configured paths
+from goldenverba.final_manim.anim_gemini.project_drishti.manim_renderer import ManimRenderer
+from goldenverba.final_manim.anim_gemini.project_drishti import config # To access configured paths
 
 class TestManimRenderer(unittest.TestCase):
 

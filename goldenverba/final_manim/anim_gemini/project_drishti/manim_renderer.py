@@ -21,11 +21,8 @@ Dependencies: Manim (must be installed and accessible in the system PATH).
 import subprocess
 import os
 import logging
-try:
-    from goldenverba.final_manim.anim_gemini.project_drishti import config
-except ImportError:
-    # Fallback for when running directly from project_drishti directory
-    from anim_gemini.project_drishti import config
+# Use relative import - this file is part of the project_drishti package
+from . import config
 
 # Configure logging (can be configured globally in main app too)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

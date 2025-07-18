@@ -4,7 +4,7 @@ Unit tests for the DidacticScripter module.
 import unittest
 import os
 import json
-from anim_gemini.project_drishti.didactic_scripter import DidacticScripter
+from goldenverba.final_manim.anim_gemini.project_drishti.didactic_scripter import DidacticScripter
 
 class TestDidacticScripter(unittest.TestCase):
 

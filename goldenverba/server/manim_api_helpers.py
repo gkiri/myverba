@@ -25,52 +25,17 @@ from goldenverba.server.supabase.supabase_client import supabase
 
 # Import the manim pipeline components - use lazy imports to avoid startup failures
 try:
-    # First check if we can access the basic package structure
     msg.info("Testing manim component imports...")
     
-    # Test basic package import first
-    try:
-        from goldenverba.final_manim import anim_gemini
-        msg.good("✅ anim_gemini package accessible")
-    except ImportError as e:
-        msg.fail(f"❌ anim_gemini package import failed: {e}")
-        raise
+    # Use the lazy loading structure we've set up
+    from goldenverba.final_manim import anim_gemini
     
-    # Test individual component imports
-    try:
-        from goldenverba.final_manim.anim_gemini.project_drishti import config
-        msg.good("✅ config imported")
-    except ImportError as e:
-        msg.fail(f"❌ config import failed: {e}")
-        raise
-    
-    try:
-        from goldenverba.final_manim.anim_gemini.project_drishti.didactic_scripter import DidacticScripter
-        msg.good("✅ DidacticScripter imported")
-    except ImportError as e:
-        msg.fail(f"❌ DidacticScripter import failed: {e}")
-        raise
-    
-    try:
-        from goldenverba.final_manim.anim_gemini.project_drishti.visual_architect import VisualArchitect
-        msg.good("✅ VisualArchitect imported")
-    except ImportError as e:
-        msg.fail(f"❌ VisualArchitect import failed: {e}")
-        raise
-    
-    try:
-        from goldenverba.final_manim.anim_gemini.project_drishti.manim_renderer import ManimRenderer
-        msg.good("✅ ManimRenderer imported")
-    except ImportError as e:
-        msg.fail(f"❌ ManimRenderer import failed: {e}")
-        raise
-    
-    try:
-        from goldenverba.final_manim.anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
-        msg.good("✅ VideoAnalyzer imported")
-    except ImportError as e:
-        msg.fail(f"❌ VideoAnalyzer import failed: {e}")
-        raise
+    # Access components through the lazy loader
+    config = anim_gemini.config
+    DidacticScripter = anim_gemini.DidacticScripter
+    VisualArchitect = anim_gemini.VisualArchitect
+    ManimRenderer = anim_gemini.ManimRenderer
+    VideoAnalyzer = anim_gemini.VideoAnalyzer
     
     MANIM_AVAILABLE = True
     msg.good("✅ All manim components imported successfully")

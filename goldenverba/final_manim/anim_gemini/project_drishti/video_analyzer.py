@@ -3,11 +3,8 @@ import subprocess
 import logging
 import time
 import google.generativeai as genai
-try:
-    from goldenverba.final_manim.anim_gemini.project_drishti import config
-except ImportError:
-    # Fallback for when running directly from project_drishti directory
-    from . import config
+# Use relative import - this file is part of the project_drishti package
+from . import config
 import shutil
 
 logging.basicConfig(level=logging.INFO)

@@ -44,29 +44,43 @@ def __getattr__(name):
         except ImportError as e:
             raise ImportError(f"main_pipeline module not available: {e}")
     elif name in ['DidacticScripter', 'VisualArchitect', 'ManimRenderer', 'VideoAnalyzer', 'ManimCompiler', 'config']:
-        try:
-            from .project_drishti import (
-                DidacticScripter,
-                VisualArchitect, 
-                ManimRenderer,
-                VideoAnalyzer,
-                ManimCompiler,
-                config,
-            )
-            if name == 'DidacticScripter':
+        # Import each component individually to avoid single point of failure
+        if name == 'DidacticScripter':
+            try:
+                from .project_drishti import DidacticScripter
                 return DidacticScripter
-            elif name == 'VisualArchitect':
+            except ImportError as e:
+                raise ImportError(f"DidacticScripter not available: {e}")
+        elif name == 'VisualArchitect':
+            try:
+                from .project_drishti import VisualArchitect
                 return VisualArchitect
-            elif name == 'ManimRenderer':
+            except ImportError as e:
+                raise ImportError(f"VisualArchitect not available: {e}")
+        elif name == 'ManimRenderer':
+            try:
+                from .project_drishti import ManimRenderer
                 return ManimRenderer
-            elif name == 'VideoAnalyzer':
+            except ImportError as e:
+                raise ImportError(f"ManimRenderer not available: {e}")
+        elif name == 'VideoAnalyzer':
+            try:
+                from .project_drishti import VideoAnalyzer
                 return VideoAnalyzer
-            elif name == 'ManimCompiler':
+            except ImportError as e:
+                raise ImportError(f"VideoAnalyzer not available: {e}")
+        elif name == 'ManimCompiler':
+            try:
+                from .project_drishti import ManimCompiler
                 return ManimCompiler
-            elif name == 'config':
+            except ImportError as e:
+                raise ImportError(f"ManimCompiler not available: {e}")
+        elif name == 'config':
+            try:
+                from .project_drishti import config
                 return config
-        except ImportError as e:
-            raise ImportError(f"{name} not available: {e}")
+            except ImportError as e:
+                raise ImportError(f"config not available: {e}")
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 __all__ = [
