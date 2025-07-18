@@ -38,6 +38,8 @@ from goldenverba.server.types import (
     GetDocumentPayload,
     SearchQueryPayload,
     ImportPayload,
+    TextToVideoRequest,
+    TextToVideoResponse,
 )
 from goldenverba.server.util import get_config, set_config, setup_managers
 from goldenverba.components.types import Question,MockQuestion # Add  Question model to types
@@ -4349,18 +4351,4 @@ async def text_to_video_status():
             }
         )
 
-# Add new request models with other Pydantic models
-class TextToVideoRequest(BaseModel):
-    topic: str
-    num_scenes: Optional[int] = 3
-    user_id: str
-
-class TextToVideoResponse(BaseModel):
-    status: str
-    video_path: Optional[str] = None
-    storage_video_url: Optional[str] = None
-    individual_videos: Optional[List[str]] = None
-    scenes_completed: int = 0
-    scenes_total: int = 0
-    processing_time: Optional[float] = None
-    error: Optional[str] = None
+# TextToVideoRequest and TextToVideoResponse are now imported from goldenverba.server.types
