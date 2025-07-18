@@ -7,8 +7,13 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
     pkg-config \
-    # Cairo graphics library for Manim
+    # Cairo and Pango graphics libraries for Manim
     libcairo2-dev \
+    libpango1.0-dev \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf2.0-dev \
+    libffi-dev \
+    shared-mime-info \
     # Video processing
     ffmpeg \
     # Audio processing  

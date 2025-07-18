@@ -32,7 +32,12 @@ docker-compose up
 
 ### System Dependencies (Dockerfile)
 - `build-essential, python3-dev, pkg-config` - Build tools
-- `libcairo2-dev` - Cairo graphics library  
+- Graphics libraries for Manim:
+  - `libcairo2-dev` - Cairo graphics library  
+  - `libpango1.0-dev` - Pango text rendering (fixes manimpango build errors)
+  - `libpangocairo-1.0-0` - Pango Cairo integration
+  - `libgdk-pixbuf2.0-dev` - GDK Pixbuf for image handling
+  - `libffi-dev, shared-mime-info` - Additional graphics support
 - `ffmpeg` - Video processing
 - `sox, libsox-fmt-all` - Audio processing
 - LaTeX packages for mathematical rendering:
@@ -40,6 +45,21 @@ docker-compose up
   - `texlive-fonts-extra, texlive-fonts-recommended` 
   - `texlive-latex-recommended, texlive-science`
   - `dvisvgm` - SVG conversion
+
+## Troubleshooting
+
+### manimpango Build Errors
+If you encounter `pangocairo >= 1.30.0 is required` errors:
+- Ensure all Pango development packages are installed
+- This is resolved by the updated Dockerfile which includes `libpango1.0-dev`
+
+### ARM64/M1 Mac Issues  
+- The Dockerfile should work on ARM64 architectures
+- If problems persist, try building with `--platform linux/amd64`
+
+### LaTeX Rendering Issues
+- Full LaTeX support requires ~500MB+ of packages
+- For minimal setup, you can remove LaTeX packages and disable LaTeX in Manim
 
 ## Version Preservation
 Existing package versions are preserved to avoid breaking changes:
