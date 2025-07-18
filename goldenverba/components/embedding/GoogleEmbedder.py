@@ -13,7 +13,7 @@ class GoogleEmbedder(Embedder):
         self.name = "GoogleEmbedder"
         self.requires_env = ["GOOGLE_API_KEY"]
         self.description = "Embeds and retrieves objects using Google's text-embedding-preview-0409 model"
-        self.vectorizer = "none"
+        self.vectorizer = "text2vec-palm"
 
     def embed(
         self,

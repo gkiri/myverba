@@ -27,8 +27,9 @@ setup(
     install_requires=[
         #"weaviate-client==3.23.1",
         "weaviate-client==4.6.4",
-        "python-dotenv>=0.21.0,<0.22.0",
-        "openai>=1.97.0",# Updated to modern OpenAI library with OpenAI class support
+        "python-dotenv==1.0.0",
+        "openai==0.27.9",# current and old openai lib.if you dont need latest openrouter models support-this is good 
+        #"openai==1.50.2",# New AsyncOpenai support needs this (I have already prepared Openroutergenerator for this for gemini with opentouer support)
         "wasabi==1.1.2",
         "fastapi==0.102.0",
         "uvicorn[standard]==0.29.0",
@@ -39,10 +40,10 @@ setup(
         "pypdf==4.2.0",
         "python-multipart==0.0.9",
         "supabase==2.7.4",
-        "google-generativeai>=0.8.2",
-        "vertexai>=1.70.0",
+        "google-generativeai==0.8.2",
+        "vertexai==1.68.0",
         "aiofiles==23.2.1",
-        # PyPDF2 removed - deprecated in favor of pypdf
+        "PyPDF2==3.0.1",
         "voyageai==0.3.2",
         "langchain-text-splitters==0.3.7",
         "aiohttp==3.11.14",
@@ -58,19 +59,7 @@ setup(
             "accelerate==0.29.2",
         ],
         "google": [
-            # Use compatible version range instead of conflicting exact version
-            "vertexai>=1.70.0",
-        ],
-        "manim": [
-            # Animation and video generation dependencies
-            "manim==0.19.0",
-            # Use latest stable manim-voiceover version
-            "manim-voiceover==0.3.7", 
-            "ffmpeg-python==0.2.0",
-            "psutil",
-            "matplotlib",
-            # Note: openai, google-generativeai, aiofiles, aiohttp, python-dotenv 
-            # are already included in main install_requires with compatible versions
+            "vertexai==1.46.0",
         ]
     },
 )

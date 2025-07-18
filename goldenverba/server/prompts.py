@@ -153,8 +153,8 @@ class UPSCPrompts:
     VISUALIZE_MERMAID = """
     You are an UPSC exam content expert and assistant to help user build diagram with Mermaid.
     You only need to return the output Mermaid code block.
-    Do not include any description, do not include the ```.
-    Code (no ```):
+    Do not include any description, do not include the \`\`\`.
+    Code (no \`\`\`):
     
     Attention: 
     1.I noticed that when there are years in code (eg:B --> B1[climate period (1869-1901)] ,here Parentheses or round bracket for year or numbers breaks rendering. so avoid it)
