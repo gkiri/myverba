@@ -39,10 +39,10 @@ setup(
         "pypdf==4.2.0",
         "python-multipart==0.0.9",
         "supabase==2.7.4",
-        "google-generativeai==0.8.2",
+        "google-generativeai>=0.8.2",
         "vertexai>=1.70.0",
         "aiofiles==23.2.1",
-        "PyPDF2==3.0.1",
+        # PyPDF2 removed - deprecated in favor of pypdf
         "voyageai==0.3.2",
         "langchain-text-splitters==0.3.7",
         "aiohttp==3.11.14",
@@ -58,12 +58,14 @@ setup(
             "accelerate==0.29.2",
         ],
         "google": [
-            "vertexai==1.46.0",
+            # Use compatible version range instead of conflicting exact version
+            "vertexai>=1.70.0",
         ],
         "manim": [
             # Animation and video generation dependencies
             "manim==0.19.0",
-            "manim-voiceover==0.3.7", 
+            # Updated manim-voiceover to newer version to fix pkg_resources issues
+            "manim-voiceover>=0.4.0", 
             "ffmpeg-python==0.2.0",
             "psutil",
             "matplotlib",

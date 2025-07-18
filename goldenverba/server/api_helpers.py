@@ -9,9 +9,8 @@ import re
 from goldenverba.verba_manager import VerbaManager
 import random
 import os
-# PyPDF2 for splitting PDF
-import PyPDF2
-from PyPDF2 import PdfReader, PdfWriter
+# pypdf for splitting PDF (updated from deprecated PyPDF2)
+from pypdf import PdfReader, PdfWriter
 
 def fetch_subtopic_content(manager: VerbaManager, subtopic_id: str) -> str:
     """
