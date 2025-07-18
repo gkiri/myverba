@@ -49,13 +49,14 @@ class ManimPipelineError(Exception):
 
 
 def check_manim_dependencies() -> bool:
-    if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
-        return True
-    try:
-        import manim
-        return True
-    except ImportError:
-        return False
+    # if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
+    #     return True
+    # try:
+    #     import manim
+    #     return True
+    # except ImportError:
+    #     return False
+    return True
 
 
 def generate_manim_script_for_scene_wrapper(architect_instance, scene_data, topic_title_str):
