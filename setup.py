@@ -64,8 +64,8 @@ setup(
         "manim": [
             # Animation and video generation dependencies
             "manim==0.19.0",
-            # Updated manim-voiceover to newer version to fix pkg_resources issues
-            "manim-voiceover>=0.4.0", 
+            # Use latest stable manim-voiceover version
+            "manim-voiceover==0.3.7", 
             "ffmpeg-python==0.2.0",
             "psutil",
             "matplotlib",

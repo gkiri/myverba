@@ -42,8 +42,14 @@ RUN chmod 600 /data/myupsc-mentor-ded3f62e859b.json
 # Copy your application code
 COPY . /Verba
 
-# Install Python dependencies including Manim extras
-RUN pip install -e '.[manim]'
+# Upgrade setuptools and pip to fix pkg_resources issues
+RUN pip install --upgrade setuptools pip
+
+# Install dependencies step by step to avoid pkg_resources conflicts
+RUN pip install -e . && \
+    pip install manim==0.19.0 && \
+    pip install manim-voiceover==0.3.7 && \
+    pip install ffmpeg-python==0.2.0 psutil matplotlib
 
 # Set the environment variable inside the image
 ENV GOOGLE_APPLICATION_CREDENTIALS /data/myupsc-mentor-ded3f62e859b.json
