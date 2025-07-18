@@ -5,7 +5,6 @@ This module provides helper functions for integrating the Project Drishti text-t
 generation pipeline into the Verba API.
 """
 
-import logging
 import os
 import json
 import asyncio
@@ -21,54 +20,51 @@ from wasabi import msg
 import uuid
 from datetime import datetime
 
-# Setup logging first
-logger = logging.getLogger("ManimAPI")
-
 # Import Supabase client
 from goldenverba.server.supabase.supabase_client import supabase
 
 # Import the manim pipeline components with absolute paths
 try:
     # Test each import individually for better error reporting
-    logger.info("Testing manim component imports...")
+    msg.info("Testing manim component imports...")
     
     try:
         from goldenverba.final_manim.anim_gemini.project_drishti import config
-        logger.info("✅ config imported")
+        msg.good("✅ config imported")
     except ImportError as e:
-        logger.error(f"❌ config import failed: {e}")
+        msg.fail(f"❌ config import failed: {e}")
         raise
     
     try:
         from goldenverba.final_manim.anim_gemini.project_drishti.didactic_scripter import DidacticScripter
-        logger.info("✅ DidacticScripter imported")
+        msg.good("✅ DidacticScripter imported")
     except ImportError as e:
-        logger.error(f"❌ DidacticScripter import failed: {e}")
+        msg.fail(f"❌ DidacticScripter import failed: {e}")
         raise
     
     try:
         from goldenverba.final_manim.anim_gemini.project_drishti.visual_architect import VisualArchitect
-        logger.info("✅ VisualArchitect imported")
+        msg.good("✅ VisualArchitect imported")
     except ImportError as e:
-        logger.error(f"❌ VisualArchitect import failed: {e}")
+        msg.fail(f"❌ VisualArchitect import failed: {e}")
         raise
     
     try:
         from goldenverba.final_manim.anim_gemini.project_drishti.manim_renderer import ManimRenderer
-        logger.info("✅ ManimRenderer imported")
+        msg.good("✅ ManimRenderer imported")
     except ImportError as e:
-        logger.error(f"❌ ManimRenderer import failed: {e}")
+        msg.fail(f"❌ ManimRenderer import failed: {e}")
         raise
     
     try:
         from goldenverba.final_manim.anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
-        logger.info("✅ VideoAnalyzer imported")
+        msg.good("✅ VideoAnalyzer imported")
     except ImportError as e:
-        logger.error(f"❌ VideoAnalyzer import failed: {e}")
+        msg.fail(f"❌ VideoAnalyzer import failed: {e}")
         raise
     
     MANIM_AVAILABLE = True
-    logger.info("✅ All manim components imported successfully")
+    msg.good("✅ All manim components imported successfully")
     
     # Check for required environment variables
     try:
@@ -76,22 +72,22 @@ try:
         gemini_key = os.getenv("GEMINI_API_KEY")
         
         if not openrouter_key:
-            logger.warning("⚠️  OPENROUTER_API_KEY not set - LLM calls will fail")
+            msg.warn("⚠️  OPENROUTER_API_KEY not set - LLM calls will fail")
         else:
-            logger.info("✅ OPENROUTER_API_KEY is set")
+            msg.good("✅ OPENROUTER_API_KEY is set")
             
         if not gemini_key:
-            logger.warning("⚠️  GEMINI_API_KEY not set - Video analysis will fail")
+            msg.warn("⚠️  GEMINI_API_KEY not set - Video analysis will fail")
         else:
-            logger.info("✅ GEMINI_API_KEY is set")
+            msg.good("✅ GEMINI_API_KEY is set")
             
     except Exception as e:
-        logger.warning(f"⚠️  Could not check environment variables: {e}")
+        msg.warn(f"⚠️  Could not check environment variables: {e}")
         
 except ImportError as e:
-    logger.error(f"❌ Manim components import failed: {e}")
-    logger.error(f"   Error type: {type(e).__name__}")
-    logger.error(f"   Error details: {str(e)}")
+    msg.fail(f"❌ Manim components import failed: {e}")
+    msg.fail(f"   Error type: {type(e).__name__}")
+    msg.fail(f"   Error details: {str(e)}")
     MANIM_AVAILABLE = False
 
 MAX_RENDER_ATTEMPTS = 3
@@ -110,23 +106,19 @@ def check_manim_dependencies() -> bool:
     Returns:
         bool: True if all dependencies are available, False otherwise
     """
-    # If user explicitly disables manim check
-    # if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
-    #     return True
-    
-    # # Check if our manim components were imported successfully
-    # if not MANIM_AVAILABLE:
-    #     logger.warning("Manim components not available - import failed")
-    #     return False
+    # Check if our manim components were imported successfully
+    if not MANIM_AVAILABLE:
+        msg.warn("Manim components not available - import failed during startup")
+        return False
         
-    # # Check if manim itself is available
-    # try:
-    #     import manim
-    #     return True
-    # except ImportError:
-    #     logger.warning("Manim library not available")
-    #     return False
-    return True
+    # Check if manim itself is available
+    try:
+        import manim
+        msg.good("✅ Manim library is available")
+        return True
+    except ImportError as e:
+        msg.warn(f"Manim library not available: {e}")
+        return False
 
 def generate_manim_script_for_scene_wrapper(architect_instance, scene_data, topic_title_str):
     """Wrapper function for scene script generation"""
@@ -134,7 +126,7 @@ def generate_manim_script_for_scene_wrapper(architect_instance, scene_data, topi
         scene_data,
         topic_title=topic_title_str
     )
-    logger.info(f"Script generated for scene: {scene_data.get('title', 'Unknown')}")
+    msg.info(f"Script generated for scene: {scene_data.get('title', 'Unknown')}")
     return script_path, manim_class_name, scene_data
 
 
@@ -166,7 +158,7 @@ async def render_scene_with_retries(
         await progress_callback(f"Starting render for scene: {scene_title}")
     
     for attempt in range(max_retries):
-        logger.info(f"Processing attempt {attempt + 1}/{max_retries} for scene '{scene_title}'")
+        msg.info(f"Processing attempt {attempt + 1}/{max_retries} for scene '{scene_title}'")
         
         if progress_callback:
             await progress_callback(f"Attempt {attempt + 1} for scene: {scene_title}")
@@ -174,7 +166,7 @@ async def render_scene_with_retries(
         # CPU-BOUND: Rendering
         render_success, video_path, render_error = False, None, ""
         async with cpu_semaphore:
-            logger.info(f"Rendering '{scene_title}' from {current_script_path}...")
+            msg.info(f"Rendering '{scene_title}' from {current_script_path}...")
             rd_start = time.perf_counter()
             render_success, video_path, render_error = await loop.run_in_executor(
                 None,
@@ -186,7 +178,7 @@ async def render_scene_with_retries(
             
             # CPU-BOUND: Compression
             if render_success:
-                logger.info(f"Compressing video for '{scene_title}'...")
+                msg.info(f"Compressing video for '{scene_title}'...")
                 if progress_callback:
                     await progress_callback(f"Compressing video for scene: {scene_title}")
                     
@@ -201,12 +193,12 @@ async def render_scene_with_retries(
 
         # If rendering and compression are successful, proceed to analysis
         if render_success:
-            logger.info(f"Successfully rendered and compressed '{scene_title}'.")
+            msg.info(f"Successfully rendered and compressed '{scene_title}'.")
             
             # I/O-BOUND: Video Analysis
             analysis_passed, analysis_reason = False, "Analysis not run"
             async with io_semaphore:
-                logger.info(f"Analyzing video quality for '{scene_title}'...")
+                msg.info(f"Analyzing video quality for '{scene_title}'...")
                 if progress_callback:
                     await progress_callback(f"Analyzing video quality for scene: {scene_title}")
                 
@@ -219,21 +211,21 @@ async def render_scene_with_retries(
                 )
 
             if analysis_passed:
-                logger.info(f"SUCCESS: Video for '{scene_title}' passed quality analysis")
+                msg.info(f"SUCCESS: Video for '{scene_title}' passed quality analysis")
                 if progress_callback:
                     await progress_callback(f"✅ Scene completed: {scene_title}")
                 return video_path
             else:
-                logger.warning(f"Video for '{scene_title}' FAILED quality analysis: {analysis_reason}")
+                msg.warn(f"Video for '{scene_title}' FAILED quality analysis: {analysis_reason}")
                 render_success = False
                 render_error = analysis_reason
 
         # If we reach here, the attempt failed
         if not render_success:
-            logger.error(f"Failed to produce quality video for '{scene_title}' on attempt {attempt + 1}: {render_error}")
+            msg.error(f"Failed to produce quality video for '{scene_title}' on attempt {attempt + 1}: {render_error}")
             
             if attempt >= max_retries - 1:
-                logger.critical(f"Max retries reached for '{scene_title}'. Moving on.")
+                msg.error(f"Max retries reached for '{scene_title}'. Moving on.")
                 if progress_callback:
                     await progress_callback(f"❌ Failed after {max_retries} attempts: {scene_title}")
                 break
@@ -255,18 +247,18 @@ async def render_scene_with_retries(
                     )
                 
                 if gen_script_path and gen_manim_class_name:
-                    logger.info(f"Script regenerated for '{scene_title}'")
+                    msg.info(f"Script regenerated for '{scene_title}'")
                     if current_script_path != gen_script_path and os.path.exists(current_script_path):
                         os.remove(current_script_path)
                     current_script_path = gen_script_path
                     current_manim_class_name = gen_manim_class_name
                 else:
-                    logger.error(f"Failed to regenerate script for '{scene_title}'")
+                    msg.error(f"Failed to regenerate script for '{scene_title}'")
                     
             except Exception as e:
-                logger.error(f"Exception during script regeneration for '{scene_title}': {e}")
+                msg.error(f"Exception during script regeneration for '{scene_title}': {e}")
 
-    logger.error(f"All {max_retries} attempts failed for scene '{scene_title}'.")
+    msg.error(f"All {max_retries} attempts failed for scene '{scene_title}'.")
     return None
 
 
@@ -284,7 +276,7 @@ async def process_scene(
 ):
     """Process a single scene from script generation to final video"""
     scene_title = scene_data.get("title", f"Scene_{scene_data.get('scene_number', 'Unknown')}")
-    logger.info(f"Processing scene: {scene_title}")
+    msg.info(f"Processing scene: {scene_title}")
     
     if progress_callback:
         await progress_callback(f"Generating script for scene: {scene_title}")
@@ -306,13 +298,13 @@ async def process_scene(
             )
             initial_script_gen_time = time.perf_counter() - sg_start_initial
         except Exception as e:
-            logger.error(f"Initial script generation failed for {scene_title}: {e}")
+            msg.error(f"Initial script generation failed for {scene_title}: {e}")
             if progress_callback:
                 await progress_callback(f"❌ Script generation failed for scene: {scene_title}")
             return None
 
     if not (script_path and manim_class_name):
-        logger.error(f"Could not generate initial script for scene: {scene_title}")
+        msg.error(f"Could not generate initial script for scene: {scene_title}")
         if progress_callback:
             await progress_callback(f"❌ No script generated for scene: {scene_title}")
         return None
@@ -340,25 +332,25 @@ async def process_scene(
 def concatenate_videos(video_paths: List[str], output_path: str) -> bool:
     """Concatenate multiple video files into a single video using FFmpeg"""
     if not video_paths:
-        logger.warning("No video paths provided for concatenation.")
+        msg.warn("No video paths provided for concatenation.")
         return False
     
     if len(video_paths) == 1:
-        logger.info("Only one video found. Copying to final output...")
+        msg.info("Only one video found. Copying to final output...")
         try:
             import shutil
             shutil.copy2(video_paths[0], output_path)
-            logger.info(f"Successfully copied single video to: {output_path}")
+            msg.good(f"Successfully copied single video to: {output_path}")
             return True
         except Exception as e:
-            logger.error(f"Failed to copy single video: {e}")
+            msg.error(f"Failed to copy single video: {e}")
             return False
     
     # Check if FFmpeg is available
     try:
         subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
-        logger.error("FFmpeg is not available. Cannot concatenate videos.")
+        msg.error("FFmpeg is not available. Cannot concatenate videos.")
         return False
     
     # Sort video paths by scene number
@@ -387,22 +379,22 @@ def concatenate_videos(video_paths: List[str], output_path: str) -> bool:
             output_path
         ]
         
-        logger.info(f"Concatenating {len(video_paths_sorted)} videos...")
+        msg.info(f"Concatenating {len(video_paths_sorted)} videos...")
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         
         if result.returncode == 0:
-            logger.info(f"Successfully concatenated videos into: {output_path}")
+            msg.good(f"Successfully concatenated videos into: {output_path}")
             if os.path.exists(output_path) and os.path.getsize(output_path) > 1000:
                 return True
         else:
-            logger.error(f"FFmpeg concatenation failed: {result.stderr}")
+            msg.error(f"FFmpeg concatenation failed: {result.stderr}")
             return False
             
     except subprocess.TimeoutExpired:
-        logger.error("Video concatenation timed out")
+        msg.error("Video concatenation timed out")
         return False
     except Exception as e:
-        logger.error(f"Error during video concatenation: {e}")
+        msg.error(f"Error during video concatenation: {e}")
         return False
     finally:
         try:
@@ -427,7 +419,7 @@ async def upload_video_to_supabase_storage(video_path: str, user_id: str, topic:
     """
     try:
         if not os.path.exists(video_path):
-            logger.error(f"Video file not found: {video_path}")
+            msg.error(f"Video file not found: {video_path}")
             return None
             
         # Generate unique filename
@@ -440,7 +432,7 @@ async def upload_video_to_supabase_storage(video_path: str, user_id: str, topic:
         with open(video_path, 'rb') as video_file:
             video_data = video_file.read()
         
-        logger.info(f"Uploading video to Supabase storage: {filename}")
+        msg.info(f"Uploading video to Supabase storage: {filename}")
         
         # Upload to Supabase storage bucket 'videos'
         storage_response = supabase.storage.from_("videos").upload(
@@ -454,14 +446,14 @@ async def upload_video_to_supabase_storage(video_path: str, user_id: str, topic:
             public_url_response = supabase.storage.from_("videos").get_public_url(filename)
             public_url = public_url_response.get('publicUrl') if isinstance(public_url_response, dict) else public_url_response
             
-            logger.info(f"Successfully uploaded video to Supabase storage: {public_url}")
+            msg.good(f"Successfully uploaded video to Supabase storage: {public_url}")
             return public_url
         else:
-            logger.error("Failed to upload video to Supabase storage")
+            msg.error("Failed to upload video to Supabase storage")
             return None
             
     except Exception as e:
-        logger.error(f"Error uploading video to Supabase storage: {str(e)}")
+        msg.error(f"Error uploading video to Supabase storage: {str(e)}")
         return None
 
 
@@ -485,7 +477,7 @@ async def run_text_to_video_pipeline(
     # Check if manim components are available
     if not MANIM_AVAILABLE:
         error_msg = "Manim components not available - import failed. Please check server logs for details."
-        logger.error(error_msg)
+        msg.error(error_msg)
         return {
             "status": "error",
             "error": error_msg,
@@ -499,7 +491,7 @@ async def run_text_to_video_pipeline(
     
     if not check_manim_dependencies():
         error_msg = "Manim dependencies not available or not configured. Please install required dependencies."
-        logger.error(error_msg)
+        msg.error(error_msg)
         return {
             "status": "error", 
             "error": error_msg,
@@ -514,7 +506,7 @@ async def run_text_to_video_pipeline(
     if num_scenes is None:
         num_scenes = DEFAULT_NUM_SCENES
     
-    logger.info(f"Starting text-to-video pipeline for topic: '{topic}' with {num_scenes} scenes")
+    msg.info(f"Starting text-to-video pipeline for topic: '{topic}' with {num_scenes} scenes")
     
     if progress_callback:
         await progress_callback(f"🎬 Starting video generation for: {topic}")
@@ -544,7 +536,7 @@ async def run_text_to_video_pipeline(
         if not didactic_script:
             raise ManimPipelineError("Failed to generate the didactic script")
 
-        logger.info(f"Generated didactic script with {len(didactic_script['scenes'])} scenes")
+        msg.info(f"Generated didactic script with {len(didactic_script['scenes'])} scenes")
         
         if progress_callback:
             await progress_callback(f"✅ Script generated with {len(didactic_script['scenes'])} scenes")
@@ -599,7 +591,7 @@ async def run_text_to_video_pipeline(
             if result:
                 final_video_paths.append(result)
 
-        logger.info(f"Successfully generated {len(final_video_paths)} out of {len(didactic_script['scenes'])} scenes")
+        msg.info(f"Successfully generated {len(final_video_paths)} out of {len(didactic_script['scenes'])} scenes")
         
         if progress_callback:
             await progress_callback(f"📹 Completed {len(final_video_paths)}/{len(didactic_script['scenes'])} scenes")
@@ -627,7 +619,7 @@ async def run_text_to_video_pipeline(
                 concatenation_success = concatenate_videos(actual_video_files, finished_video_path)
                 
                 if concatenation_success:
-                    logger.info(f"Successfully created final merged video: {finished_video_path}")
+                    msg.good(f"Successfully created final merged video: {finished_video_path}")
                     final_video_path = finished_video_path
                     if progress_callback:
                         await progress_callback("✅ Final video created successfully!")
@@ -643,19 +635,19 @@ async def run_text_to_video_pipeline(
                     )
                     
                     if storage_video_url:
-                        logger.info(f"Successfully uploaded video to storage: {storage_video_url}")
+                        msg.good(f"Successfully uploaded video to storage: {storage_video_url}")
                         if progress_callback:
                             await progress_callback("✅ Video uploaded to cloud storage!")
                     else:
-                        logger.warning("Failed to upload video to storage, local path available")
+                        msg.warn("Failed to upload video to storage, local path available")
                         if progress_callback:
                             await progress_callback("⚠️ Cloud upload failed, local video available")
                 else:
-                    logger.error("Failed to concatenate videos")
+                    msg.error("Failed to concatenate videos")
                     if progress_callback:
                         await progress_callback("⚠️ Video merge failed, individual scenes available")
             else:
-                logger.warning("No video files found for concatenation")
+                msg.warn("No video files found for concatenation")
                 if progress_callback:
                     await progress_callback("⚠️ No video files found for merging")
 
@@ -671,7 +663,7 @@ async def run_text_to_video_pipeline(
         }
         
     except Exception as e:
-        logger.error(f"Pipeline failed: {str(e)}")
+        msg.error(f"Pipeline failed: {str(e)}")
         if progress_callback:
             await progress_callback(f"❌ Pipeline failed: {str(e)}")
         
