@@ -14,15 +14,13 @@ VECTORIZERS = {
 
 # Optional vectorizers that may be enabled
 OPTIONAL_VECTORIZERS = {
-    "text2vec-voyageai",
-    "text2vec-palm"
+    "text2vec-voyageai"
 }
 
 EMBEDDINGS = {"MiniLM", "OLLAMA"}  # Custom Vectors
 
 google_project = os.getenv("GOOGLE_CLOUD_PROJECT")
-if google_project is not None:
-    VECTORIZERS.add("text2vec-palm")
+# Note: text2vec-palm has been deprecated and removed
 
 
 def strip_non_letters(s: str):
@@ -58,14 +56,7 @@ def verify_vectorizer(
                     "text2vec-openai": {"deploymentId": model, "resourceName": resourceName}
                 }
 
-            # adding specific config for Google
-            if vectorizer == "text2vec-palm":
-                if google_project is not None:
-                    vectorizer_config = {
-                        "text2vec-palm": {
-                            "projectId": google_project,
-                        }
-                    }
+            # Note: text2vec-palm configuration removed as vectorizer is deprecated
 
             if vectorizer_config is not None:
                 modified_schema["classes"][0]["moduleConfig"] = vectorizer_config

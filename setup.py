@@ -28,8 +28,7 @@ setup(
         #"weaviate-client==3.23.1",
         "weaviate-client==4.6.4",
         "python-dotenv>=0.21.0,<0.22.0",
-        "openai==1.84.0",# current and old openai lib.if you dont need latest openrouter models support-this is good 
-        #"openai==1.50.2",# New AsyncOpenai support needs this (I have already prepared Openroutergenerator for this for gemini with opentouer support)
+        "openai>=1.97.0",# Updated to modern OpenAI library with OpenAI class support
         "wasabi==1.1.2",
         "fastapi==0.102.0",
         "uvicorn[standard]==0.29.0",
@@ -41,7 +40,7 @@ setup(
         "python-multipart==0.0.9",
         "supabase==2.7.4",
         "google-generativeai==0.8.2",
-        "vertexai==1.68.0",
+        "vertexai>=1.70.0",
         "aiofiles==23.2.1",
         "PyPDF2==3.0.1",
         "voyageai==0.3.2",

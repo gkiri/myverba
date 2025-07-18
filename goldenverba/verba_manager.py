@@ -200,7 +200,7 @@ class VerbaManager:
 
             if google_project != "":
                 additional_env_vars = {
-                    "ENABLE_MODULES": "text2vec-openai,generative-openai,qna-openai,text2vec-cohere,text2vec-palm,text2vec-voyageai",
+                    "ENABLE_MODULES": "text2vec-openai,generative-openai,qna-openai,text2vec-cohere,text2vec-voyageai",
                     "GOOGLE_CLOUD_PROJECT": google_project,
                 }
             else:
