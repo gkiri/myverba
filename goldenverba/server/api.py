@@ -59,6 +59,9 @@ from typing import List,AsyncGenerator, Dict, Optional
 import aiofiles
 from goldenverba.server.api_helpers import split_pdf_into_subpdfs
 
+# Import manim helpers at the top with other imports
+from goldenverba.server.manim_api_helpers import run_text_to_video_pipeline, ManimPipelineError, check_manim_dependencies
+
 load_dotenv()
 
 gpt3_generator = GPT3Generator()
@@ -4231,3 +4234,133 @@ async def mentor_query_search(request: GetMentorQueryRequest):
     except Exception as e:
         msg.fail(f"Error in mentor_chat_search: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+###############################################################################
+# Text-to-Video Generation Endpoint
+###############################################################################
+
+@app.post("/api/text_to_video")
+async def text_to_video(request: TextToVideoRequest) -> TextToVideoResponse:
+    """
+    Generate a video from text topic using the Manim pipeline.
+    
+    This endpoint accepts a topic and generates an educational video by:
+    1. Creating a didactic script
+    2. Generating Manim code for each scene
+    3. Rendering individual scene videos
+    4. Concatenating scenes into a final video
+    5. Uploading to Supabase storage
+    
+    Returns a simple JSON response with the video URL.
+    """
+    msg.info(f"Starting text-to-video generation for topic: {request.topic}")
+    
+    # Check if manim dependencies are available
+    if not check_manim_dependencies():
+        raise HTTPException(
+            status_code=503, 
+            detail="Text-to-video service unavailable. Manim dependencies not configured."
+        )
+    
+    try:
+        # Run the pipeline
+        result = await run_text_to_video_pipeline(
+            topic=request.topic,
+            user_id=request.user_id,
+            num_scenes=request.num_scenes,
+            progress_callback=None
+        )
+        
+        if result["status"] == "success":
+            msg.good(f"✅ Video generation completed! Generated {result['scenes_completed']}/{result['scenes_total']} scenes")
+            
+            return TextToVideoResponse(
+                status="success",
+                video_path=result.get("video_path"),
+                storage_video_url=result.get("storage_video_url"),
+                individual_videos=result.get("individual_videos", []),
+                scenes_completed=result.get("scenes_completed", 0),
+                scenes_total=result.get("scenes_total", 0),
+                processing_time=result.get("processing_time")
+            )
+        else:
+            # Return error response
+            error_msg = result.get("error", "Unknown error occurred")
+            msg.fail(f"Video generation failed: {error_msg}")
+            
+            return TextToVideoResponse(
+                status="error",
+                error=error_msg,
+                video_path=None,
+                storage_video_url=None,
+                scenes_completed=result.get("scenes_completed", 0),
+                scenes_total=result.get("scenes_total", 0)
+            )
+            
+    except ManimPipelineError as e:
+        msg.fail(f"Manim pipeline error: {str(e)}")
+        return TextToVideoResponse(
+            status="error",
+            error=f"Pipeline error: {str(e)}",
+            video_path=None,
+            storage_video_url=None
+        )
+        
+    except Exception as e:
+        msg.fail(f"Unexpected error in text-to-video: {str(e)}")
+        return TextToVideoResponse(
+            status="error",
+            error=f"Unexpected error: {str(e)}",
+            video_path=None,
+            storage_video_url=None
+        )
+
+
+@app.get("/api/text_to_video/status")
+async def text_to_video_status():
+    """
+    Check the status of the text-to-video service.
+    
+    Returns information about whether the service is available and configured.
+    """
+    try:
+        dependencies_available = check_manim_dependencies()
+        
+        return JSONResponse(content={
+            "available": dependencies_available,
+            "service": "text-to-video",
+            "dependencies": {
+                "manim": dependencies_available,
+                "openrouter_configured": bool(os.getenv("OPENROUTER_API_KEY")),
+                "ffmpeg": True  # Assume available for now
+            },
+            "default_scenes": 3,
+            "max_scenes": 10
+        })
+        
+    except Exception as e:
+        msg.fail(f"Error checking text-to-video status: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "available": False,
+                "error": str(e)
+            }
+        )
+
+# Add new request models with other Pydantic models
+class TextToVideoRequest(BaseModel):
+    topic: str
+    num_scenes: Optional[int] = 3
+    user_id: str
+
+class TextToVideoResponse(BaseModel):
+    status: str
+    video_path: Optional[str] = None
+    storage_video_url: Optional[str] = None
+    individual_videos: Optional[List[str]] = None
+    scenes_completed: int = 0
+    scenes_total: int = 0
+    processing_time: Optional[float] = None
+    error: Optional[str] = None

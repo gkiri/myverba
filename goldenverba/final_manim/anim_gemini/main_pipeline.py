@@ -1,0 +1,745 @@
+"""
+Main Pipeline for Project Drishti - End-to-End POC
+
+This script orchestrates the entire process:
+1. Topic Input -> DidacticScripter
+2. Scripted Scenes -> VisualArchitect (LLM Manim Code Generation)
+3. Generated Manim .py Scripts -> ManimRenderer (Video Rendering)
+"""
+
+import logging
+import os
+import json  # For pretty printing outputs if needed
+import asyncio
+import time  # NEW: For timing measurements
+from functools import partial
+import multiprocessing # To get CPU count
+import subprocess  # NEW: For FFmpeg video concatenation
+import tempfile  # NEW: For creating temporary file list
+import re # NEW: For scene number extraction in concatenation
+
+from anim_gemini.project_drishti.didactic_scripter import DidacticScripter
+from anim_gemini.project_drishti.visual_architect import VisualArchitect
+from anim_gemini.project_drishti.manim_renderer import ManimRenderer
+from anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
+from anim_gemini.project_drishti import config # To check for API key and use settings
+
+# Setup basic logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("MainPipeline")
+
+MAX_RENDER_ATTEMPTS = 3 # Maximum number of rendering attempts for a single scene
+
+# Helper function to wrap architect call for returning scene_data
+def generate_manim_script_for_scene_wrapper(architect_instance, scene_data, topic_title_str):
+    script_path, manim_class_name = architect_instance.generate_manim_code_for_scene(
+        scene_data,
+        topic_title=topic_title_str
+    )
+    logger.info(f"generate_manim_script_for_scene_wrapper completed for scene: {scene_data.get('title', 'Unknown')}, returning: {(script_path, manim_class_name, scene_data)}")
+    return script_path, manim_class_name, scene_data
+
+# NEW Helper function to wrap architect fix call
+def fix_manim_script_for_scene_wrapper(
+    architect_instance: VisualArchitect,
+    original_scene_data: dict, # For context like title, narration
+    topic_title_str: str,
+    faulty_script_content: str,
+    error_message: str
+):
+    script_path, manim_class_name = architect_instance.fix_manim_code_for_scene(
+        scene_data=original_scene_data,
+        topic_title=topic_title_str,
+        faulty_code_content=faulty_script_content,
+        error_message=error_message
+    )
+    # Return original_scene_data to maintain consistency with generate_manim_script_for_scene_wrapper if its result structure is used similarly
+    logger.info(f"fix_manim_script_for_scene_wrapper completed for scene: {original_scene_data.get('title', 'Unknown')}, returning: {(script_path, manim_class_name, original_scene_data)}")
+    return script_path, manim_class_name, original_scene_data
+
+async def render_scene_with_retries(
+    *,  # enforce keyword usage for new arg backwards compatibility
+    initial_script_path: str,
+    initial_manim_class_name: str,
+    original_scene_data: dict,
+    architect_instance: VisualArchitect,
+    renderer_instance: ManimRenderer,
+    video_analyzer_instance: VideoAnalyzer,
+    loop: asyncio.AbstractEventLoop,
+    topic_title_str: str,
+    metrics_tracker: dict,
+    cpu_semaphore: asyncio.Semaphore,
+    io_semaphore: asyncio.Semaphore,
+    initial_script_gen_time: float = 0.0,
+    max_retries: int = MAX_RENDER_ATTEMPTS
+) -> str | None:
+    current_script_path = initial_script_path
+    current_manim_class_name = initial_manim_class_name
+    scene_title = original_scene_data.get("title", "Unknown Scene")
+    scene_narration = original_scene_data.get("script_content", "") # Use script_content as narration
+    
+    # Initialize metrics for this scene if not already present
+    if scene_title not in metrics_tracker:
+        metrics_tracker[scene_title] = {
+            "script_generation_attempts": 0,
+            "video_analysis_attempts": 0,
+            "status": "Pending",
+            "attempt_details": []  # NEW: hold per-attempt timing metrics
+        }
+    
+    for attempt in range(max_retries):
+        # --- Per-attempt timing structure ---
+        attempt_metrics = {
+            "attempt_number": attempt + 1,
+            "script_gen_time": 0.0,
+            "render_time": 0.0,
+            "compress_time": 0.0,
+            "analysis_time": 0.0,
+            "total_time": 0.0,
+            "status": "Pending",
+        }
+
+        # Seed with any script generation time that happened prior to this attempt (e.g., initial generation or a regeneration done at the end of the previous loop)
+        if initial_script_gen_time > 0:
+            attempt_metrics["script_gen_time"] = initial_script_gen_time
+            # Reset for subsequent attempts so it isn't double-counted
+            initial_script_gen_time = 0.0
+        logger.info(
+            f"Processing attempt {attempt + 1}/{max_retries} for scene '{scene_title}'."
+        )
+        metrics_tracker[scene_title]["script_generation_attempts"] = attempt + 1
+
+        # Ensure script exists, if not, generate it.
+        if not current_script_path or not os.path.exists(current_script_path):
+            logger.warning(f"Script not found for '{scene_title}'. Attempting to generate.")
+            try:
+                # This is a blocking call, run in executor
+                sg_start = time.perf_counter()
+                async with io_semaphore:
+                    gen_script_path, gen_manim_class_name, _ = await loop.run_in_executor(
+                        None,
+                        partial(
+                            generate_manim_script_for_scene_wrapper,
+                            architect_instance,
+                            original_scene_data,
+                            topic_title_str
+                        )
+                    )
+                attempt_metrics["script_gen_time"] += time.perf_counter() - sg_start
+                if not (gen_script_path and gen_manim_class_name):
+                    raise ValueError("Script generation failed to return a valid path or class name.")
+                current_script_path, current_manim_class_name = gen_script_path, gen_manim_class_name
+                logger.info(f"Successfully generated script: {current_script_path}")
+            except Exception as e:
+                logger.error(f"FATAL: Could not generate script for '{scene_title}' on attempt {attempt + 1}: {e}")
+                attempt_metrics["status"] = "Script Gen Failed"
+                attempt_metrics["total_time"] = (
+                    attempt_metrics["script_gen_time"]
+                    + attempt_metrics["render_time"]
+                    + attempt_metrics["compress_time"]
+                    + attempt_metrics["analysis_time"]
+                )
+                metrics_tracker[scene_title]["attempt_details"].append(attempt_metrics)
+                continue  # Move to the next attempt
+
+        # If script is still missing, we can't proceed with this attempt.
+        if not current_script_path or not os.path.exists(current_script_path):
+            logger.error(f"Script for '{scene_title}' is missing after generation attempt. Skipping to next retry.")
+            continue
+
+        # --- CPU-BOUND: Rendering ---
+        render_success, video_path, render_error = False, None, ""
+        async with cpu_semaphore:
+            logger.info(f"Rendering '{scene_title}' from {current_script_path}...")
+            rd_start = time.perf_counter()
+            render_success, video_path, render_error = await loop.run_in_executor(
+                None,
+                renderer_instance.render_scene,
+                current_script_path,
+                current_manim_class_name
+            )
+            attempt_metrics["render_time"] = time.perf_counter() - rd_start
+
+            # --- CPU-BOUND: Compression (now correctly serialized) ---
+            if render_success:
+                logger.info(f"Compressing video for '{scene_title}'...")
+                compressed_path, compress_time = await loop.run_in_executor(
+                    None,
+                    video_analyzer_instance.compress_video,
+                    video_path
+                )
+                attempt_metrics["compress_time"] = compress_time
+                if not compressed_path:
+                    render_success = False # Treat compression failure as a render failure
+                    render_error = "Video compression failed."
+
+
+        # If rendering and compression are successful, proceed to analysis.
+        if render_success:
+            logger.info(f"Successfully rendered and compressed '{scene_title}'.")
+            
+            # --- I/O-BOUND: Video Analysis ---
+            analysis_passed, analysis_reason = False, "Analysis not run"
+            async with io_semaphore:
+                logger.info(f"Analyzing video quality for '{scene_title}'...")
+                metrics_tracker[scene_title]["video_analysis_attempts"] += 1
+                
+                analysis_passed, analysis_reason, analysis_time = await loop.run_in_executor(
+                    None,
+                    video_analyzer_instance.analyze_compressed_video,
+                    compressed_path,
+                    video_path, # Pass original path for moving to final videos
+                    scene_narration,
+                )
+                attempt_metrics["analysis_time"] = analysis_time
+
+            if analysis_passed:
+                logger.info(f"SUCCESS: Video for '{scene_title}' passed quality analysis. Reason: {analysis_reason}")
+                metrics_tracker[scene_title]["status"] = "Success"
+                attempt_metrics["status"] = "Success"
+                attempt_metrics["total_time"] = (
+                    attempt_metrics["script_gen_time"]
+                    + attempt_metrics["render_time"]
+                    + attempt_metrics["compress_time"]
+                    + attempt_metrics["analysis_time"]
+                )
+                metrics_tracker[scene_title]["attempt_details"].append(attempt_metrics)
+                # Clean up intermediate script if a fix had created a new one
+                if initial_script_path and current_script_path != initial_script_path and os.path.exists(initial_script_path):
+                    os.remove(initial_script_path)
+                return video_path
+            else:
+                logger.warning(f"Video for '{scene_title}' FAILED quality analysis. Reason: {analysis_reason}")
+                render_success = False # Mark as failed to trigger recovery
+                render_error = analysis_reason # Use analysis reason as the error for the fix prompt
+                attempt_metrics["status"] = "Analysis Failed"
+
+        # If rendering or analysis failed
+        if not render_success:
+            logger.error(f"Failed to produce a good quality video for '{scene_title}' on attempt {attempt + 1}. Error: {render_error}")
+
+            # NEW: Separate semaphore for rendering
+            # The render semaphore should be passed into this function.
+            # For now, we assume it's available in the global scope or passed via a class.
+            # This is a conceptual placement. The actual implementation will be in `process_scene`.
+            
+            attempt_metrics["total_time"] = (
+                attempt_metrics["script_gen_time"]
+                + attempt_metrics["render_time"]
+                + attempt_metrics["compress_time"]
+                + attempt_metrics["analysis_time"]
+            )
+            metrics_tracker[scene_title]["attempt_details"].append(attempt_metrics)
+
+            if attempt >= max_retries - 1:
+                logger.critical(f"Max retries reached for '{scene_title}'. Moving on.")
+                break  # Exit loop
+
+            # Attempt to regenerate the script for the next iteration
+            logger.info(f"Attempting to regenerate script for '{scene_title}'...")
+            try:
+                # We are choosing to regenerate from scratch instead of fixing
+                # This is a blocking call, run in executor
+                sg_start_retry = time.perf_counter()
+                async with io_semaphore:
+                    gen_script_path, gen_manim_class_name, _ = await loop.run_in_executor(
+                        None,
+                        partial(
+                            generate_manim_script_for_scene_wrapper,
+                            architect_instance,
+                            original_scene_data,
+                            topic_title_str
+                        )
+                    )
+                attempt_metrics_retry_extra = time.perf_counter() - sg_start_retry
+                # This generation is for the NEXT attempt, so we'll carry it forward in the next loop iteration via initial_script_gen_time update
+                initial_script_gen_time = attempt_metrics_retry_extra
+
+                if gen_script_path and gen_manim_class_name:
+                    logger.info(f"Script for '{scene_title}' was regenerated. New script: {gen_script_path}")
+                    # Clean up the old faulty script if a new one was created
+                    if current_script_path != gen_script_path and os.path.exists(current_script_path):
+                        os.remove(current_script_path)
+                    current_script_path = gen_script_path
+                    current_manim_class_name = gen_manim_class_name
+                else:
+                    logger.error(f"Failed to regenerate script for '{scene_title}'. Will retry with the same script if it exists.")
+
+            except Exception as e:
+                logger.error(f"An exception occurred while trying to regenerate the script for '{scene_title}': {e}")
+
+    logger.error(f"All {max_retries} attempts failed for scene '{scene_title}'.")
+    metrics_tracker[scene_title]["status"] = "Failed"
+    # Ensure last attempt metrics captured if loop exits due to max retries
+    if attempt_metrics and attempt_metrics not in metrics_tracker[scene_title]["attempt_details"]:
+        attempt_metrics["total_time"] = (
+            attempt_metrics["script_gen_time"]
+            + attempt_metrics["render_time"]
+            + attempt_metrics["compress_time"]
+            + attempt_metrics["analysis_time"]
+        )
+        metrics_tracker[scene_title]["attempt_details"].append(attempt_metrics)
+    return None
+
+def print_metrics_table(metrics: dict):
+    """Prints a formatted table of the scene metrics."""
+    logger.info("--- Final Run Metrics ---")
+    # Headers
+    headers = ["Scene Title", "Script Gen Attempts", "Video Analysis Attempts", "Final Status"]
+    # Column widths - adjust as needed
+    col_widths = [max(len(k) for k in metrics.keys()) + 2, 21, 25, 15]
+
+    # Header row
+    header_row = " | ".join(h.ljust(w) for h, w in zip(headers, col_widths))
+    logger.info(header_row)
+    logger.info("-" * len(header_row))
+
+    # Data rows
+    for title, data in metrics.items():
+        row_data = [
+            title,
+            str(data.get("script_generation_attempts", 0)),
+            str(data.get("video_analysis_attempts", 0)),
+            data.get("status", "Unknown")
+        ]
+        data_row = " | ".join(d.ljust(w) for d, w in zip(row_data, col_widths))
+        logger.info(data_row)
+    logger.info("-" * len(header_row))
+
+async def process_scene(
+    scene_data: dict,
+    architect: VisualArchitect,
+    renderer: ManimRenderer,
+    video_analyzer: VideoAnalyzer,
+    loop: asyncio.AbstractEventLoop,
+    topic_title_str: str,
+    metrics_tracker: dict,
+    io_semaphore: asyncio.Semaphore,
+    cpu_semaphore: asyncio.Semaphore
+):
+    """
+    Complete processing for a single scene, from script generation to final video.
+    Uses separate semaphores for I/O-bound and CPU-bound tasks.
+    """
+    scene_title = scene_data.get("title", f"Scene_{scene_data.get('scene_number', 'Unknown')}")
+    logger.info(f"Queueing processing for scene: {scene_title}")
+
+    # --- I/O-BOUND: Script Generation ---
+    script_path, manim_class_name = None, None
+    initial_script_gen_time = 0.0
+    async with io_semaphore:
+        logger.info(f"Starting script generation for scene: {scene_title}")
+        sg_start_initial = time.perf_counter()
+        try:
+            script_path, manim_class_name, _ = await loop.run_in_executor(
+                None,
+                partial(
+                    generate_manim_script_for_scene_wrapper,
+                    architect,
+                    scene_data,
+                    topic_title_str
+                )
+            )
+            initial_script_gen_time = time.perf_counter() - sg_start_initial
+        except Exception as e:
+            logger.error(f"Initial script generation failed for {scene_title}: {e}")
+            metrics_tracker[scene_title]["status"] = "Script Gen Failed"
+            return None
+
+    if not (script_path and manim_class_name):
+        logger.error(f"Could not generate initial script for scene: {scene_title}. It will not be rendered.")
+        metrics_tracker[scene_title]["status"] = "Script Gen Failed"
+        return None
+
+    # --- Call the main processing loop which handles its own granular locking ---
+    video_path = await render_scene_with_retries(
+        initial_script_path=script_path,
+        initial_manim_class_name=manim_class_name,
+        original_scene_data=scene_data,
+        architect_instance=architect,
+        renderer_instance=renderer,
+        video_analyzer_instance=video_analyzer,
+        loop=loop,
+        topic_title_str=topic_title_str,
+        metrics_tracker=metrics_tracker,
+        cpu_semaphore=cpu_semaphore,
+        io_semaphore=io_semaphore,
+        initial_script_gen_time=initial_script_gen_time
+    )
+    
+    return video_path
+
+async def run_pipeline(topic: str, num_scenes_override: int | None = None):
+    """
+    Runs the full pipeline from topic to individual scene videos.
+
+    Args:
+        topic (str): The UPSC topic to generate a video for.
+        num_scenes_override (int | None): Optionally override the number of scenes.
+                                           If None, DidacticScripter's default is used.
+    """
+    logger.info(f"Starting Project Drishti pipeline for topic: '{topic}'")
+    scene_metrics = {}
+
+    if not config.OPENROUTER_API_KEY:
+        logger.error("CRITICAL: OPENROUTER_API_KEY is not set in .env file. LLM calls will fail.")
+        logger.error("Please create a .env file in the workspace root with your OpenRouter API key.")
+        # return # Optionally exit early
+
+    # --- Stage 1: Didactic Scripter --- 
+    logger.info("--- Stage 1: Generating Didactic Script ---")
+    scripter = DidacticScripter()
+    ds_start = time.perf_counter()
+    didactic_script_args = {"topic": topic}
+    if num_scenes_override is not None:
+        didactic_script_args["num_scenes"] = num_scenes_override
+    
+    didactic_script = scripter.generate_script(**didactic_script_args)
+    didactic_script_time = time.perf_counter() - ds_start
+    if not didactic_script:
+        logger.error("Failed to generate the didactic script. Cannot proceed.")
+        return
+
+    logger.info(f"Successfully generated didactic script with {len(didactic_script['scenes'])} scenes.")
+    logger.debug(f"Didactic Script Content:\n{json.dumps(didactic_script, indent=4)}")
+    # The script is also saved to a .md file by the scripter itself.
+
+    # --- Stage 2 & 3: Visual Architect & Manim Renderer (in parallel) ---
+    logger.info("--- Stages 2 & 3: Generating Manim Scripts and Rendering Videos ---")
+    architect = VisualArchitect()
+    renderer = ManimRenderer()
+    video_analyzer = VideoAnalyzer() # Instantiate the video analyzer
+    loop = asyncio.get_event_loop()
+    topic_title_str = topic.replace(" ", "_")
+
+    # --- NEW: Intelligent Concurrency Control ---
+    # Get the number of CPU cores
+    cpu_cores = multiprocessing.cpu_count()
+    
+    # Semaphore for CPU-bound tasks (rendering). Updated to 4 to leverage 8-core machine.
+    cpu_semaphore = asyncio.Semaphore(4)
+    logger.info("CPU-bound tasks (rendering) will be limited to 4 concurrent operations as per system capacity.")
+
+    # Semaphore for I/O-bound tasks (LLM calls). Can be higher.
+    # Let's keep it reasonably high but not unlimited to prevent overwhelming APIs.
+    io_concurrency_limit = 10 
+    io_semaphore = asyncio.Semaphore(io_concurrency_limit)
+    logger.info(f"I/O-bound tasks (LLM calls) will be limited to {io_concurrency_limit} concurrent operations.")
+
+
+    # Initialize metrics for all scenes
+    for scene_data in didactic_script.get("scenes", []):
+        scene_title = scene_data.get("title", f"Scene_{scene_data.get('scene_number', 'Unknown')}")
+        scene_metrics[scene_title] = {
+            "script_generation_attempts": 0,
+            "video_analysis_attempts": 0,
+            "status": "Pending",
+            "attempt_details": []
+        }
+
+    # Create tasks for each scene to be processed concurrently
+    processing_tasks = []
+    for scene_data in didactic_script.get("scenes", []):
+        task = process_scene(
+            scene_data=scene_data,
+            architect=architect,
+            renderer=renderer,
+            video_analyzer=video_analyzer,
+            loop=loop,
+            topic_title_str=topic_title_str,
+            metrics_tracker=scene_metrics,
+            io_semaphore=io_semaphore,
+            cpu_semaphore=cpu_semaphore
+        )
+        processing_tasks.append(task)
+    
+    final_video_paths = []
+    logger.info(f"--- Starting parallel processing of {len(processing_tasks)} scenes (I/O Concurrency: {io_concurrency_limit}, CPU Concurrency: 4) ---")
+    
+    # This loop is for the async processing of all scene tasks
+    for result in await asyncio.gather(*processing_tasks):
+        if result:
+            final_video_paths.append(result)
+
+    # --- Final Summary ---
+    logger.info("--- Pipeline Execution Finished ---")
+    logger.info(f"Successfully generated {len(final_video_paths)} out of {len(didactic_script['scenes'])} scenes.")
+    if final_video_paths:
+        logger.info("Final video paths:")
+        for path in final_video_paths:
+            logger.info(f" - {path}")
+    
+    print_metrics_table(scene_metrics)
+
+    # ---- New Latency Dashboard ----
+    print_latency_table(scene_metrics, didactic_script_time)
+
+    # ---- NEW: Video Concatenation ----
+    if final_video_paths:
+        logger.info("--- Stage 4: Merging Individual Videos ---")
+        
+        # Determine the output directory (same as final_videos folder)
+        # Instead of using final_video_paths which contains original render paths,
+        # scan the actual final_videos directory for the moved files
+        final_videos_dir = os.path.join(os.path.dirname(__file__), "outputs", "final_videos")
+        
+        # Find all .mp4 files in the final_videos directory
+        actual_video_files = []
+        if os.path.exists(final_videos_dir):
+            for file in os.listdir(final_videos_dir):
+                if file.endswith('.mp4') and not file == 'finished_video.mp4':  # Exclude existing finished video
+                    actual_video_files.append(os.path.join(final_videos_dir, file))
+        
+        if not actual_video_files:
+            logger.error("No video files found in final_videos directory. Cannot concatenate.")
+        else:
+            finished_video_path = os.path.join(final_videos_dir, "finished_video.mp4")
+            
+            # Start concatenation timer
+            concat_start = time.perf_counter()
+            
+            logger.info(f"Found {len(actual_video_files)} video files in final_videos directory:")
+            for video_file in sorted(actual_video_files):
+                logger.info(f"  - {os.path.basename(video_file)}")
+            
+            concatenation_success = concatenate_videos(actual_video_files, finished_video_path)
+            
+            concat_time = time.perf_counter() - concat_start
+            
+            if concatenation_success:
+                logger.info(f"✅ Successfully created final merged video: {finished_video_path}")
+                logger.info(f"   Concatenation time: {concat_time:.2f} seconds")
+                logger.info(f"   Total scenes merged: {len(actual_video_files)}")
+            else:
+                logger.error("❌ Failed to create final merged video.")
+                logger.error("   Individual scene videos are still available in the final_videos folder.")
+    else:
+        logger.warning("No videos were successfully generated, skipping concatenation.")
+    
+    # ---- Final Summary with Concatenation Status ----
+    logger.info("--- Final Pipeline Summary ---")
+    logger.info(f"Topic: '{topic}'")
+    logger.info(f"Total scenes attempted: {len(didactic_script['scenes'])}")
+    logger.info(f"Successfully generated individual videos: {len(final_video_paths)}")
+    if final_video_paths:
+        final_videos_dir = os.path.join(os.path.dirname(__file__), "outputs", "final_videos")
+        finished_video_path = os.path.join(final_videos_dir, "finished_video.mp4")
+        if os.path.exists(finished_video_path):
+            logger.info(f"✅ Final merged video: {finished_video_path}")
+        else:
+            logger.info("❌ Final merged video: Creation failed")
+    logger.info("--- Pipeline Complete ---")
+
+
+def print_latency_table(metrics: dict, didactic_time: float):
+    """Prints a detailed latency table for each attempt across all scenes."""
+    logger.info("--- Latency Metrics ---")
+    logger.info(f"Didactic Script Generation Time: {didactic_time:.2f} seconds")
+
+    headers = [
+        "Scene Title",
+        "Attempt #",
+        "ScriptGen(s)",
+        "Render(s)",
+        "Compress(s)",
+        "Analysis(s)",
+        "Total(s)",
+        "Status",
+    ]
+
+    # Determine dynamic column widths
+    scene_name_width = max(max((len(k) for k in metrics.keys()), default=0), len(headers[0])) + 2
+    col_widths = [
+        scene_name_width,
+        10,
+        14,
+        10,
+        12,
+        13,
+        10,
+        10,
+    ]
+
+    header_row = " | ".join(h.ljust(w) for h, w in zip(headers, col_widths))
+    logger.info(header_row)
+    logger.info("-" * len(header_row))
+
+    for scene_title, data in metrics.items():
+        for attempt in data.get("attempt_details", []):
+            row_data = [
+                scene_title,
+                str(attempt.get("attempt_number", "")),
+                f"{attempt.get('script_gen_time', 0.0):.2f}",
+                f"{attempt.get('render_time', 0.0):.2f}",
+                f"{attempt.get('compress_time', 0.0):.2f}",
+                f"{attempt.get('analysis_time', 0.0):.2f}",
+                f"{attempt.get('total_time', 0.0):.2f}",
+                attempt.get("status", ""),
+            ]
+            data_row = " | ".join(d.ljust(w) for d, w in zip(row_data, col_widths))
+            logger.info(data_row)
+    logger.info("-" * len(header_row))
+
+def concatenate_videos(video_paths: list[str], output_path: str) -> bool:
+    """
+    Concatenates multiple video files into a single video using FFmpeg's concat demuxer.
+    This method is efficient as it doesn't re-encode the videos (assumes same codecs).
+    
+    Args:
+        video_paths (list[str]): List of paths to video files to concatenate
+        output_path (str): Path where the final concatenated video should be saved
+        
+    Returns:
+        bool: True if concatenation was successful, False otherwise
+    """
+    if not video_paths:
+        logger.warning("No video paths provided for concatenation.")
+        return False
+    
+    if len(video_paths) == 1:
+        logger.info("Only one video found. Copying to finished_video.mp4...")
+        try:
+            import shutil
+            shutil.copy2(video_paths[0], output_path)
+            logger.info(f"Successfully copied single video to: {output_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to copy single video: {e}")
+            return False
+    
+    # Check if FFmpeg is available
+    try:
+        subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logger.error("FFmpeg is not available or not installed. Cannot concatenate videos.")
+        logger.error("Please install FFmpeg to enable video concatenation.")
+        return False
+    
+    # Verify all input files exist
+    missing_files = []
+    for video_path in video_paths:
+        if not os.path.exists(video_path):
+            missing_files.append(video_path)
+    
+    if missing_files:
+        logger.error(f"The following video files are missing:")
+        for missing_file in missing_files:
+            logger.error(f"  - {missing_file}")
+        return False
+    
+    # Sort video paths to ensure consistent ordering
+    # Extract scene numbers for proper sorting
+    def extract_scene_number(path):
+        filename = os.path.basename(path)
+        # Look for SceneX pattern
+        match = re.search(r'Scene(\d+)', filename)
+        return int(match.group(1)) if match else 0
+    
+    video_paths_sorted = sorted(video_paths, key=extract_scene_number)
+    
+    logger.info("Final video order for concatenation:")
+    for i, video_path in enumerate(video_paths_sorted, 1):
+        logger.info(f"  {i}. {os.path.basename(video_path)}")
+    
+    # Create a temporary file list for FFmpeg concat demuxer
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+        temp_file_path = temp_file.name
+        logger.info(f"Creating temporary file list: {temp_file_path}")
+        for video_path in video_paths_sorted:
+            # Write absolute paths to avoid issues with special characters
+            # FFmpeg concat demuxer requires "file 'path'" format
+            abs_path = os.path.abspath(video_path)
+            temp_file.write(f"file '{abs_path}'\n")
+            logger.debug(f"Added to list: file '{abs_path}'")
+    
+    # Log the contents of the temporary file for debugging
+    try:
+        with open(temp_file_path, 'r') as f:
+            file_contents = f.read()
+        logger.info(f"Temporary file contents:\n{file_contents}")
+    except Exception as e:
+        logger.warning(f"Could not read temporary file for debugging: {e}")
+    
+    try:
+        # Use FFmpeg concat demuxer for efficient concatenation
+        # -f concat: use concat demuxer
+        # -safe 0: allow absolute paths
+        # -i: input file list
+        # -c copy: copy streams without re-encoding (most efficient)
+        cmd = [
+            'ffmpeg',
+            '-f', 'concat',
+            '-safe', '0',
+            '-i', temp_file_path,
+            '-c', 'copy',
+            '-y',  # Overwrite output file if it exists
+            output_path
+        ]
+        
+        logger.info(f"Starting video concatenation of {len(video_paths_sorted)} videos...")
+        logger.info(f"Output path: {output_path}")
+        logger.info(f"FFmpeg command: {' '.join(cmd)}")
+        
+        # Run FFmpeg command
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 minute timeout for concatenation
+        )
+        
+        if result.returncode == 0:
+            logger.info(f"Successfully concatenated {len(video_paths_sorted)} videos into: {output_path}")
+            
+            # Verify the output file exists and has reasonable size
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 1000:  # At least 1KB
+                logger.info(f"Final video file size: {os.path.getsize(output_path) / (1024*1024):.2f} MB")
+                return True
+            else:
+                logger.error("Output file doesn't exist or is too small.")
+                return False
+        else:
+            logger.error(f"FFmpeg concatenation failed with return code: {result.returncode}")
+            logger.error(f"FFmpeg stdout: {result.stdout}")
+            logger.error(f"FFmpeg stderr: {result.stderr}")
+            return False
+            
+    except subprocess.TimeoutExpired:
+        logger.error("Video concatenation timed out after 5 minutes.")
+        return False
+    except Exception as e:
+        logger.error(f"Error during video concatenation: {e}")
+        return False
+    finally:
+        # Clean up temporary file
+        try:
+            os.unlink(temp_file_path)
+            logger.debug(f"Cleaned up temporary file: {temp_file_path}")
+        except OSError as e:
+            logger.warning(f"Could not clean up temporary file {temp_file_path}: {e}")
+    
+    return False
+
+async def main():
+    """
+    Main function to parse arguments and run the pipeline.
+    """
+    # --- Configuration ---
+    topic_to_process = "The Non-Cooperation Movement in India"
+    # topic_to_process = "The story of the Elephant and the Rope"
+    # topic_to_process = "The Indian Removal Act and the Trail of Tears"
+    # topic_to_process = "The history of the Rosetta Stone"
+    # topic_to_process = "The process of photosynthesis"
+    # topic_to_process = "Explain back propagation in neural network "
+    # topic_to_process = "A brief history of the internet"
+
+    # Set to a number to override the scripter's default (e.g., 3 for a short test)
+    # Set to None to let the scripter decide.
+    num_scenes_for_topic = 5
+
+    # --- Run Pipeline ---
+    await run_pipeline(topic_to_process, num_scenes_for_topic)
+
+if __name__ == "__main__":
+    # asyncio.run() to call the async main
+    asyncio.run(main())

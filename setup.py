@@ -60,6 +60,16 @@ setup(
         ],
         "google": [
             "vertexai==1.46.0",
+        ],
+        "manim": [
+            # Animation and video generation dependencies
+            "manim==0.19.0",
+            "manim-voiceover==0.3.7", 
+            "ffmpeg-python==0.2.0",
+            "psutil",
+            "matplotlib",
+            # Note: openai, google-generativeai, aiofiles, aiohttp, python-dotenv 
+            # are already included in main install_requires with compatible versions
         ]
     },
 )
