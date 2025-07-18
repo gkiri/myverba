@@ -23,11 +23,20 @@ from datetime import datetime
 # Import Supabase client
 from goldenverba.server.supabase.supabase_client import supabase
 
-# Import the manim pipeline components with absolute paths
+# Import the manim pipeline components - use lazy imports to avoid startup failures
 try:
-    # Test each import individually for better error reporting
+    # First check if we can access the basic package structure
     msg.info("Testing manim component imports...")
     
+    # Test basic package import first
+    try:
+        from goldenverba.final_manim import anim_gemini
+        msg.good("✅ anim_gemini package accessible")
+    except ImportError as e:
+        msg.fail(f"❌ anim_gemini package import failed: {e}")
+        raise
+    
+    # Test individual component imports
     try:
         from goldenverba.final_manim.anim_gemini.project_drishti import config
         msg.good("✅ config imported")
