@@ -22,7 +22,11 @@ import os
 import re
 import logging
 from openai import OpenAI # For OpenRouter
-from anim_gemini.project_drishti import config
+try:
+    from goldenverba.final_manim.anim_gemini.project_drishti import config
+except ImportError:
+    # Fallback for when running directly from project_drishti directory
+    from anim_gemini.project_drishti import config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

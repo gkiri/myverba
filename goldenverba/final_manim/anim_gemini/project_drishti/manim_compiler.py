@@ -28,7 +28,11 @@ Dependencies: Manim (ensure it's installed in the environment)
 
 from manim import *
 import numpy as np # Often useful
-from anim_gemini.project_drishti.manim_layout_utils import * # Import your layout utils
+try:
+    from goldenverba.final_manim.anim_gemini.project_drishti.manim_layout_utils import *
+except ImportError:
+    # Fallback for when running directly from project_drishti directory
+    from anim_gemini.project_drishti.manim_layout_utils import *
 import json
 import os
 import sys

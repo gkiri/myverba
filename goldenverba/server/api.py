@@ -4260,9 +4260,13 @@ async def text_to_video(request: TextToVideoRequest) -> TextToVideoResponse:
     
     # Check if manim dependencies are available
     if not check_manim_dependencies():
-        raise HTTPException(
-            status_code=503, 
-            detail="Text-to-video service unavailable. Manim dependencies not configured."
+        error_msg = "Text-to-video service unavailable. Required dependencies not available."
+        msg.warn(error_msg)
+        return TextToVideoResponse(
+            status="error",
+            error=error_msg,
+            video_path=None,
+            storage_video_url=None
         )
     
     try:

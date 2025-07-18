@@ -21,7 +21,11 @@ import json
 import os
 import logging
 from openai import OpenAI # For OpenRouter
-from anim_gemini.project_drishti import config
+try:
+    from goldenverba.final_manim.anim_gemini.project_drishti import config
+except ImportError:
+    # Fallback for when running directly from project_drishti directory
+    from anim_gemini.project_drishti import config
 import re
 
 # Configure logging

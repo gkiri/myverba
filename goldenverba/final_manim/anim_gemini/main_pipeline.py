@@ -18,11 +18,19 @@ import subprocess  # NEW: For FFmpeg video concatenation
 import tempfile  # NEW: For creating temporary file list
 import re # NEW: For scene number extraction in concatenation
 
-from anim_gemini.project_drishti.didactic_scripter import DidacticScripter
-from anim_gemini.project_drishti.visual_architect import VisualArchitect
-from anim_gemini.project_drishti.manim_renderer import ManimRenderer
-from anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
-from anim_gemini.project_drishti import config # To check for API key and use settings
+try:
+    from goldenverba.final_manim.anim_gemini.project_drishti.didactic_scripter import DidacticScripter
+    from goldenverba.final_manim.anim_gemini.project_drishti.visual_architect import VisualArchitect
+    from goldenverba.final_manim.anim_gemini.project_drishti.manim_renderer import ManimRenderer
+    from goldenverba.final_manim.anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
+    from goldenverba.final_manim.anim_gemini.project_drishti import config
+except ImportError:
+    # Fallback for when running directly from anim_gemini directory
+    from anim_gemini.project_drishti.didactic_scripter import DidacticScripter
+    from anim_gemini.project_drishti.visual_architect import VisualArchitect
+    from anim_gemini.project_drishti.manim_renderer import ManimRenderer
+    from anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
+    from anim_gemini.project_drishti import config
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

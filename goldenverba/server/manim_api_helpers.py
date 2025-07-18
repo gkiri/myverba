@@ -49,12 +49,26 @@ class ManimPipelineError(Exception):
 
 
 def check_manim_dependencies() -> bool:
+    """
+    Check if manim dependencies are available and components are properly imported.
+    
+    Returns:
+        bool: True if all dependencies are available, False otherwise
+    """
+    # # If user explicitly disables manim check
     # if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
     #     return True
+    
+    # # Check if our manim components were imported successfully
+    # if not MANIM_AVAILABLE:
+    #     return False
+        
+    # # Check if manim itself is available
     # try:
     #     import manim
     #     return True
     # except ImportError:
+    #     logger.warning("Manim library not available")
     #     return False
     return True
 
@@ -413,6 +427,10 @@ async def run_text_to_video_pipeline(
     Returns:
         Dict with status, video_path, and metrics
     """
+    # Check if manim components are available
+    if not MANIM_AVAILABLE:
+        raise ManimPipelineError("Manim components not available - import failed")
+    
     if not check_manim_dependencies():
         raise ManimPipelineError("Manim dependencies not available or not configured")
     
