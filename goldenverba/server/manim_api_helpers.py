@@ -26,14 +26,70 @@ from goldenverba.server.supabase.supabase_client import supabase
 
 # Import the manim pipeline components with absolute paths
 try:
-    from goldenverba.final_manim.anim_gemini.project_drishti.didactic_scripter import DidacticScripter
-    from goldenverba.final_manim.anim_gemini.project_drishti.visual_architect import VisualArchitect
-    from goldenverba.final_manim.anim_gemini.project_drishti.manim_renderer import ManimRenderer
-    from goldenverba.final_manim.anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
-    from goldenverba.final_manim.anim_gemini.project_drishti import config
+    # Test each import individually for better error reporting
+    logger.info("Testing manim component imports...")
+    
+    try:
+        from goldenverba.final_manim.anim_gemini.project_drishti import config
+        logger.info("✅ config imported")
+    except ImportError as e:
+        logger.error(f"❌ config import failed: {e}")
+        raise
+    
+    try:
+        from goldenverba.final_manim.anim_gemini.project_drishti.didactic_scripter import DidacticScripter
+        logger.info("✅ DidacticScripter imported")
+    except ImportError as e:
+        logger.error(f"❌ DidacticScripter import failed: {e}")
+        raise
+    
+    try:
+        from goldenverba.final_manim.anim_gemini.project_drishti.visual_architect import VisualArchitect
+        logger.info("✅ VisualArchitect imported")
+    except ImportError as e:
+        logger.error(f"❌ VisualArchitect import failed: {e}")
+        raise
+    
+    try:
+        from goldenverba.final_manim.anim_gemini.project_drishti.manim_renderer import ManimRenderer
+        logger.info("✅ ManimRenderer imported")
+    except ImportError as e:
+        logger.error(f"❌ ManimRenderer import failed: {e}")
+        raise
+    
+    try:
+        from goldenverba.final_manim.anim_gemini.project_drishti.video_analyzer import VideoAnalyzer
+        logger.info("✅ VideoAnalyzer imported")
+    except ImportError as e:
+        logger.error(f"❌ VideoAnalyzer import failed: {e}")
+        raise
+    
     MANIM_AVAILABLE = True
+    logger.info("✅ All manim components imported successfully")
+    
+    # Check for required environment variables
+    try:
+        import os
+        openrouter_key = os.getenv("OPENROUTER_API_KEY")
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        
+        if not openrouter_key:
+            logger.warning("⚠️  OPENROUTER_API_KEY not set - LLM calls will fail")
+        else:
+            logger.info("✅ OPENROUTER_API_KEY is set")
+            
+        if not gemini_key:
+            logger.warning("⚠️  GEMINI_API_KEY not set - Video analysis will fail")
+        else:
+            logger.info("✅ GEMINI_API_KEY is set")
+            
+    except Exception as e:
+        logger.warning(f"⚠️  Could not check environment variables: {e}")
+        
 except ImportError as e:
-    msg.warn(f"Manim components not available: {e}")
+    logger.error(f"❌ Manim components import failed: {e}")
+    logger.error(f"   Error type: {type(e).__name__}")
+    logger.error(f"   Error details: {str(e)}")
     MANIM_AVAILABLE = False
 
 # Setup logging
@@ -55,22 +111,22 @@ def check_manim_dependencies() -> bool:
     Returns:
         bool: True if all dependencies are available, False otherwise
     """
-    # # If user explicitly disables manim check
-    # if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
-    #     return True
+    # If user explicitly disables manim check
+    if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
+        return True
     
-    # # Check if our manim components were imported successfully
-    # if not MANIM_AVAILABLE:
-    #     return False
+    # Check if our manim components were imported successfully
+    if not MANIM_AVAILABLE:
+        logger.warning("Manim components not available - import failed")
+        return False
         
-    # # Check if manim itself is available
-    # try:
-    #     import manim
-    #     return True
-    # except ImportError:
-    #     logger.warning("Manim library not available")
-    #     return False
-    return True
+    # Check if manim itself is available
+    try:
+        import manim
+        return True
+    except ImportError:
+        logger.warning("Manim library not available")
+        return False
 
 
 def generate_manim_script_for_scene_wrapper(architect_instance, scene_data, topic_title_str):
@@ -429,10 +485,32 @@ async def run_text_to_video_pipeline(
     """
     # Check if manim components are available
     if not MANIM_AVAILABLE:
-        raise ManimPipelineError("Manim components not available - import failed")
+        error_msg = "Manim components not available - import failed. Please check server logs for details."
+        logger.error(error_msg)
+        return {
+            "status": "error",
+            "error": error_msg,
+            "video_path": None,
+            "storage_video_url": None,
+            "individual_videos": None,
+            "scenes_completed": 0,
+            "scenes_total": 0,
+            "processing_time": None
+        }
     
     if not check_manim_dependencies():
-        raise ManimPipelineError("Manim dependencies not available or not configured")
+        error_msg = "Manim dependencies not available or not configured. Please install required dependencies."
+        logger.error(error_msg)
+        return {
+            "status": "error", 
+            "error": error_msg,
+            "video_path": None,
+            "storage_video_url": None,
+            "individual_videos": None,
+            "scenes_completed": 0,
+            "scenes_total": 0,
+            "processing_time": None
+        }
     
     if num_scenes is None:
         num_scenes = DEFAULT_NUM_SCENES
