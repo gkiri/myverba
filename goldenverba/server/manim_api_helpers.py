@@ -21,6 +21,9 @@ from wasabi import msg
 import uuid
 from datetime import datetime
 
+# Setup logging first
+logger = logging.getLogger("ManimAPI")
+
 # Import Supabase client
 from goldenverba.server.supabase.supabase_client import supabase
 
@@ -69,7 +72,6 @@ try:
     
     # Check for required environment variables
     try:
-        import os
         openrouter_key = os.getenv("OPENROUTER_API_KEY")
         gemini_key = os.getenv("GEMINI_API_KEY")
         
@@ -91,9 +93,6 @@ except ImportError as e:
     logger.error(f"   Error type: {type(e).__name__}")
     logger.error(f"   Error details: {str(e)}")
     MANIM_AVAILABLE = False
-
-# Setup logging
-logger = logging.getLogger("ManimAPI")
 
 MAX_RENDER_ATTEMPTS = 3
 DEFAULT_NUM_SCENES = 3  # Conservative default for API use
