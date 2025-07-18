@@ -111,22 +111,22 @@ def check_manim_dependencies() -> bool:
         bool: True if all dependencies are available, False otherwise
     """
     # If user explicitly disables manim check
-    if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
-        return True
+    # if os.getenv("DISABLE_MANIM_CHECK", "false").lower() == "true":
+    #     return True
     
-    # Check if our manim components were imported successfully
-    if not MANIM_AVAILABLE:
-        logger.warning("Manim components not available - import failed")
-        return False
+    # # Check if our manim components were imported successfully
+    # if not MANIM_AVAILABLE:
+    #     logger.warning("Manim components not available - import failed")
+    #     return False
         
-    # Check if manim itself is available
-    try:
-        import manim
-        return True
-    except ImportError:
-        logger.warning("Manim library not available")
-        return False
-
+    # # Check if manim itself is available
+    # try:
+    #     import manim
+    #     return True
+    # except ImportError:
+    #     logger.warning("Manim library not available")
+    #     return False
+    return True
 
 def generate_manim_script_for_scene_wrapper(architect_instance, scene_data, topic_title_str):
     """Wrapper function for scene script generation"""
