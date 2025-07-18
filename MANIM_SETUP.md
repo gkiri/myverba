@@ -53,6 +53,12 @@ If you encounter `pangocairo >= 1.30.0 is required` errors:
 - Ensure all Pango development packages are installed
 - This is resolved by the updated Dockerfile which includes `libpango1.0-dev`
 
+### Dependency Conflict Errors
+If you encounter `Cannot install goldenverba[manim] because these package versions have conflicting dependencies`:
+- This was caused by exact version pinning in setup.py
+- Fixed by using compatible version ranges (e.g., `python-dotenv>=0.21.0,<0.22.0`)
+- Clear Docker cache and rebuild: `docker system prune -a && docker-compose build --no-cache`
+
 ### ARM64/M1 Mac Issues  
 - The Dockerfile should work on ARM64 architectures
 - If problems persist, try building with `--platform linux/amd64`
@@ -65,7 +71,8 @@ If you encounter `pangocairo >= 1.30.0 is required` errors:
 Existing package versions are preserved to avoid breaking changes:
 - `openai==0.27.9` (kept instead of manim's 1.84.0)
 - `google-generativeai==0.8.2` (kept instead of manim's 0.8.5)
-- `aiofiles==23.2.1`, `aiohttp==3.11.14`, `python-dotenv==1.0.0`
+- `aiofiles==23.2.1`, `aiohttp==3.11.14`
+- `python-dotenv>=0.21.0,<0.22.0` (relaxed from ==1.0.0 for manim-voiceover compatibility)
 
 ## Docker Build
 The Docker image now includes all Manim system dependencies by default but Python packages are only installed when using the `[manim]` extra.

@@ -27,7 +27,7 @@ setup(
     install_requires=[
         #"weaviate-client==3.23.1",
         "weaviate-client==4.6.4",
-        "python-dotenv==1.0.0",
+        "python-dotenv>=0.21.0,<0.22.0",
         "openai==0.27.9",# current and old openai lib.if you dont need latest openrouter models support-this is good 
         #"openai==1.50.2",# New AsyncOpenai support needs this (I have already prepared Openroutergenerator for this for gemini with opentouer support)
         "wasabi==1.1.2",
